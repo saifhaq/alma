@@ -67,6 +67,7 @@ class Net(nn.Module):
         scripted_model = torch.jit.script(model)
         scripted_model.save("mnist_cnn_scripted.pt")
 
+
 def train(args, model, device, train_loader, optimizer, epoch):
     model.train()
     for batch_idx, (data, target) in enumerate(train_loader):

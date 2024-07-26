@@ -14,3 +14,21 @@ digit,count
 ```
 
 You're free to change `setup-data.sh` and `train.py`, namely the data split and training setup, just document your reasoning. For convenience we include a `reset.sh` that you shouldn't need to change.
+
+
+## Code Standards
+- **Black**: Ensures consistency following a strict subset of PEP 8.
+- **isort**: Organizes Python imports systematically.
+
+### Automatic Formatting Before Commit
+1. From the repo root, run:
+```bash
+pre-commit install
+```
+### Manually Running Hooks
+If you want to manually run all hooks on all files, you can do:
+
+```bash
+git stage .
+pre-commit run --all-files
+```

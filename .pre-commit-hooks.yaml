@@ -1,0 +1,17 @@
+-   id: black
+    name: black
+    description: "Black: The uncompromising Python code formatter"
+    entry: black
+    language: python
+    minimum_pre_commit_version: 2.9.2
+    require_serial: true
+    types_or: [python, pyi]
+
+-   id: isort
+    name: isort
+    entry: isort
+    require_serial: true
+    language: python
+    types_or: [cython, pyi, python]
+    args: ['--filter-files']
+    minimum_pre_commit_version: '2.9.2'
