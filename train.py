@@ -1,6 +1,7 @@
 import argparse
 import logging
 import os
+import time
 
 import pandas as pd
 import torch
@@ -12,6 +13,13 @@ from torch.utils.data import Dataset
 from torchvision import transforms
 from torchvision.io import read_image
 from tqdm import tqdm
+
+from torch.ao.quantization.quantize_pt2e import prepare_pt2e
+# from torch._export import export
+from torch.ao.quantization.quantizer.xnnpack_quantizer import (
+    XNNPACKQuantizer,
+    get_symmetric_quantization_config,
+)
 
 
 def setup_logging(log_file=None):
@@ -120,6 +128,8 @@ def test(model, device, test_loader):
     model.eval()
     test_loss = 0
     correct = 0
+    start_time = time.time()
+ 
     with torch.no_grad():
         for data, target in tqdm(test_loader, desc="Testing"):
             data, target = data.to(device), target.to(device)
@@ -128,10 +138,12 @@ def test(model, device, test_loader):
             pred = output.argmax(dim=1, keepdim=True)
             correct += pred.eq(target.view_as(pred)).sum().item()
 
+    end_time = time.time()
     test_loss /= len(test_loader.dataset)
 
     logging.info(
-        "\nTest set: Average loss: {:.4f}, Accuracy: {}/{} ({:.0f}%)\n".format(
+        "\nTest set: Time: {:.2f}, Average loss: {:.4f}, Accuracy: {}/{} ({:.0f}%)\n".format(
+            start_time-end_time,
             test_loss,
             correct,
             len(test_loader.dataset),
@@ -262,6 +274,8 @@ def main():
     if args.save_model:
         torch.save(model.state_dict(), "mnist_cnn.pt")
         model.save_scripted_model()
+        model.save_compiled_model(test_loader, device)
+
 
 
 if __name__ == "__main__":

@@ -3,6 +3,8 @@ import concurrent.futures
 import logging
 import os
 import time
+from typing import Tuple, Dict
+from train import Net
 
 import torch
 import torch.nn.functional as F
@@ -10,6 +12,9 @@ from torch.utils.data import DataLoader, Dataset
 from torchvision import transforms
 from torchvision.io import read_image
 from tqdm import tqdm
+
+from ipdb_hook import ipdb_sys_excepthook
+ipdb_sys_excepthook()
 
 
 def setup_logging(log_file=None):
@@ -67,6 +72,22 @@ def process_batch(batch, model, device):
     return preds.cpu().numpy()
 
 
+def compile_model(model: torch.nn.Module):
+    import torch._dynamo
+    torch._dynamo.reset()
+    model_opt = torch.compile(model, mode="reduce-overhead")
+    return model_opt
+
+    # Step 2. quantization
+    # backend developer will write their own Quantizer and expose methods to allow
+    # users to express how they
+    # want the model to be quantized
+    quantizer = XNNPACKQuantizer().set_global(get_symmetric_quantization_config())
+    # or prepare_qat_pt2e for Quantization Aware Training
+    m = prepare_pt2e(m, quantizer)
+
+
+
 def main():
     setup_logging()
 
@@ -95,7 +116,12 @@ def main():
 
     logging.info(f"Loading model from {args.model}")
     model_load_start_time = time.time()
-    model = torch.jit.load(args.model).to(device)
+    if 'scripted' in args.model:
+        model = torch.jit.load(args.model).to(device)
+    else:
+        model = Net()
+        model.load_state_dict(torch.load(args.model))
+        model.to(device)
     model.eval()
     model_load_end_time = time.time()
 
@@ -117,37 +143,50 @@ def main():
 
     digit_counts = [0] * 10
 
-    logging.info("Starting inference...")
-    inference_start_time = time.time()
-    with torch.no_grad():
-        with concurrent.futures.ThreadPoolExecutor() as executor:
-            futures = []
-            for batch, _ in tqdm(data_loader, desc="Processing batches", unit="batch"):
-                futures.append(executor.submit(process_batch, batch, model, device))
-            for future in tqdm(
-                concurrent.futures.as_completed(futures),
-                total=len(futures),
-                desc="Aggregating results",
-                unit="batch",
-            ):
-                preds = future.result()
-                for pred in preds:
-                    digit_counts[pred.item()] += 1
-    inference_end_time = time.time()
+
+    def inference_benchmarking(data_loader, model, device) -> Tuple[Dict[int, int], float]:
+        inference_start_time = time.time()
+        with torch.no_grad():
+            with concurrent.futures.ThreadPoolExecutor() as executor:
+                futures = []
+                for batch, _ in tqdm(data_loader, desc="Processing batches", unit="batch"):
+                    futures.append(executor.submit(process_batch, batch, model, device))
+                for future in tqdm(
+                    concurrent.futures.as_completed(futures),
+                    total=len(futures),
+                    desc="Aggregating results",
+                    unit="batch",
+                ):
+                    preds = future.result()
+                    for pred in preds:
+                        digit_counts[pred.item()] += 1
+        inference_end_time = time.time()
+        return digit_counts, inference_start_time, inference_end_time 
+
+    def calc_benchmark_times(model_load_start_time, model_load_end_time, image_paths_gather_start_time, image_paths_gather_end_time, inference_start_time, inference_end_time):
+        total_execution_time = inference_end_time - model_load_start_time
+        inference_time = inference_end_time - inference_start_time
+        model_load_time = model_load_end_time - model_load_start_time
+        image_paths_gather_time = (
+            image_paths_gather_end_time - image_paths_gather_start_time
+        )
+
+        logging.info(f"Model loading time: {model_load_time:.2f} seconds")
+        logging.info(f"Image paths gathering time: {image_paths_gather_time:.2f} seconds")
+        logging.info(f"Inference time: {inference_time:.2f} seconds")
+        logging.info(f"Total execution time: {total_execution_time:.2f} seconds")
+        return total_execution_time, inference_time, model_load_time, image_paths_gather_time
+
+    logging.info("Starting eager inference...")
+    digit_counts, inference_start_time, inference_end_time = inference_benchmarking(data_loader, model, device)
+    calc_benchmark_times(model_load_start_time, model_load_end_time, image_paths_gather_start_time, image_paths_gather_end_time, inference_start_time, inference_end_time)
+
+    logging.info("Starting compiled inference...")
+    compiled_model = compile_model(model)
+    digit_counts, inference_start_time, inference_end_time = inference_benchmarking(data_loader, compiled_model, device)
+    calc_benchmark_times(model_load_start_time, model_load_end_time, image_paths_gather_start_time, image_paths_gather_end_time, inference_start_time, inference_end_time)
 
     logging.info("Inference complete.")
-
-    total_execution_time = inference_end_time - model_load_start_time
-    model_load_time = model_load_end_time - model_load_start_time
-    image_paths_gather_time = (
-        image_paths_gather_end_time - image_paths_gather_start_time
-    )
-    inference_time = inference_end_time - inference_start_time
-
-    logging.info(f"Model loading time: {model_load_time:.2f} seconds")
-    logging.info(f"Image paths gathering time: {image_paths_gather_time:.2f} seconds")
-    logging.info(f"Inference time: {inference_time:.2f} seconds")
-    logging.info(f"Total execution time: {total_execution_time:.2f} seconds")
 
     for digit, count in enumerate(digit_counts):
         logging.info(f"Digit {digit}: {count}")
