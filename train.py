@@ -85,10 +85,8 @@ class Net(nn.Module):
         return output
 
     def save_scripted_model(self):
-        model = Net()
-        model.load_state_dict(torch.load("mnist_cnn.pt"))
-        model.eval()
-        scripted_model = torch.jit.script(model)
+        self.eval()
+        scripted_model = torch.jit.script(self)
         scripted_model.save("mnist_cnn_scripted.pt")
 
 
