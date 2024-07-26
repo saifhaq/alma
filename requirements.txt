@@ -5,3 +5,4 @@ torch==2.2.2
 torchvision==0.17.2
 black==24.4.1
 isort==5.13.2
+tqdm==4.66.1
