@@ -2,6 +2,7 @@ import argparse
 import concurrent.futures
 import logging
 import os
+import time
 
 import torch
 import torch.nn.functional as F
@@ -22,14 +23,15 @@ def setup_logging(log_file=None):
     date_format = "%Y-%m-%d %H:%M:%S"
     log_level = logging.INFO
 
+    handlers = [logging.StreamHandler()]
+    if log_file:
+        handlers.append(logging.FileHandler(log_file))
+
     logging.basicConfig(
         level=log_level,
         format=log_format,
         datefmt=date_format,
-        handlers=[
-            logging.StreamHandler(),
-            logging.FileHandler(log_file) if log_file else logging.NullHandler(),
-        ],
+        handlers=handlers,
     )
 
 
@@ -85,11 +87,17 @@ def main():
     )
     args = parser.parse_args()
 
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    device = torch.device(
+        "cuda"
+        if torch.cuda.is_available()
+        else "mps" if torch.backends.mps.is_available() else "cpu"
+    )
 
     logging.info(f"Loading model from {args.model}")
+    model_load_start_time = time.time()
     model = torch.jit.load(args.model).to(device)
     model.eval()
+    model_load_end_time = time.time()
 
     transform = transforms.Compose(
         [
@@ -101,13 +109,16 @@ def main():
     )
 
     logging.info(f"Gathering image paths from {args.target}")
+    image_paths_gather_start_time = time.time()
     image_paths = gather_image_paths(args.target)
+    image_paths_gather_end_time = time.time()
     dataset = InferenceDataset(image_paths, transform=transform)
     data_loader = DataLoader(dataset, batch_size=64, num_workers=4, pin_memory=True)
 
     digit_counts = [0] * 10
 
     logging.info("Starting inference...")
+    inference_start_time = time.time()
     with torch.no_grad():
         with concurrent.futures.ThreadPoolExecutor() as executor:
             futures = []
@@ -122,6 +133,21 @@ def main():
                 preds = future.result()
                 for pred in preds:
                     digit_counts[pred.item()] += 1
+    inference_end_time = time.time()
+
+    logging.info("Inference complete.")
+
+    total_execution_time = inference_end_time - model_load_start_time
+    model_load_time = model_load_end_time - model_load_start_time
+    image_paths_gather_time = (
+        image_paths_gather_end_time - image_paths_gather_start_time
+    )
+    inference_time = inference_end_time - inference_start_time
+
+    logging.info(f"Model loading time: {model_load_time:.2f} seconds")
+    logging.info(f"Image paths gathering time: {image_paths_gather_time:.2f} seconds")
+    logging.info(f"Inference time: {inference_time:.2f} seconds")
+    logging.info(f"Total execution time: {total_execution_time:.2f} seconds")
 
     for digit, count in enumerate(digit_counts):
         logging.info(f"Digit {digit}: {count}")
