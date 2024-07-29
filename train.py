@@ -14,6 +14,22 @@ from torchvision import transforms
 from torchvision.io import read_image
 from tqdm import tqdm
 
+from typing import Tuple, Any, Union, List
+from copy import deepcopy
+
+import torch
+import torch.quantization as tq
+from torch.ao.quantization.quantize_fx import prepare_qat_fx
+from torch.ao.quantization.qconfig_mapping import QConfigMapping
+
+from qconfigs import learnable_act, learnable_weights, fake_quant_act
+from ipdb_hook import ipdb_sys_excepthook
+
+# Adds ipdb breakpoint if and where we have an error
+ipdb_sys_excepthook()
+
+
+
 from torch.ao.quantization.quantize_pt2e import prepare_pt2e
 # from torch._export import export
 from torch.ao.quantization.quantizer.xnnpack_quantizer import (
@@ -96,6 +112,43 @@ class Net(nn.Module):
         self.eval()
         scripted_model = torch.jit.script(self)
         scripted_model.save("mnist_cnn_scripted.pt")
+
+    def quantize(self):
+        """
+        Quantizes the model with FX graph tracing. Does not do PTQ or QAT, and
+        just provides default quantization parameters.
+        """
+        # Define qconfigs
+        qconfig_global = tq.QConfig(
+            activation=learnable_act(range=2),
+            weight=tq.default_fused_per_channel_wt_fake_quant
+        )
+
+        # Assign qconfigs
+        qconfig_mapping = QConfigMapping().set_global(qconfig_global)
+
+        # We loop through the modules so that we can access the `out_channels` attribute
+        for name, module in self.named_modules():
+            if hasattr(module, 'out_channels'):
+                qconfig = tq.QConfig(
+                    activation=learnable_act(range=2),
+                    weight=learnable_weights(channels=module.out_channels)
+                )
+                qconfig_mapping.set_module_name(name, qconfig)
+
+        # Do symbolic tracing and quantization
+        example_inputs = (torch.randn(1, 3, 224, 224),)
+        self.eval()
+        self = prepare_qat_fx(self, qconfig_mapping, example_inputs)
+
+        # Prints the graph as a table
+        print("\nGraph as a Table:\n")
+        self.graph.print_tabular()
+        
+
+    def save_quantized_model(self):
+        self.eval()
+        raise NotImplementedError("Save method not implemented yet")
 
 
 def train(args, model, device, train_loader, optimizer, epoch):
@@ -209,6 +262,12 @@ def main():
         help="quickly check a single pass",
     )
     parser.add_argument(
+        "--quantize",
+        action="store_true",
+        default=False,
+        help="quantize the model",
+    )
+    parser.add_argument(
         "--seed", type=int, default=1, metavar="S", help="random seed (default: 1)"
     )
     parser.add_argument(
@@ -271,10 +330,14 @@ def main():
         test(model, device, test_loader)
         scheduler.step()
 
+    if args.quantize:
+        # Traces the model and quantizes
+        model.quantize()
+        # TODO: still need to do PTQ/QAT
+        model.save_quantized_model()
     if args.save_model:
         torch.save(model.state_dict(), "mnist_cnn.pt")
         model.save_scripted_model()
-        model.save_compiled_model(test_loader, device)
 
 
 
