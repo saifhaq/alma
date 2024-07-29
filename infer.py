@@ -84,8 +84,12 @@ def compile_model(model: torch.nn.Module):
     # want the model to be quantized
     quantizer = XNNPACKQuantizer().set_global(get_symmetric_quantization_config())
     # or prepare_qat_pt2e for Quantization Aware Training
-    m = prepare_pt2e(m, quantizer)
+    m = prepare_pt2e(model_opt, quantizer)
 
+
+def export_to_tensorRT(model: torch.nn.Module):
+    # Placeholder
+    raise NotImplementedError("This method is not implemented yet")
 
 
 def main():
