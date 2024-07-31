@@ -22,7 +22,8 @@ import torch.quantization as tq
 from torch.ao.quantization.quantize_fx import prepare_qat_fx
 from torch.ao.quantization.qconfig_mapping import QConfigMapping
 
-from qconfigs import learnable_act, learnable_weights, fake_quant_act
+from quantization.qconfigs import learnable_act, learnable_weights, fake_quant_act, fixed_0255
+from quantization.utils import replace_node_module, save_fake_quantized_model, replace_node_with_target
 from ipdb_hook import ipdb_sys_excepthook
 
 # Adds ipdb breakpoint if and where we have an error
@@ -135,11 +136,12 @@ class Net(nn.Module):
         # Do symbolic tracing and quantization
         example_inputs = (torch.randn(1, 3, 224, 224),)
         self.eval()
-        self = prepare_qat_fx(self, qconfig_mapping, example_inputs)
+        fx_model = prepare_qat_fx(self, qconfig_mapping, example_inputs)
 
         # Prints the graph as a table
         print("\nGraph as a Table:\n")
-        self.graph.print_tabular()
+        fx_model.graph.print_tabular()
+        return fx_model
         
         return self 
         
@@ -148,13 +150,6 @@ class Net(nn.Module):
         scripted_model = torch.jit.script(self)
         scripted_model.save(path)
         logging.info(f"Scripted model saved to {path}")
-
-    def save_fake_quantized_model(self, path):
-        # Ensure the model is in evaluation mode
-        self.eval()
-        # Save the quantized model state dict
-        torch.save(self.state_dict(), path)
-        logging.info(f"Quantized model saved to {path}")
 
 
 
@@ -339,11 +334,16 @@ def main():
 
     if args.quantize:
         # Traces the model and quantizes
-        model.quantize()
+        fx_model = model.quantize()
+
+        # Replace initial quantatub with fixed qparams equivalent
+        replace_node_with_target(fx_model, 'activation_post_process_0', fixed_0255())
+
         # TODO: still need to do PTQ/QAT
 
+
     if args.quantize and args.save_model:
-        model.save_fake_quantized_model('mnist_cnn_quantized.pt')
+        save_fake_quantized_model(fx_model, 'mnist_cnn_quantized.pt')
 
     if args.save_model:
         torch.save(model.state_dict(), "mnist_cnn.pt")
