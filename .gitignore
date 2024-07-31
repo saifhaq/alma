@@ -165,3 +165,4 @@ mnist_images/
 data_for_inference
 mnist_images.zip
 mnist_images.csv
+mnist_cnn*
