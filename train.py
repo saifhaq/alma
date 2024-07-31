@@ -108,10 +108,6 @@ class Net(nn.Module):
         output = F.log_softmax(x, dim=1)
         return output
 
-    def save_scripted_model(self):
-        self.eval()
-        scripted_model = torch.jit.script(self)
-        scripted_model.save("mnist_cnn_scripted.pt")
 
     def quantize(self):
         """
@@ -145,10 +141,20 @@ class Net(nn.Module):
         print("\nGraph as a Table:\n")
         self.graph.print_tabular()
         
-
-    def save_quantized_model(self):
+        return self 
+        
+    def save_scripted_model(self, path):
         self.eval()
-        raise NotImplementedError("Save method not implemented yet")
+        scripted_model = torch.jit.script(self)
+        scripted_model.save(path)
+
+    def save_fake_quantized_model(self, path):
+        # Ensure the model is in evaluation mode
+        self.eval()
+        # Save the quantized model state dict
+        torch.save(self.state_dict(), path)
+        print(f"Quantized model saved to {path}")
+
 
 
 def train(args, model, device, train_loader, optimizer, epoch):
@@ -334,10 +340,10 @@ def main():
         # Traces the model and quantizes
         model.quantize()
         # TODO: still need to do PTQ/QAT
-        model.save_quantized_model()
+
     if args.save_model:
         torch.save(model.state_dict(), "mnist_cnn.pt")
-        model.save_scripted_model()
+        model.save_scripted_model('mnist_cnn_scripted.pt')
 
 
 
