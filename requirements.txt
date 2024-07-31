@@ -1,8 +1,9 @@
 # Feel free to change these, but might force you to change train.py
 numpy==1.26.4
 pandas==2.2.2
-torch==2.2.2
-torchvision==0.17.2
+torch==2.4.0
+torchvision==0.19.0
 black==24.4.1
 isort==5.13.2
 tqdm==4.66.1
+ipdb==0.13.13

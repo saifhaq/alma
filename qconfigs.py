@@ -5,6 +5,15 @@ from torch.ao.quantization._learnable_fake_quantize import (
     _LearnableFakeQuantize as LearnableFakeQuantize,
 )
 
+
+# observer: tq.HistogramObserver is used to collect statistics on the activations during training to determine the optimal quantization parameters.
+# quant_min and quant_max: These define the range of quantized values (0 to 255 for quint8).
+# dtype: The data type for quantization (torch.quint8 for unsigned 8-bit integers).
+# qscheme: The quantization scheme (torch.per_tensor_affine), which means a single scale and zero-point for the entire tensor.
+# scale: This is set to range / 255.0, where range is a parameter passed to the lambda function. This determines the scaling factor for quantization.
+# zero_point: Set to 0.0, indicating no offset.
+# use_grad_scaling: If True, it allows the gradients to scale appropriately during backpropagation, making the quantization parameters learnable.
+
 learnable_act = lambda range : LearnableFakeQuantize.with_args(
     observer=tq.HistogramObserver,
     quant_min=0,
