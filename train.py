@@ -147,13 +147,14 @@ class Net(nn.Module):
         self.eval()
         scripted_model = torch.jit.script(self)
         scripted_model.save(path)
+        logging.info(f"Scripted model saved to {path}")
 
     def save_fake_quantized_model(self, path):
         # Ensure the model is in evaluation mode
         self.eval()
         # Save the quantized model state dict
         torch.save(self.state_dict(), path)
-        print(f"Quantized model saved to {path}")
+        logging.info(f"Quantized model saved to {path}")
 
 
 
@@ -340,6 +341,9 @@ def main():
         # Traces the model and quantizes
         model.quantize()
         # TODO: still need to do PTQ/QAT
+
+    if args.quantize and args.save_model:
+        model.save_fake_quantized_model('mnist_cnn_quantized.pt')
 
     if args.save_model:
         torch.save(model.state_dict(), "mnist_cnn.pt")
