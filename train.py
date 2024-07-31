@@ -23,7 +23,7 @@ from torch.ao.quantization.quantize_fx import prepare_qat_fx
 from torch.ao.quantization.qconfig_mapping import QConfigMapping
 
 from quantization.qconfigs import learnable_act, learnable_weights, fake_quant_act, fixed_0255
-from quantization.utils import replace_node_module, save_fake_quantized_model, replace_node_with_target
+from quantization.utils import replace_node_module, save_fake_quantized_model, replace_node_with_target, PTQ
 from ipdb_hook import ipdb_sys_excepthook
 
 # Adds ipdb breakpoint if and where we have an error
@@ -142,8 +142,6 @@ class Net(nn.Module):
         print("\nGraph as a Table:\n")
         fx_model.graph.print_tabular()
         return fx_model
-        
-        return self 
         
     def save_scripted_model(self, path):
         self.eval()
@@ -339,6 +337,7 @@ def main():
         # Replace initial quantatub with fixed qparams equivalent
         replace_node_with_target(fx_model, 'activation_post_process_0', fixed_0255())
 
+        PTQ(fx_model, device, test_loader)
         # TODO: still need to do PTQ/QAT
 
 

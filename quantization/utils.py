@@ -1,5 +1,14 @@
+<<<<<<< Updated upstream
 import logging
 from typing import Optional, Tuple
+=======
+import torch.fx as fx
+import time
+from tqdm import tqdm
+from typing import Tuple
+import torch
+import logging
+>>>>>>> Stashed changes
 
 import torch
 import torch.fx as fx
@@ -82,6 +91,26 @@ def _parent_name(target: str) -> Tuple[str, str]:
     *parent, name = target.rsplit(".", 1)
     return parent[0] if parent else "", name
 
+def PTQ(model, device, dataloader):
+
+    model.eval()
+    # Enable PTQ observers
+    for module in model.modules():
+        if hasattr(module, 'observer_enabled') or hasattr(module, 'static_enabled'):
+            module.enable_observer()
+
+    start_time = time.time()
+    with torch.no_grad():
+        for data, target in tqdm(dataloader, desc="PTQ"):
+            data, target = data.to(device), target.to(device)
+            _ = model(data)
+    end_time = time.time()
+    logging.info(f"PTQ time: {end_time - start_time:.2f}s")
+
+    # Disable PTQ observers
+    for module in model.modules():
+        if hasattr(module, 'observer_enabled') or hasattr(module, 'static_enabled'):
+            module.disable_observer()
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
