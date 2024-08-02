@@ -38,6 +38,8 @@ from torch.ao.quantization.quantizer.xnnpack_quantizer import (
     get_symmetric_quantization_config,
 )
 
+# torch.backends.quantized.engine = 'x86'
+torch.backends.quantized.engine = 'qnnpack'
 
 def setup_logging(log_file=None):
     """
@@ -114,6 +116,8 @@ class Net(nn.Module):
         """
         Quantizes the model with FX graph tracing. Does not do PTQ or QAT, and
         just provides default quantization parameters.
+
+        Returns a fx-graph traced quantized model.
         """
         # Define qconfigs
         qconfig_global = tq.QConfig(

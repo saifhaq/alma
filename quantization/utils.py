@@ -87,6 +87,9 @@ def _parent_name(target: str) -> Tuple[str, str]:
     return parent[0] if parent else "", name
 
 def PTQ(model, device, dataloader):
+    """
+    Perform PTQ on the model using the given dataloader.
+    """
 
     model.eval()
     # Enable PTQ observers
