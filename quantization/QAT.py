@@ -1,12 +1,14 @@
-import time
-from torch.optim.lr_scheduler import StepLR
-import torch.optim as optim
 import logging
+import time
+
+import torch.optim as optim
 import torch.quantization as tq
+from torch.optim.lr_scheduler import StepLR
+
 
 def QAT(train, test, args, model, device, train_loader, test_loader):
     """
-    Perform QAT on the model using the given dataloaders, and train adn test 
+    Perform QAT on the model using the given dataloaders, and train adn test
     functions.
     """
 
@@ -21,7 +23,7 @@ def QAT(train, test, args, model, device, train_loader, test_loader):
 
     # Disable PTQ observers
     for module in model.modules():
-        if hasattr(module, 'observer_enabled') or hasattr(module, 'static_enabled'):
+        if hasattr(module, "observer_enabled") or hasattr(module, "static_enabled"):
             module.disable_observer()
 
     start_time = time.time()
@@ -32,4 +34,3 @@ def QAT(train, test, args, model, device, train_loader, test_loader):
 
     end_time = time.time()
     logging.info(f"QAT time: {end_time - start_time:.2f}s")
-

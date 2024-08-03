@@ -1,5 +1,7 @@
-import traceback, ipdb
 import sys
+import traceback
+
+import ipdb
 
 
 def ipdb_sys_excepthook():

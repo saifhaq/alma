@@ -1,9 +1,10 @@
+import logging
 import time
 
 import torch
 import torch.quantization as tq
-import logging
 from tqdm import tqdm
+
 
 def PTQ(model, device, dataloader):
     """
@@ -16,7 +17,7 @@ def PTQ(model, device, dataloader):
 
     # Enable PTQ observers
     for module in model.modules():
-        if hasattr(module, 'observer_enabled') or hasattr(module, 'static_enabled'):
+        if hasattr(module, "observer_enabled") or hasattr(module, "static_enabled"):
             module.enable_observer()
 
     start_time = time.time()
@@ -29,5 +30,5 @@ def PTQ(model, device, dataloader):
 
     # Disable PTQ observers
     for module in model.modules():
-        if hasattr(module, 'observer_enabled') or hasattr(module, 'static_enabled'):
+        if hasattr(module, "observer_enabled") or hasattr(module, "static_enabled"):
             module.disable_observer()

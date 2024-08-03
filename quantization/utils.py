@@ -1,12 +1,10 @@
 import logging
-from typing import Optional, Tuple
-import torch.fx as fx
 import time
-from tqdm import tqdm
-import torch
+from typing import Optional, Tuple
 
 import torch
 import torch.fx as fx
+from tqdm import tqdm
 
 
 def save_fake_quantized_model(model: torch.nn.Module, path: str) -> None:

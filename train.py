@@ -2,46 +2,43 @@ import argparse
 import logging
 import os
 import time
+from copy import deepcopy
+from typing import Any, List, Tuple, Union
 
 import pandas as pd
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
+import torch.quantization as tq
+from torch.ao.quantization.qconfig_mapping import QConfigMapping
+from torch.ao.quantization.quantize_fx import prepare_qat_fx
 from torch.optim.lr_scheduler import StepLR
 from torch.utils.data import Dataset
 from torchvision import transforms
 from torchvision.io import read_image
 from tqdm import tqdm
 
-from typing import Tuple, Any, Union, List
-from copy import deepcopy
-
-import torch
-import torch.quantization as tq
-from torch.ao.quantization.quantize_fx import prepare_qat_fx
-from torch.ao.quantization.qconfig_mapping import QConfigMapping
-
-from quantization.qconfigs import learnable_act, learnable_weights, fake_quant_act, fixed_0255
-from quantization.utils import replace_node_module, save_fake_quantized_model, replace_node_with_target
-from quantization.QAT import QAT
-from quantization.PTQ import PTQ
 from ipdb_hook import ipdb_sys_excepthook
+from quantization.PTQ import PTQ
+from quantization.QAT import QAT
+from quantization.qconfigs import (fake_quant_act, fixed_0255, learnable_act,
+                                   learnable_weights)
+from quantization.utils import (replace_node_module, replace_node_with_target,
+                                save_fake_quantized_model)
 
 # Adds ipdb breakpoint if and where we have an error
 ipdb_sys_excepthook()
 
 
-
 from torch.ao.quantization.quantize_pt2e import prepare_pt2e
 # from torch._export import export
 from torch.ao.quantization.quantizer.xnnpack_quantizer import (
-    XNNPACKQuantizer,
-    get_symmetric_quantization_config,
-)
+    XNNPACKQuantizer, get_symmetric_quantization_config)
 
 # torch.backends.quantized.engine = 'x86'
-torch.backends.quantized.engine = 'qnnpack'
+torch.backends.quantized.engine = "qnnpack"
+
 
 def setup_logging(log_file=None):
     """
@@ -133,7 +130,6 @@ class Net(nn.Module):
         )
         return fused_model
 
-
     def fx_quantize(self):
         """
         Quantizes the model with FX graph tracing. Does not do PTQ or QAT, and
@@ -144,7 +140,7 @@ class Net(nn.Module):
         # Define qconfigs
         qconfig_global = tq.QConfig(
             activation=learnable_act(range=2),
-            weight=tq.default_fused_per_channel_wt_fake_quant
+            weight=tq.default_fused_per_channel_wt_fake_quant,
         )
 
         # Assign qconfigs
@@ -152,17 +148,17 @@ class Net(nn.Module):
 
         # We loop through the modules so that we can access the `out_channels` attribute
         for name, module in self.named_modules():
-            if hasattr(module, 'out_channels'):
+            if hasattr(module, "out_channels"):
                 qconfig = tq.QConfig(
                     activation=learnable_act(range=2),
-                    weight=learnable_weights(channels=module.out_channels)
+                    weight=learnable_weights(channels=module.out_channels),
                 )
                 qconfig_mapping.set_module_name(name, qconfig)
             # Idiot pytorch, why do you have `out_features` for Linear but not Conv2d?
-            elif hasattr(module, 'out_features'):
+            elif hasattr(module, "out_features"):
                 qconfig = tq.QConfig(
                     activation=learnable_act(range=2),
-                    weight=learnable_weights(channels=module.out_features)
+                    weight=learnable_weights(channels=module.out_features),
                 )
                 qconfig_mapping.set_module_name(name, qconfig)
 
@@ -189,27 +185,26 @@ class Net(nn.Module):
 
         # We loop through the modules so that we can access the `out_channels` attribute
         for name, module in fused_model.named_modules():
-            if hasattr(module, 'out_channels'):
+            if hasattr(module, "out_channels"):
                 qconfig = tq.QConfig(
                     activation=learnable_act(range=2),
-                    weight=learnable_weights(channels=module.out_channels)
+                    weight=learnable_weights(channels=module.out_channels),
                 )
             # Idiot pytorch, why do you have `out_features` for Linear but not Conv2d?
-            elif hasattr(module, 'out_features'):
+            elif hasattr(module, "out_features"):
                 qconfig = tq.QConfig(
                     activation=learnable_act(range=2),
-                    weight=learnable_weights(channels=module.out_features)
+                    weight=learnable_weights(channels=module.out_features),
                 )
             else:
                 qconfig = tq.QConfig(
                     activation=learnable_act(range=2),
-                    weight=tq.default_fused_per_channel_wt_fake_quant
+                    weight=tq.default_fused_per_channel_wt_fake_quant,
                 )
             module.qconfig = qconfig
 
         qconfig = tq.QConfig(
-            activation=fixed_0255,
-            weight=tq.default_fused_per_channel_wt_fake_quant
+            activation=fixed_0255, weight=tq.default_fused_per_channel_wt_fake_quant
         )
         fused_model.quant_input.qconfig = qconfig
 
@@ -219,13 +214,11 @@ class Net(nn.Module):
 
         return quant_model
 
-
     def save_scripted_model(self, path):
         self.eval()
         scripted_model = torch.jit.script(self)
         scripted_model.save(path)
         logging.info(f"Scripted model saved to {path}")
-
 
 
 def train(args, model, device, train_loader, optimizer, epoch):
@@ -259,7 +252,7 @@ def test(model, device, test_loader):
     test_loss = 0
     correct = 0
     start_time = time.time()
- 
+
     with torch.no_grad():
         for data, target in tqdm(test_loader, desc="Testing"):
             data, target = data.to(device), target.to(device)
@@ -273,7 +266,7 @@ def test(model, device, test_loader):
 
     logging.info(
         "\nTest set: Time: {:.2f}, Average loss: {:.4f}, Accuracy: {}/{} ({:.0f}%)\n".format(
-            start_time-end_time,
+            start_time - end_time,
             test_loss,
             correct,
             len(test_loader.dataset),
@@ -414,7 +407,7 @@ def main():
 
         # FX graph mode quantization
         model = model.fx_quantize()
-        replace_node_with_target(model, 'activation_post_process_0', fixed_0255())
+        replace_node_with_target(model, "activation_post_process_0", fixed_0255())
 
         # Do PTQ
         PTQ(model, device, test_loader)
@@ -423,12 +416,11 @@ def main():
         QAT(train, test, args, model, device, train_loader, test_loader)
 
     if args.quantize and args.save_model:
-        save_fake_quantized_model(fx_model, 'mnist_cnn_quantized.pt')
+        save_fake_quantized_model(fx_model, "mnist_cnn_quantized.pt")
 
     if args.save_model:
         torch.save(model.state_dict(), "mnist_cnn.pt")
-        model.save_scripted_model('mnist_cnn_scripted.pt')
-
+        model.save_scripted_model("mnist_cnn_scripted.pt")
 
 
 if __name__ == "__main__":
