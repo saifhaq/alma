@@ -15,7 +15,8 @@ from torch.ao.quantization._learnable_fake_quantize import (
 # use_grad_scaling: If True, it allows the gradients to scale appropriately during backpropagation, making the quantization parameters learnable.
 
 learnable_act = lambda range : LearnableFakeQuantize.with_args(
-    observer=tq.HistogramObserver,
+    # observer=tq.HistogramObserver,
+    observer=tq.MinMaxObserver,
     quant_min=0,
     quant_max=255,
     dtype=torch.quint8,
@@ -35,7 +36,6 @@ fixed_0255 = FixedQParamsFakeQuantize.with_args(
         qscheme=torch.per_tensor_affine,
     )
 )
-
 
 learnable_weights = lambda channels : LearnableFakeQuantize.with_args(  # need to specify number of channels here
     observer=tq.PerChannelMinMaxObserver,
