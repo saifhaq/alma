@@ -15,6 +15,9 @@ def PTQ(model, device, dataloader):
     # Ensure fake quantization enabled
     model.apply(tq.enable_fake_quant)
 
+    # Ensure model is on the correct device
+    model.to(device)
+
     # Enable PTQ observers
     for module in model.modules():
         if hasattr(module, "observer_enabled") or hasattr(module, "static_enabled"):
