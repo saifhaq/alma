@@ -3,8 +3,7 @@ import concurrent.futures
 import logging
 import os
 import time
-from typing import Tuple, Dict
-from train import Net
+from typing import Dict, Tuple
 
 import torch
 import torch.nn.functional as F
@@ -14,6 +13,8 @@ from torchvision.io import read_image
 from tqdm import tqdm
 
 from ipdb_hook import ipdb_sys_excepthook
+from train import Net
+
 ipdb_sys_excepthook()
 
 
@@ -74,6 +75,7 @@ def process_batch(batch, model, device):
 
 def compile_model(model: torch.nn.Module):
     import torch._dynamo
+
     torch._dynamo.reset()
     model_opt = torch.compile(model, mode="reduce-overhead")
     return model_opt
@@ -115,12 +117,14 @@ def main():
     device = torch.device(
         "cuda"
         if torch.cuda.is_available()
-        else "mps" if torch.backends.mps.is_available() else "cpu"
+        else "mps"
+        if torch.backends.mps.is_available()
+        else "cpu"
     )
 
     logging.info(f"Loading model from {args.model}")
     model_load_start_time = time.time()
-    if 'scripted' in args.model:
+    if "scripted" in args.model:
         model = torch.jit.load(args.model).to(device)
     else:
         model = Net()
@@ -147,13 +151,16 @@ def main():
 
     digit_counts = [0] * 10
 
-
-    def inference_benchmarking(data_loader, model, device) -> Tuple[Dict[int, int], float]:
+    def inference_benchmarking(
+        data_loader, model, device
+    ) -> Tuple[Dict[int, int], float]:
         inference_start_time = time.time()
         with torch.no_grad():
             with concurrent.futures.ThreadPoolExecutor() as executor:
                 futures = []
-                for batch, _ in tqdm(data_loader, desc="Processing batches", unit="batch"):
+                for batch, _ in tqdm(
+                    data_loader, desc="Processing batches", unit="batch"
+                ):
                     futures.append(executor.submit(process_batch, batch, model, device))
                 for future in tqdm(
                     concurrent.futures.as_completed(futures),
@@ -165,9 +172,16 @@ def main():
                     for pred in preds:
                         digit_counts[pred.item()] += 1
         inference_end_time = time.time()
-        return digit_counts, inference_start_time, inference_end_time 
+        return digit_counts, inference_start_time, inference_end_time
 
-    def calc_benchmark_times(model_load_start_time, model_load_end_time, image_paths_gather_start_time, image_paths_gather_end_time, inference_start_time, inference_end_time):
+    def calc_benchmark_times(
+        model_load_start_time,
+        model_load_end_time,
+        image_paths_gather_start_time,
+        image_paths_gather_end_time,
+        inference_start_time,
+        inference_end_time,
+    ):
         total_execution_time = inference_end_time - model_load_start_time
         inference_time = inference_end_time - inference_start_time
         model_load_time = model_load_end_time - model_load_start_time
@@ -176,19 +190,44 @@ def main():
         )
 
         logging.info(f"Model loading time: {model_load_time:.2f} seconds")
-        logging.info(f"Image paths gathering time: {image_paths_gather_time:.2f} seconds")
+        logging.info(
+            f"Image paths gathering time: {image_paths_gather_time:.2f} seconds"
+        )
         logging.info(f"Inference time: {inference_time:.2f} seconds")
         logging.info(f"Total execution time: {total_execution_time:.2f} seconds")
-        return total_execution_time, inference_time, model_load_time, image_paths_gather_time
+        return (
+            total_execution_time,
+            inference_time,
+            model_load_time,
+            image_paths_gather_time,
+        )
 
     logging.info("Starting eager inference...")
-    digit_counts, inference_start_time, inference_end_time = inference_benchmarking(data_loader, model, device)
-    calc_benchmark_times(model_load_start_time, model_load_end_time, image_paths_gather_start_time, image_paths_gather_end_time, inference_start_time, inference_end_time)
+    digit_counts, inference_start_time, inference_end_time = inference_benchmarking(
+        data_loader, model, device
+    )
+    calc_benchmark_times(
+        model_load_start_time,
+        model_load_end_time,
+        image_paths_gather_start_time,
+        image_paths_gather_end_time,
+        inference_start_time,
+        inference_end_time,
+    )
 
     logging.info("Starting compiled inference...")
     compiled_model = compile_model(model)
-    digit_counts, inference_start_time, inference_end_time = inference_benchmarking(data_loader, compiled_model, device)
-    calc_benchmark_times(model_load_start_time, model_load_end_time, image_paths_gather_start_time, image_paths_gather_end_time, inference_start_time, inference_end_time)
+    digit_counts, inference_start_time, inference_end_time = inference_benchmarking(
+        data_loader, compiled_model, device
+    )
+    calc_benchmark_times(
+        model_load_start_time,
+        model_load_end_time,
+        image_paths_gather_start_time,
+        image_paths_gather_end_time,
+        inference_start_time,
+        inference_end_time,
+    )
 
     logging.info("Inference complete.")
 

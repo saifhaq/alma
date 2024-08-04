@@ -32,3 +32,9 @@ If you want to manually run all hooks on all files, you can do:
 git stage .
 pre-commit run --all-files
 ```
+
+
+To quantize the model running on Apple silicon, run:
+```
+PYTORCH_ENABLE_MPS_FALLBACK=1 python train.py  --quantize
+```
