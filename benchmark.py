@@ -2,11 +2,10 @@ import argparse
 import logging
 import os
 import time
-from typing import List, Tuple
+from typing import Iterator, Tuple
 
-import pandas as pd
 import torch
-from torch.utils.data import DataLoader, Dataset
+from torch.utils.data import DataLoader, Dataset, Sampler
 from torchvision import transforms
 from torchvision.io import read_image
 from tqdm import tqdm
@@ -60,6 +59,26 @@ class CustomImageDataset(Dataset):
         return image, 0  # Returning 0 as label since it's not used for benchmarking
 
 
+class CircularSampler(Sampler):
+    def __init__(self, data_source: Dataset):
+        self.data_source = data_source
+
+    def __iter__(self) -> Iterator[int]:
+        while True:
+            yield from torch.randperm(len(self.data_source)).tolist()
+
+    def __len__(self) -> int:
+        return len(self.data_source)
+
+
+class CircularDataLoader(DataLoader):
+    def __init__(
+        self, dataset: Dataset, batch_size: int, shuffle: bool = False, **kwargs
+    ):
+        sampler = CircularSampler(dataset)
+        super().__init__(dataset, batch_size=batch_size, sampler=sampler, **kwargs)
+
+
 def load_model(model_path: str, device: torch.device) -> torch.nn.Module:
     if model_path.endswith(".pt"):
         state_dict = torch.load(model_path, map_location=device)
@@ -74,27 +93,38 @@ def load_model(model_path: str, device: torch.device) -> torch.nn.Module:
 
 
 def benchmark_model(
-    model: torch.nn.Module,
-    device: torch.device,
-    data_loader: DataLoader,
-    iterations: int,
+    model: torch.nn.Module, device: torch.device, data_loader: DataLoader, n_images: int
 ) -> None:
     total_time = 0.0
     total_images = 0
+    num_batches = 0
+
+    start_time = time.time()  # Start timing for the entire process
 
     with torch.no_grad():
-        for _ in range(iterations):
-            for data, _ in tqdm(data_loader, desc="Benchmarking"):
-                data = data.to(device)
-                start_time = time.time()
-                output = model(data)
-                end_time = time.time()
+        for data, _ in tqdm(data_loader, desc="Benchmarking"):
+            if total_images >= n_images:
+                break
 
-                total_time += end_time - start_time
-                total_images += data.size(0)
+            data = data.to(device)
+            batch_start_time = time.time()
+            output = model(data)
+            batch_end_time = time.time()
 
-    throughput = total_images / total_time
-    logging.info(f"Total inference time: {total_time:.4f} seconds")
+            batch_size = min(data.size(0), n_images - total_images)
+            total_time += batch_end_time - batch_start_time
+            total_images += batch_size
+            num_batches += 1
+
+            if total_images >= n_images:
+                break
+
+    end_time = time.time()  # End timing for the entire process
+
+    total_elapsed_time = end_time - start_time
+    throughput = total_images / total_elapsed_time if total_elapsed_time > 0 else 0
+    logging.info(f"Total elapsed time: {total_elapsed_time:.4f} seconds")
+    logging.info(f"Total inference time (model only): {total_time:.4f} seconds")
     logging.info(f"Total images: {total_images}")
     logging.info(f"Throughput: {throughput:.2f} images/second")
 
@@ -116,15 +146,15 @@ def main() -> None:
     parser.add_argument(
         "--batch-size",
         type=int,
-        default=64,
+        default=30,
         metavar="N",
-        help="input batch size for benchmarking (default: 64)",
+        help="input batch size for benchmarking (default: 30)",
     )
     parser.add_argument(
-        "--iterations",
+        "--n_images",
         type=int,
-        default=1,
-        help="Number of times to iterate over the dataset (default: 1)",
+        default=5000,
+        help="Total number of images to process (default: 300)",
     )
     parser.add_argument(
         "--no-cuda",
@@ -161,11 +191,11 @@ def main() -> None:
 
     dataset = CustomImageDataset(img_dir=args.data_dir, transform=transform)
 
-    data_loader = DataLoader(dataset, batch_size=args.batch_size, shuffle=False)
+    data_loader = CircularDataLoader(dataset, batch_size=args.batch_size, shuffle=False)
 
     model = load_model(args.model_path, device)
 
-    benchmark_model(model, device, data_loader, args.iterations)
+    benchmark_model(model, device, data_loader, args.n_images)
 
 
 if __name__ == "__main__":
