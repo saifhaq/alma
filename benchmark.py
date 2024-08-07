@@ -81,14 +81,19 @@ class CircularDataLoader(DataLoader):
 
 def load_model(model_path: str, device: torch.device) -> torch.nn.Module:
     if model_path.endswith(".pt"):
-        state_dict = torch.load(model_path, map_location=device)
-        model = Net()  # You need to define your model architecture (Net)
-        # Load the state dict with strict=False to allow for extra keys
-        model.load_state_dict(state_dict, strict=False)
+        try:
+            model = torch.jit.load(model_path, map_location=device)
+            model.eval()
+        except RuntimeError:
+            state_dict = torch.load(model_path, map_location=device)
+            model = Net()  # Define your model architecture (Net)
+            model.load_state_dict(state_dict, strict=False)
+            model.to(device)
+            model.eval()
     else:
         model = torch.jit.load(model_path, map_location=device)
-    model.to(device)
-    model.eval()
+        model.to(device)
+        model.eval()
     return model
 
 
