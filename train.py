@@ -437,7 +437,7 @@ def main():
 
         # FX graph mode quantization
         model = model.fx_quantize()
-        # replace_node_with_target(model, "activation_post_process_0", fixed_0255())
+        replace_node_with_target(model, "activation_post_process_0", fixed_0255())
 
         # Do PTQ
         PTQ(model, device, test_loader)
@@ -463,12 +463,6 @@ def main():
         # into a graph of Aten primitive operators
         model = torch.export.export(model, (data,))
         model.graph.print_tabular()
-
-        # Pass some data through the model to have it compile
-        for data, target in test_loader:
-            data, target = data.to(device), target.to(device)
-            break
-            _ = model(data)
 
     if args.quantize and args.save_model:
         if not args.compile:
