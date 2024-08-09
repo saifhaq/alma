@@ -1,9 +1,9 @@
 import torch
 import torch.quantization as tq
-from torch.ao.quantization._learnable_fake_quantize import \
-    _LearnableFakeQuantize as LearnableFakeQuantize
-from torch.ao.quantization.fake_quantize import (FakeQuantize,
-                                                 FixedQParamsFakeQuantize)
+from torch.ao.quantization._learnable_fake_quantize import (
+    _LearnableFakeQuantize as LearnableFakeQuantize,
+)
+from torch.ao.quantization.fake_quantize import FakeQuantize, FixedQParamsFakeQuantize
 
 # observer: tq.HistogramObserver is used to collect statistics on the activations during training to determine the optimal quantization parameters.
 # quant_min and quant_max: These define the range of quantized values (0 to 255 for quint8).

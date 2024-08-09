@@ -22,19 +22,29 @@ from tqdm import tqdm
 from ipdb_hook import ipdb_sys_excepthook
 from quantization.PTQ import PTQ
 from quantization.QAT import QAT
-from quantization.qconfigs import (fake_quant_act, fixed_0255, learnable_act,
-                                   learnable_weights)
-from quantization.utils import (replace_node_module, replace_node_with_target,
-                                save_fake_quantized_model)
+from quantization.qconfigs import (
+    fake_quant_act,
+    fixed_0255,
+    learnable_act,
+    learnable_weights,
+)
+from quantization.utils import (
+    replace_node_module,
+    replace_node_with_target,
+    save_fake_quantized_model,
+)
 
 # Adds ipdb breakpoint if and where we have an error
 ipdb_sys_excepthook()
 
 
 from torch.ao.quantization.quantize_pt2e import prepare_pt2e
+
 # from torch._export import export
 from torch.ao.quantization.quantizer.xnnpack_quantizer import (
-    XNNPACKQuantizer, get_symmetric_quantization_config)
+    XNNPACKQuantizer,
+    get_symmetric_quantization_config,
+)
 
 # torch.backends.quantized.engine = 'x86'
 torch.backends.quantized.engine = "qnnpack"
@@ -405,10 +415,9 @@ def main():
         # https://pytorch.org/get-started/pytorch-2.0/#user-experience
         compile_settings = {
             # 'mode': "reduce-overhead",
-            'mode': "max-autotune", # Slow to compile., but the "best" option
-            'fullgraph': True, # Compiles entire program into 1 graph, but comes with restricted Python
+            "mode": "max-autotune",  # Slow to compile., but the "best" option
+            "fullgraph": True,  # Compiles entire program into 1 graph, but comes with restricted Python
         }
-
 
     train_loader = torch.utils.data.DataLoader(train_dataset, **train_kwargs)
     test_loader = torch.utils.data.DataLoader(test_dataset, **test_kwargs)
@@ -436,7 +445,6 @@ def main():
         # Do QAT
         QAT(train, test, args, model, device, train_loader, test_loader)
 
-
     if args.compile:
         model = torch.compile(model, **compile_settings)
 
@@ -453,7 +461,7 @@ def main():
 
         # Call torch export, which deconposes the forward pass of the model
         # into a graph of Aten primitive operators
-        model = torch.export.export(model, (data, ))
+        model = torch.export.export(model, (data,))
         model.graph.print_tabular()
 
         # Pass some data through the model to have it compile
@@ -461,7 +469,6 @@ def main():
             data, target = data.to(device), target.to(device)
             break
             _ = model(data)
-
 
     if args.quantize and args.save_model:
         if not args.compile:
