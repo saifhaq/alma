@@ -470,7 +470,7 @@ def main():
         else:
             save_fake_quantized_model(model, "mnist_cnn_compiled_quantized.pt")
 
-    if args.save_model:
+    elif args.save_model:
         torch.save(model.state_dict(), "mnist_cnn.pt")
         model.save_scripted_model("mnist_cnn_scripted.pt")
 
