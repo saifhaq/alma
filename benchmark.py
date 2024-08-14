@@ -2,7 +2,7 @@ import argparse
 import logging
 import os
 import time
-from typing import Iterator, Tuple
+from typing import Iterator, Tuple, Callable
 
 import torch
 from torch.utils.data import DataLoader, Dataset, Sampler
@@ -96,13 +96,54 @@ def load_model(model_path: str, device: torch.device) -> torch.nn.Module:
         model.eval()
     return model
 
+def get_compiled_model(model: torch.nn.Module, device: torch.device):
+    logging.info("Running torch.compile the model")            # Get a sample of data to pass through the model
+
+    # See below for documentation on torch.compile and a discussion of modes
+    # https://pytorch.org/get-started/pytorch-2.0/#user-experience
+    compile_settings = {
+        # 'mode': "reduce-overhead",  # Good for small models
+        "mode": "max-autotune",  # Slow to compile, but should find the "best" option
+        "fullgraph": True,  # Compiles entire program into 1 graph, but comes with restricted Python
+    }
+
+    model = torch.compile(model, **compile_settings)
+
+    # Pass some data through the model to have it compile
+    for data, target in test_loader:
+        data, target = data.to(device), target.to(device)
+        _ = model(data)
+    return model
+
+def get_exported_model(model, data_loader, device: torch.device):
+    logging.info("Running torch.export the model")            # Get a sample of data to pass through the model
+    for data, target in data_loader:
+        data, target = data.to(device), target.to(device)
+        break
+
+    # Call torch export, which decomposes the forward pass of the model
+    # into a graph of Aten primitive operators
+    model = torch.export.export(model, (data,))
+    model.graph.print_tabular()
+
+    return model
+
 
 def benchmark_model(
-    model: torch.nn.Module, device: torch.device, data_loader: DataLoader, n_images: int
+    model: torch.nn.Module, device: torch.device, data_loader: DataLoader, n_images: int, exported: bool = False
 ) -> None:
     total_time = 0.0
     total_images = 0
     num_batches = 0
+
+    def get_forward_call_function(model, exported: bool) -> Callable:
+        if exported:
+            forward = model.module().forward
+        else:
+            forward = model.forward
+        return forward
+
+    forward_call = get_forward_call_function(model, exported)
 
     start_time = time.time()  # Start timing for the entire process
 
@@ -113,7 +154,8 @@ def benchmark_model(
 
             data = data.to(device)
             batch_start_time = time.time()
-            output = model(data)
+            output = forward_call(data)
+            # output = model(data)
             batch_end_time = time.time()
 
             batch_size = min(data.size(0), n_images - total_images)
@@ -173,6 +215,18 @@ def main() -> None:
         default=False,
         help="disables MPS acceleration",
     )
+    parser.add_argument(
+        "--compile",
+        action="store_true",
+        default=False,
+        help="run torch.compile on the model",
+    )
+    parser.add_argument(
+        "--export",
+        action="store_true",
+        default=False,
+        help="run torch.export on the model",
+    )
     args = parser.parse_args()
 
     use_cuda = not args.no_cuda and torch.cuda.is_available()
@@ -200,7 +254,14 @@ def main() -> None:
 
     model = load_model(args.model_path, device)
 
-    benchmark_model(model, device, data_loader, args.n_images)
+    if args.compile:
+        model = get_compiled_model(model, device)
+
+    if args.export:
+        model = get_exported_model(model, data_loader, device)
+
+
+    benchmark_model(model, device, data_loader, args.n_images, args.export)
 
 
 if __name__ == "__main__":

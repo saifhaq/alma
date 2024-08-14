@@ -348,18 +348,6 @@ def main():
         help="quantize the model",
     )
     parser.add_argument(
-        "--compile",
-        action="store_true",
-        default=False,
-        help="run torch.compile on the model",
-    )
-    parser.add_argument(
-        "--export",
-        action="store_true",
-        default=False,
-        help="run torch.export on the model",
-    )
-    parser.add_argument(
         "--seed", type=int, default=1, metavar="S", help="random seed (default: 1)"
     )
     parser.add_argument(
@@ -410,14 +398,6 @@ def main():
     test_dataset = CustomImageDataset(
         annotations_file="mnist_images.csv", img_dir="mnist_images", transform=transform
     )
-    if args.compile:
-        # See below for documentation on torch.compile and a discussion of modes
-        # https://pytorch.org/get-started/pytorch-2.0/#user-experience
-        compile_settings = {
-            # 'mode': "reduce-overhead",
-            "mode": "max-autotune",  # Slow to compile., but the "best" option
-            "fullgraph": True,  # Compiles entire program into 1 graph, but comes with restricted Python
-        }
 
     train_loader = torch.utils.data.DataLoader(train_dataset, **train_kwargs)
     test_loader = torch.utils.data.DataLoader(test_dataset, **test_kwargs)
@@ -444,25 +424,6 @@ def main():
 
         # Do QAT
         QAT(train, test, args, model, device, train_loader, test_loader)
-
-    if args.compile:
-        model = torch.compile(model, **compile_settings)
-
-        # Pass some data through the model to have it compile
-        for data, target in test_loader:
-            data, target = data.to(device), target.to(device)
-            _ = model(data)
-
-    if args.export:
-        # Get a sample of data to pass through the model
-        for data, target in test_loader:
-            data, target = data.to(device), target.to(device)
-            break
-
-        # Call torch export, which deconposes the forward pass of the model
-        # into a graph of Aten primitive operators
-        model = torch.export.export(model, (data,))
-        model.graph.print_tabular()
 
     if args.quantize and args.save_model:
         if not args.compile:
