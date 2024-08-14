@@ -417,7 +417,7 @@ def main():
 
         # FX graph mode quantization
         model = model.fx_quantize()
-        replace_node_with_target(model, "activation_post_process_0", fixed_0255())
+        # replace_node_with_target(model, "activation_post_process_0", fixed_0255())
 
         # Do PTQ
         PTQ(model, device, test_loader)
