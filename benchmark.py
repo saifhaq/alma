@@ -3,6 +3,7 @@ import logging
 import os
 import time
 from typing import Iterator, Tuple, Callable
+import onnx
 
 import torch
 from torch.utils.data import DataLoader, Dataset, Sampler
@@ -96,7 +97,19 @@ def load_model(model_path: str, device: torch.device) -> torch.nn.Module:
         model.eval()
     return model
 
-def get_compiled_model(model: torch.nn.Module, device: torch.device):
+def get_compiled_model(model: torch.nn.Module, data_loader: DataLoader , device: torch.device):
+    """
+    Compile the model using torch.compile.
+
+    Inputs:
+    - model (torch.nn.Module): The model to export
+    - data_loader (DataLoader): The DataLoader to get a sample of data from
+    - device (torch.device): The device to run the model on
+
+    Outputs:
+    model (torch._dynamo.eval_frame.OptimizedModule): The compiled model
+
+    """
     logging.info("Running torch.compile the model")            # Get a sample of data to pass through the model
 
     # See below for documentation on torch.compile and a discussion of modes
@@ -110,12 +123,26 @@ def get_compiled_model(model: torch.nn.Module, device: torch.device):
     model = torch.compile(model, **compile_settings)
 
     # Pass some data through the model to have it compile
-    for data, target in test_loader:
+    for data, target in data_loader:
         data, target = data.to(device), target.to(device)
         _ = model(data)
+        break
+
     return model
 
-def get_exported_model(model, data_loader, device: torch.device):
+def get_exported_model(model, data_loader: DataLoader, device: torch.device):
+    """
+    Export the model using torch.export.
+
+    Inputs:
+    - model (torch.nn.Module): The model to export
+    - data_loader (DataLoader): The DataLoader to get a sample of data from
+    - device (torch.device): The device to run the model on
+
+    Outputs:
+    model (torch.export.Model): The exported model 
+    """
+
     logging.info("Running torch.export the model")            # Get a sample of data to pass through the model
     for data, target in data_loader:
         data, target = data.to(device), target.to(device)
@@ -128,6 +155,112 @@ def get_exported_model(model, data_loader, device: torch.device):
 
     return model
 
+def get_onnx_model(model, data_loader: DataLoader, device: torch.device):
+    """
+    Export the model to ONNX using torch.onnx.
+
+    Inputs:
+    - model (torch.nn.Module): The model to export
+    - data_loader (DataLoader): The DataLoader to get a sample of data from
+    - device (torch.device): The device to run the model on
+
+    Outputs:
+    None
+    """
+    logging.info("Running torch.onnx the model")            # Get a sample of data to pass through the
+
+    # Input to the model
+    for data, target in data_loader:
+        data, target = data.to(device), target.to(device)
+        break
+
+    # Providing input and output names sets the display names for values
+    # within the model's graph. Setting these does not change the semantics
+    # of the graph; it is only for readability.
+    # 
+    # The inputs to the network consist of the flat list of inputs (i.e.
+    # the values you would pass to the forward() method) followed by the
+    # flat list of parameters. You can partially specify names, i.e. provide
+    # a list here shorter than the number of inputs to the model, and we will
+    # only set that subset of names, starting from the beginning.
+    input_names = ["input_data"] + [name for name, _ in model.named_parameters()]
+    output_names = ["output"]
+
+    # torch.onnx.export(model, data, "model.onnx", verbose=True, input_names=input_names, output_names=output_names)
+    model.eval()
+
+    # Export the model
+    torch.onnx.export(model,               # model being run
+        data,                         # model input (or a tuple for multiple inputs)
+        "model.onnx",   # where to save the model (can be a file or file-like object)
+        verbose=True,
+        export_params=True,        # store the trained parameter weights inside the model file
+        # opset_version=10,          # the ONNX version to export the model to
+        do_constant_folding=True,  # whether to execute constant folding for optimization
+        input_names = input_names,   # the model's input names
+        output_names = output_names,  # the model's output names
+        # dynamic_axes={'input' : {0 : 'batch_size'},    # variable length axes
+        #             'output' : {0 : 'batch_size'}}
+    )
+
+    # Check the model is well formed
+    # Load the ONNX model
+    loaded_model = onnx.load("model.onnx")
+
+    # Check that the model is well formed
+    onnx.checker.check_model(loaded_model)
+
+    # Print a human readable representation of the graph
+    print(onnx.helper.printable_graph(loaded_model.graph))
+
+
+def benchmark_onnx(
+    model_path: str, device: torch.device, data_loader: DataLoader, n_images: int, exported: bool = False
+    ) -> None:
+    """
+    Benchmark an ONNX model using ONNX Runtime, however it is buggy and leads
+    to a seg-fault on Oscar's Mac.
+    """
+    import onnxruntime
+    total_time = 0.0
+    total_images = 0
+    num_batches = 0
+
+    ort_session = onnxruntime.InferenceSession(model_path, providers=["CPUExecutionProvider"])
+
+    def to_numpy(tensor):
+        return tensor.detach().cpu().numpy() if tensor.requires_grad else tensor.cpu().numpy()
+
+    start_time = time.time()  # Start timing for the entire process
+
+    for data, _ in tqdm(data_loader, desc="Benchmarking"):
+        if total_images >= n_images:
+            break
+
+        ort_inputs = {ort_session.get_inputs()[0].name: to_numpy(data)}
+        # data = data.to(device)
+        batch_start_time = time.time()
+        ort_outs = ort_session.run(None, ort_inputs)
+        # output = model(data)
+        batch_end_time = time.time()
+
+        batch_size = min(data.size(0), n_images - total_images)
+        total_time += batch_end_time - batch_start_time
+        total_images += batch_size
+        num_batches += 1
+
+        if total_images >= n_images:
+            break
+
+    end_time = time.time()  # End timing for the entire process
+
+    total_elapsed_time = end_time - start_time
+    throughput = total_images / total_elapsed_time if total_elapsed_time > 0 else 0
+    logging.info(f"Total elapsed time: {total_elapsed_time:.4f} seconds")
+    logging.info(f"Total inference time (model only): {total_time:.4f} seconds")
+    logging.info(f"Total images: {total_images}")
+    logging.info(f"Throughput: {throughput:.2f} images/second")
+
 
 def benchmark_model(
     model: torch.nn.Module, device: torch.device, data_loader: DataLoader, n_images: int, exported: bool = False
@@ -139,6 +272,8 @@ def benchmark_model(
     def get_forward_call_function(model, exported: bool) -> Callable:
         if exported:
             forward = model.module().forward
+        # elif onnx:
+        #
         else:
             forward = model.forward
         return forward
@@ -227,6 +362,12 @@ def main() -> None:
         default=False,
         help="run torch.export on the model",
     )
+    parser.add_argument(
+        "--onnx",
+        action="store_true",
+        default=False,
+        help="export the model to ONNX",
+    )
     args = parser.parse_args()
 
     use_cuda = not args.no_cuda and torch.cuda.is_available()
@@ -255,13 +396,18 @@ def main() -> None:
     model = load_model(args.model_path, device)
 
     if args.compile:
-        model = get_compiled_model(model, device)
+        model = get_compiled_model(model, data_loader, device)
 
     if args.export:
         model = get_exported_model(model, data_loader, device)
 
+    if args.onnx:
+        model = get_onnx_model(model, data_loader, device)
 
-    benchmark_model(model, device, data_loader, args.n_images, args.export)
+    if args.onnx:
+        benchmark_onnx('model.onnx', device, data_loader, args.n_images, args.export)
+    else:
+        benchmark_model(model, device, data_loader, args.n_images, args.export)
 
 
 if __name__ == "__main__":
