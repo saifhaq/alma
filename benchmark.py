@@ -2,9 +2,11 @@ import argparse
 import logging
 import os
 import time
-from typing import Iterator, Tuple, Callable
+from typing import Iterator, Tuple, Callable, Any
+
 import onnx
 import onnxruntime
+# import torch_tensorrt
 
 import torch
 from torch.utils.data import DataLoader, Dataset, Sampler
@@ -98,6 +100,18 @@ def load_model(model_path: str, device: torch.device) -> torch.nn.Module:
         model.eval()
     return model
 
+def get_sample_data(data_loader: DataLoader) -> torch.Tensor:
+    """
+    Get a sample of data from the DataLoader.
+
+    Inputs:
+    - data_loader (DataLoader): The DataLoader to get a sample of data from
+
+    Outputs:
+    - data (torch.Tensor): A sample of data from the DataLoader
+    """
+    for data, _ in data_loader:
+        return data
 
 def get_compiled_model(
     model: torch.nn.Module, data_loader: DataLoader, device: torch.device
@@ -126,11 +140,12 @@ def get_compiled_model(
 
     model = torch.compile(model, **compile_settings)
 
-    # Pass some data through the model to have it compile
-    for data, target in data_loader:
-        data, target = data.to(device), target.to(device)
-        _ = model(data)
-        break
+    data = get_sample_data(data_loader)
+    data.to(device)
+    _ = model(data)
+
+    # Print model graph
+    model.graph.print_tabular()
 
     return model
 
@@ -151,9 +166,8 @@ def get_exported_model(model, data_loader: DataLoader, device: torch.device):
     logging.info("Running torch.export the model")
 
     # Get a sample of data to pass through the model
-    for data, target in data_loader:
-        data, target = data.to(device), target.to(device)
-        break
+    data = get_sample_data(data_loader)
+    data.to(device)
 
     # Call torch export, which decomposes the forward pass of the model
     # into a graph of Aten primitive operators
@@ -231,36 +245,56 @@ def benchmark_model(
     total_images = 0
     num_batches = 0
 
-    if args.onnx:
-        ort_session = onnxruntime.InferenceSession(
-            "model.onnx", providers=["CPUExecutionProvider"]
-        )
+    def get_forward_call_function(model: Any, args: argparse.Namespace, data: torch.Tensor) -> Callable:
+        if args.export:
+            compile_settings = {
+                # 'mode': "reduce-overhead",  # Good for small models
+                "mode": "max-autotune",  # Slow to compile, but should find the "best" option
+                "fullgraph": True,  # Compiles entire program into 1 graph, but comes with restricted Python
+            }
+            # Exported model forward call (with compile)
+            # forward = torch.compile(model.module(), **compile_settings) #, backend="inductor")
 
-        # Helper function for onnx runtime
-        def to_numpy(tensor):
-            return (
-                tensor.detach().cpu().numpy()
-                if tensor.requires_grad
-                else tensor.cpu().numpy()
+            # Eager mode forward call
+            forward = model.module().forward
+
+            if args.tensorrt:
+                trt_gm = torch_tensorrt.dynamo.compile(model, data) # Output is a torch.fx.GraphModule
+                forward = trt_gm.forward
+
+        elif args.onnx:
+            # Create ONNX runtime session for ONNX model
+            ort_session = onnxruntime.InferenceSession(
+                "model.onnx", providers=["CPUExecutionProvider"]
             )
 
-    def get_forward_call_function(model, args: argparse.Namespace) -> Callable:
-        if args.export:
-            # Exported model forward call
-            forward = model.module().forward
-        elif args.onnx:
+            # Helper function for onnx runtime, detaches and moves tensor to cpu and numpy
+            def to_numpy(tensor):
+                return (
+                    tensor.detach().cpu().numpy()
+                    if tensor.requires_grad
+                    else tensor.cpu().numpy()
+                )
+
             # Onnx runtime forward call
             def onnx_forward(data):
                 ort_inputs = {ort_session.get_inputs()[0].name: to_numpy(data)}
                 ort_outs = ort_session.run(None, ort_inputs)
 
+            # Assign forward call
             forward = onnx_forward
+
         else:
             # Regular model forward call
             forward = model.forward
         return forward
 
-    forward_call = get_forward_call_function(model, args)
+    # Get sample of data, used in some of the compilation methods
+    data = get_sample_data(data_loader)
+    data.to(device)
+
+    # Get the forward call of the model, which we will benchmark
+    forward_call = get_forward_call_function(model, args, data)
 
     start_time = time.time()  # Start timing for the entire process
 
@@ -269,6 +303,7 @@ def benchmark_model(
             if total_images >= n_images:
                 break
 
+            # data = data.to(device, non_blocking=True)
             data = data.to(device)
             batch_start_time = time.time()
             output = forward_call(data)
@@ -349,6 +384,12 @@ def main() -> None:
         action="store_true",
         default=False,
         help="export the model to ONNX",
+    )
+    parser.add_argument(
+        "--tensorrt",
+        action="store_true",
+        default=False,
+        help="when exporting, use TensorRT backend for torch.compile",
     )
     args = parser.parse_args()
 
