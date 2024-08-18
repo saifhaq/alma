@@ -6,7 +6,7 @@ from typing import Iterator, Tuple, Callable, Any
 
 import onnx
 import onnxruntime
-# import torch_tensorrt
+import torch_tensorrt
 
 import torch
 from torch.utils.data import DataLoader, Dataset, Sampler
@@ -100,17 +100,19 @@ def load_model(model_path: str, device: torch.device) -> torch.nn.Module:
         model.eval()
     return model
 
-def get_sample_data(data_loader: DataLoader) -> torch.Tensor:
+def get_sample_data(data_loader: DataLoader, device: torch.device) -> torch.Tensor:
     """
     Get a sample of data from the DataLoader.
 
     Inputs:
     - data_loader (DataLoader): The DataLoader to get a sample of data from
+    - device (torch.device): The device the data tensor should live on
 
     Outputs:
     - data (torch.Tensor): A sample of data from the DataLoader
     """
     for data, _ in data_loader:
+        data = data.to(device)
         return data
 
 def get_compiled_model(
@@ -140,8 +142,7 @@ def get_compiled_model(
 
     model = torch.compile(model, **compile_settings)
 
-    data = get_sample_data(data_loader)
-    data.to(device)
+    data = get_sample_data(data_loader, device)
     _ = model(data)
 
     # Print model graph
@@ -166,8 +167,7 @@ def get_exported_model(model, data_loader: DataLoader, device: torch.device):
     logging.info("Running torch.export the model")
 
     # Get a sample of data to pass through the model
-    data = get_sample_data(data_loader)
-    data.to(device)
+    data = get_sample_data(data_loader, device)
 
     # Call torch export, which decomposes the forward pass of the model
     # into a graph of Aten primitive operators
@@ -192,9 +192,7 @@ def get_onnx_model(model, data_loader: DataLoader, device: torch.device):
     logging.info("Running torch.onnx the model")
 
     # Get a sample of data to pass through the
-    for data, target in data_loader:
-        data, target = data.to(device), target.to(device)
-        break
+    data = get_sample_data(data_loader, device)
 
     # Providing input and output names sets the display names for values
     # within the model's graph. Setting these does not change the semantics
@@ -247,20 +245,47 @@ def benchmark_model(
 
     def get_forward_call_function(model: Any, args: argparse.Namespace, data: torch.Tensor) -> Callable:
         if args.export:
-            compile_settings = {
-                # 'mode': "reduce-overhead",  # Good for small models
-                "mode": "max-autotune",  # Slow to compile, but should find the "best" option
-                "fullgraph": True,  # Compiles entire program into 1 graph, but comes with restricted Python
-            }
-            # Exported model forward call (with compile)
-            # forward = torch.compile(model.module(), **compile_settings) #, backend="inductor")
-
-            # Eager mode forward call
-            forward = model.module().forward
-
             if args.tensorrt:
+                # Tensor TR (inside PyTorch) graph model forward call
                 trt_gm = torch_tensorrt.dynamo.compile(model, data) # Output is a torch.fx.GraphModule
                 forward = trt_gm.forward
+            else:
+                # option = 'COMPILE'
+                option = 'AOTInductor'
+                # option = 'EAGER'
+                match option:
+                    case 'COMPILE':
+                        # Get exported model forward call (with compile)
+                        compile_settings = {
+                            # 'mode': "reduce-overhead",  # Good for small models
+                            "mode": "max-autotune",  # Slow to compile, but should find the "best" option
+                            "fullgraph": True,  # Compiles entire program into 1 graph, but comes with restricted Python
+                        }
+                        forward = torch.compile(model.module(), **compile_settings) #, backend="inductor")
+
+                    case 'AOTInductor':
+                        cuda_home = os.environ.get('CUDA_HOME')
+                        if not cuda_home:
+                            raise ValueError("To use the AOTInductor option for export, set CUDA_HOME when you call the script, e.g. `CUDA_HOME='/usr/local/cuda' python benchmark.py`")
+
+                        import torch._export
+                        import torch._inductor
+
+                        # Compile the exported program to a `.so` using ``AOTInductor``
+                        # E.g. this can be run as a C++ file, or called from Python
+                        with torch.no_grad():
+                            so_path = torch._inductor.aot_compile(model.module(), (data,))
+
+                        # Load and run the .so file in Python.
+                        # To load and run it in a C++ environment, see:
+                        # https://pytorch.org/docs/main/torch.compiler_aot_inductor.html
+                        forward = torch._export.aot_load(so_path, device="cuda")
+
+                    case 'EAGER':
+                        # Get eager mode forward call of export (shouldn't be much faster than basic eager 
+                        # mode,the only difference is we perhaps remove some of the Python wrapper functions 
+                        # around the Aten ops)
+                        forward = model.module().forward
 
         elif args.onnx:
             # Create ONNX runtime session for ONNX model
@@ -290,8 +315,7 @@ def benchmark_model(
         return forward
 
     # Get sample of data, used in some of the compilation methods
-    data = get_sample_data(data_loader)
-    data.to(device)
+    data = get_sample_data(data_loader, device)
 
     # Get the forward call of the model, which we will benchmark
     forward_call = get_forward_call_function(model, args, data)
