@@ -6,9 +6,19 @@ import torch.quantization as tq
 from tqdm import tqdm
 
 
-def PTQ(model, device, dataloader):
+def PTQ(
+    model: torch.nn.Module,
+    device: torch.device,
+    dataloader: torch.utils.data.DataLoader,
+):
     """
     Perform PTQ on the model using the given dataloader.
+    This works in place on the model.
+
+    Inputs:
+    - model (torch.nn.Module): The model to quantize.
+    - device (torch.device): The device to run the model on.
+    - dataloader (DataLoader): The DataLoader to get a sample of data from.
     """
 
     model.eval()

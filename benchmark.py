@@ -1,86 +1,23 @@
 import argparse
 import logging
-import os
 import time
-from typing import Iterator, Tuple, Callable, Any
-
-import onnx
-import onnxruntime
-import torch_tensorrt
 
 import torch
-from torch.utils.data import DataLoader, Dataset, Sampler
-from torchvision import transforms
-from torchvision.io import read_image
+from torch.utils.data import DataLoader
 from tqdm import tqdm
 
-from train import Net
+from arguments.benchmark_args import parse_benchmark_args
+from conversions import get_compiled_model, get_exported_model, save_onnx_model
+from conversions.select import select_forward_call_function
+from data.datasets import BenchmarkCustomImageDataset
+from data.loaders import CircularDataLoader
+from data.transforms import InferenceTransform
+from data.utils import get_sample_data
+from model.model import Net
+from utils.ipdb_hook import ipdb_sys_excepthook
+from utils.setup_logging import setup_logging
 
-
-def setup_logging(log_file: str = None) -> None:
-    """
-    Sets up logging to print to console and optionally to a file.
-
-    Args:
-        log_file (str): Path to a log file. If None, logs will not be saved to a file.
-    """
-    log_format = "%(asctime)s - %(levelname)s - %(message)s"
-    date_format = "%Y-%m-%d %H:%M:%S"
-    log_level = logging.INFO
-
-    logging.basicConfig(
-        level=log_level,
-        format=log_format,
-        datefmt=date_format,
-        handlers=[
-            logging.StreamHandler(),
-            logging.FileHandler(log_file) if log_file else logging.NullHandler(),
-        ],
-    )
-
-
-class CustomImageDataset(Dataset):
-    def __init__(self, img_dir: str, transform: transforms.Compose = None):
-        self.img_dir = img_dir
-        self.transform = transform
-        self.img_paths = []
-        self._gather_images(img_dir)
-
-    def _gather_images(self, directory: str) -> None:
-        for root, _, files in os.walk(directory):
-            for file in files:
-                if file.endswith((".png", ".jpg", ".jpeg")):
-                    self.img_paths.append(os.path.join(root, file))
-
-    def __len__(self) -> int:
-        return len(self.img_paths)
-
-    def __getitem__(self, idx: int) -> Tuple[torch.Tensor, int]:
-        img_path = self.img_paths[idx % len(self.img_paths)]  # Circular indexing
-        image = read_image(img_path)
-        if self.transform:
-            image = self.transform(image)
-        return image, 0  # Returning 0 as label since it's not used for benchmarking
-
-
-class CircularSampler(Sampler):
-    def __init__(self, data_source: Dataset):
-        self.data_source = data_source
-
-    def __iter__(self) -> Iterator[int]:
-        while True:
-            yield from torch.randperm(len(self.data_source)).tolist()
-
-    def __len__(self) -> int:
-        return len(self.data_source)
-
-
-class CircularDataLoader(DataLoader):
-    def __init__(
-        self, dataset: Dataset, batch_size: int, shuffle: bool = False, **kwargs
-    ):
-        sampler = CircularSampler(dataset)
-        super().__init__(dataset, batch_size=batch_size, sampler=sampler, **kwargs)
+ipdb_sys_excepthook()
 
 
 def load_model(model_path: str, device: torch.device) -> torch.nn.Module:
@@ -100,137 +37,6 @@ def load_model(model_path: str, device: torch.device) -> torch.nn.Module:
         model.eval()
     return model
 
-def get_sample_data(data_loader: DataLoader, device: torch.device) -> torch.Tensor:
-    """
-    Get a sample of data from the DataLoader.
-
-    Inputs:
-    - data_loader (DataLoader): The DataLoader to get a sample of data from
-    - device (torch.device): The device the data tensor should live on
-
-    Outputs:
-    - data (torch.Tensor): A sample of data from the DataLoader
-    """
-    for data, _ in data_loader:
-        data = data.to(device)
-        return data
-
-def get_compiled_model(
-    model: torch.nn.Module, data_loader: DataLoader, device: torch.device
-):
-    """
-    Compile the model using torch.compile.
-
-    Inputs:
-    - model (torch.nn.Module): The model to export
-    - data_loader (DataLoader): The DataLoader to get a sample of data from
-    - device (torch.device): The device to run the model on
-
-    Outputs:
-    model (torch._dynamo.eval_frame.OptimizedModule): The compiled model
-
-    """
-    logging.info("Running torch.compile the model")
-
-    # See below for documentation on torch.compile and a discussion of modes
-    # https://pytorch.org/get-started/pytorch-2.0/#user-experience
-    compile_settings = {
-        # 'mode': "reduce-overhead",  # Good for small models
-        "mode": "max-autotune",  # Slow to compile, but should find the "best" option
-        "fullgraph": True,  # Compiles entire program into 1 graph, but comes with restricted Python
-    }
-
-    model = torch.compile(model, **compile_settings)
-
-    data = get_sample_data(data_loader, device)
-    _ = model(data)
-
-    # Print model graph
-    model.graph.print_tabular()
-
-    return model
-
-
-def get_exported_model(model, data_loader: DataLoader, device: torch.device):
-    """
-    Export the model using torch.export.
-
-    Inputs:
-    - model (torch.nn.Module): The model to export
-    - data_loader (DataLoader): The DataLoader to get a sample of data from
-    - device (torch.device): The device to run the model on
-
-    Outputs:
-    model (torch.export.Model): The exported model
-    """
-
-    logging.info("Running torch.export the model")
-
-    # Get a sample of data to pass through the model
-    data = get_sample_data(data_loader, device)
-
-    # Call torch export, which decomposes the forward pass of the model
-    # into a graph of Aten primitive operators
-    model = torch.export.export(model, (data,))
-    model.graph.print_tabular()
-
-    return model
-
-
-def get_onnx_model(model, data_loader: DataLoader, device: torch.device):
-    """
-    Export the model to ONNX using torch.onnx.
-
-    Inputs:
-    - model (torch.nn.Module): The model to export
-    - data_loader (DataLoader): The DataLoader to get a sample of data from
-    - device (torch.device): The device to run the model on
-
-    Outputs:
-    None
-    """
-    logging.info("Running torch.onnx the model")
-
-    # Get a sample of data to pass through the
-    data = get_sample_data(data_loader, device)
-
-    # Providing input and output names sets the display names for values
-    # within the model's graph. Setting these does not change the semantics
-    # of the graph; it is only for readability.
-    #
-    # The inputs to the network consist of the flat list of inputs (i.e.
-    # the values you would pass to the forward() method) followed by the
-    # flat list of parameters. You can partially specify names, i.e. provide
-    # a list here shorter than the number of inputs to the model, and we will
-    # only set that subset of names, starting from the beginning.
-    input_names = ["input_data"] + [name for name, _ in model.named_parameters()]
-    output_names = ["output"]
-
-    # torch.onnx.export(model, data, "model.onnx", verbose=True, input_names=input_names, output_names=output_names)
-    model.eval()
-
-    # Export the model
-    torch.onnx.export(
-        model,  # model being run
-        data,  # model input (or a tuple for multiple inputs)
-        "model.onnx",  # where to save the model (can be a file or file-like object)
-        verbose=True,
-        export_params=True,  # store the trained parameter weights inside the model file
-        # opset_version=10,          # the ONNX version to export the model to
-        do_constant_folding=True,  # whether to execute constant folding for optimization
-        input_names=input_names,  # the model's input names
-        output_names=output_names,  # the model's output names
-        # dynamic_axes={'input' : {0 : 'batch_size'},    # variable length axes
-        #             'output' : {0 : 'batch_size'}}
-    )
-
-    # Check the model is well formed
-    loaded_model = onnx.load("model.onnx")
-    onnx.checker.check_model(loaded_model)
-
-    # Print a human readable representation of the graph
-    print(onnx.helper.printable_graph(loaded_model.graph))
-
 
 def benchmark_model(
     model: torch.nn.Module,
@@ -238,87 +44,17 @@ def benchmark_model(
     data_loader: DataLoader,
     n_images: int,
     args: argparse.Namespace,
+    logging,
 ) -> None:
     total_time = 0.0
     total_images = 0
     num_batches = 0
 
-    def get_forward_call_function(model: Any, args: argparse.Namespace, data: torch.Tensor) -> Callable:
-        if args.export:
-            if args.tensorrt:
-                # Tensor TR (inside PyTorch) graph model forward call
-                trt_gm = torch_tensorrt.dynamo.compile(model, data) # Output is a torch.fx.GraphModule
-                forward = trt_gm.forward
-            else:
-                # option = 'COMPILE'
-                option = 'AOTInductor'
-                # option = 'EAGER'
-                match option:
-                    case 'COMPILE':
-                        # Get exported model forward call (with compile)
-                        compile_settings = {
-                            # 'mode': "reduce-overhead",  # Good for small models
-                            "mode": "max-autotune",  # Slow to compile, but should find the "best" option
-                            "fullgraph": True,  # Compiles entire program into 1 graph, but comes with restricted Python
-                        }
-                        forward = torch.compile(model.module(), **compile_settings) #, backend="inductor")
-
-                    case 'AOTInductor':
-                        cuda_home = os.environ.get('CUDA_HOME')
-                        if not cuda_home:
-                            raise ValueError("To use the AOTInductor option for export, set CUDA_HOME when you call the script, e.g. `CUDA_HOME='/usr/local/cuda' python benchmark.py`")
-
-                        import torch._export
-                        import torch._inductor
-
-                        # Compile the exported program to a `.so` using ``AOTInductor``
-                        # E.g. this can be run as a C++ file, or called from Python
-                        with torch.no_grad():
-                            so_path = torch._inductor.aot_compile(model.module(), (data,))
-
-                        # Load and run the .so file in Python.
-                        # To load and run it in a C++ environment, see:
-                        # https://pytorch.org/docs/main/torch.compiler_aot_inductor.html
-                        forward = torch._export.aot_load(so_path, device="cuda")
-
-                    case 'EAGER':
-                        # Get eager mode forward call of export (shouldn't be much faster than basic eager 
-                        # mode,the only difference is we perhaps remove some of the Python wrapper functions 
-                        # around the Aten ops)
-                        forward = model.module().forward
-
-        elif args.onnx:
-            # Create ONNX runtime session for ONNX model
-            ort_session = onnxruntime.InferenceSession(
-                "model.onnx", providers=["CPUExecutionProvider"]
-            )
-
-            # Helper function for onnx runtime, detaches and moves tensor to cpu and numpy
-            def to_numpy(tensor):
-                return (
-                    tensor.detach().cpu().numpy()
-                    if tensor.requires_grad
-                    else tensor.cpu().numpy()
-                )
-
-            # Onnx runtime forward call
-            def onnx_forward(data):
-                ort_inputs = {ort_session.get_inputs()[0].name: to_numpy(data)}
-                ort_outs = ort_session.run(None, ort_inputs)
-
-            # Assign forward call
-            forward = onnx_forward
-
-        else:
-            # Regular model forward call
-            forward = model.forward
-        return forward
-
     # Get sample of data, used in some of the compilation methods
     data = get_sample_data(data_loader, device)
 
     # Get the forward call of the model, which we will benchmark
-    forward_call = get_forward_call_function(model, args, data)
+    forward_call = select_forward_call_function(model, args, data, logging)
 
     start_time = time.time()  # Start timing for the entire process
 
@@ -330,8 +66,7 @@ def benchmark_model(
             # data = data.to(device, non_blocking=True)
             data = data.to(device)
             batch_start_time = time.time()
-            output = forward_call(data)
-            # output = model(data)
+            _ = forward_call(data)
             batch_end_time = time.time()
 
             batch_size = min(data.size(0), n_images - total_images)
@@ -353,105 +88,33 @@ def benchmark_model(
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Benchmark PyTorch Models")
-    parser.add_argument(
-        "--model-path",
-        type=str,
-        required=True,
-        help="Path to the model file (e.g., mnist_cnn_quantized.pt, mnist_cnn_scripted.pt, mnist_cnn.pt)",
-    )
-    parser.add_argument(
-        "--data-dir",
-        type=str,
-        required=True,
-        help="Path to the directory containing images for inference",
-    )
-    parser.add_argument(
-        "--batch-size",
-        type=int,
-        default=30,
-        metavar="N",
-        help="input batch size for benchmarking (default: 30)",
-    )
-    parser.add_argument(
-        "--n_images",
-        type=int,
-        default=5000,
-        help="Total number of images to process (default: 300)",
-    )
-    parser.add_argument(
-        "--no-cuda",
-        action="store_true",
-        default=False,
-        help="disables CUDA acceleration",
-    )
-    parser.add_argument(
-        "--no-mps",
-        action="store_true",
-        default=False,
-        help="disables MPS acceleration",
-    )
-    parser.add_argument(
-        "--compile",
-        action="store_true",
-        default=False,
-        help="run torch.compile on the model",
-    )
-    parser.add_argument(
-        "--export",
-        action="store_true",
-        default=False,
-        help="run torch.export on the model",
-    )
-    parser.add_argument(
-        "--onnx",
-        action="store_true",
-        default=False,
-        help="export the model to ONNX",
-    )
-    parser.add_argument(
-        "--tensorrt",
-        action="store_true",
-        default=False,
-        help="when exporting, use TensorRT backend for torch.compile",
-    )
-    args = parser.parse_args()
+    setup_logging()
+    args, device = parse_benchmark_args()
 
-    use_cuda = not args.no_cuda and torch.cuda.is_available()
-    use_mps = not args.no_mps and torch.backends.mps.is_available()
-
-    if use_cuda:
-        device = torch.device("cuda")
-    elif use_mps:
-        device = torch.device("mps")
-    else:
-        device = torch.device("cpu")
-
-    transform = transforms.Compose(
-        [
-            transforms.Resize((28, 28)),  # Ensure all images are resized to 28x28
-            transforms.ToPILImage(),
-            transforms.ToTensor(),
-            transforms.Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5]),
-        ]
+    # Create dataset and data loader
+    dataset = BenchmarkCustomImageDataset(
+        img_dir=args.data_dir, transform=InferenceTransform
     )
-
-    dataset = CustomImageDataset(img_dir=args.data_dir, transform=transform)
-
     data_loader = CircularDataLoader(dataset, batch_size=args.batch_size, shuffle=False)
 
+    # Load model
     model = load_model(args.model_path, device)
 
     if args.compile:
-        model = get_compiled_model(model, data_loader, device)
+        model: torch._dynamo.eval_frame.OptimizedModule = get_compiled_model(
+            model, data_loader, device, logging
+        )
 
     if args.export:
-        model = get_exported_model(model, data_loader, device)
+        model: torch.export.ExportedProgram = get_exported_model(
+            model, data_loader, device
+        )
 
     if args.onnx:
-        model = get_onnx_model(model, data_loader, device)
+        # Saves the model to ONNX format, to a file
+        save_onnx_model(model, data_loader, device, onxx_model_file="model/model.onnx")
 
-    benchmark_model(model, device, data_loader, args.n_images, args)
+    benchmark_model(model, device, data_loader, args.n_images, args, logging)
 
 
 if __name__ == "__main__":
