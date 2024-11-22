@@ -25,8 +25,6 @@ def get_export_compiled_forward_call(
     # Export the model
     model = get_exported_model(model, data, logging)
 
-    # NOTE: not sure if this is correct. It may be correct for compile, or for compile+export.
-    # If the latter, move this into the export sub directory.
     assert isinstance(
         model, ExportedProgram
     ), f"model must be of type ExportedProgram, got {type(model)}"

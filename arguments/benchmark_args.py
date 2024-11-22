@@ -6,12 +6,12 @@ from conversions.select import MODEL_CONVERSION_OPTIONS
 
 
 def parse_benchmark_args(logger):
-    # string_rep_of_conv_options = ""
-    string_rep_of_conv_options = "; \n".join(
+
+    # Create a string represenation of the model conversion options
+    # to add to the argparser description.
+    string_rep_of_conv_options: str = "; \n".join(
         [f"{key}: {value}" for key, value in MODEL_CONVERSION_OPTIONS.items()]
     )
-    # for key, value in MODEL_CONVERSION_OPTIONS.items():
-    #     string_rep_of_conv_options += f"{key}: {value}\n"
 
     parser = argparse.ArgumentParser(description="Benchmark PyTorch Models")
     parser.add_argument(
