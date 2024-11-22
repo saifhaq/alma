@@ -1,19 +1,14 @@
-import torch
-from typing import Literal
 import copy
+import logging
 from argparse import Namespace
+from typing import Literal
 
-from torch.ao.quantization.quantize_pt2e import (
-    prepare_pt2e,
-    convert_pt2e,
-)
-
+import torch
+from torch.ao.quantization.quantize_pt2e import convert_pt2e, prepare_pt2e
 from torch.ao.quantization.quantizer.xnnpack_quantizer import (
     XNNPACKQuantizer,
     get_symmetric_quantization_config,
 )
-
-import logging
 
 
 def get_quant_exported_model(
@@ -47,7 +42,9 @@ def get_quant_exported_model(
     elif int_or_dequant_op == "dequant":
         int_op: bool = False
     else:
-        raise ValueError(f"`int_or_dequant_op` shoudl equal `int` or `dequant, not {int_or_dequant_op}")
+        raise ValueError(
+            f"`int_or_dequant_op` shoudl equal `int` or `dequant, not {int_or_dequant_op}"
+        )
 
     # Step 1. program capture
     # This is available for pytorch 2.5+, for more details on lower pytorch versions

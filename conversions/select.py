@@ -1,7 +1,7 @@
 import argparse
 import logging
-from typing import Any, Callable
 from pathlib import Path
+from typing import Any, Callable
 
 import torch
 
@@ -12,7 +12,7 @@ from .export.aotinductor import (
 )
 from .export.compile import get_export_compiled_forward_call
 from .export.eager import get_export_eager_forward_call
-from .export.quant import get_quant_exported_model, get_quant_exported_forward_call
+from .export.quant import get_quant_exported_forward_call, get_quant_exported_model
 from .onnx import get_onnx_forward_call
 
 # from .tensorrt import get_tensorrt_dynamo_forward_call # commented out because it messes up imports if not on CUDA
@@ -73,7 +73,9 @@ def select_forward_call_function(
 
         case "EXPORT+TENSORRT":
             # forward = get_tensorrt_dynamo_forward_call(model, data, logging)
-            raise NotImplementedError("Installing torch_tensorrt is taking forever, have to do")
+            raise NotImplementedError(
+                "Installing torch_tensorrt is taking forever, have to do"
+            )
 
         case "EXPORT+ONNX":
             raise NotImplementedError("Not Implemented")

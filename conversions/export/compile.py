@@ -1,6 +1,6 @@
+import logging
 from typing import Callable
 
-import logging
 import torch
 from torch.export.exported_program import ExportedProgram
 

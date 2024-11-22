@@ -1,4 +1,4 @@
-from typing import Union, Callable
+from typing import Callable, Union
 
 import torch
 import torch.fx as fx
@@ -48,5 +48,3 @@ def get_compiled_model_forward_call(
     ), f"model must be of type OptimizedModule, got {type(model)}"
 
     return model.forward
-
-

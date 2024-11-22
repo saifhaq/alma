@@ -1,15 +1,17 @@
+import logging
 import os
 from typing import Callable, Literal
 
-import logging
 import torch._export
 import torch._inductor
 from torch.export.exported_program import ExportedProgram
 from torch.fx.graph_module import GraphModule
+
 from .quant import get_quant_exported_model
 from .utils import get_exported_model
 
 CUDA_HOME = os.environ.get("CUDA_HOME")
+
 
 def get_export_aot_inductor_forward_call(
     model: ExportedProgram | GraphModule, data: torch.Tensor, logger: logging.Logger
@@ -36,7 +38,6 @@ def get_export_aot_inductor_forward_call(
     ), f"model must be of type ExportedProgram, got {type(model)}"
 
     return get_AOTInductor_lowered_model_forward_call(model, data, logger)
-
 
 
 def get_AOTInductor_lowered_model_forward_call(
@@ -73,13 +74,13 @@ def get_AOTInductor_lowered_model_forward_call(
         with torch.no_grad():
             so_path = torch._inductor.aot_compile(model, (data,))
 
-
     # Load and run the .so file in Python.
     # To load and run it in a C++ environment, see:
     # https://pytorch.org/docs/main/torch.compiler_aot_inductor.html
     forward = torch._export.aot_load(so_path, device="cuda")
 
     return forward
+
 
 def get_quant_export_aot_inductor_forward_call(
     model,
@@ -105,4 +106,3 @@ def get_quant_export_aot_inductor_forward_call(
     model = get_quant_exported_model(model, data, logging, int_or_dequant_op)
     forward = get_export_aot_inductor_forward_call(model, data, logger)
     return forward
-

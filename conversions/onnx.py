@@ -1,8 +1,8 @@
 import logging
+from pathlib import Path
+from typing import Any
 
 import onnx
-from typing import Any
-from pathlib import Path
 import onnxruntime
 import torch
 from torch.utils.data import DataLoader

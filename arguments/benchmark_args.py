@@ -4,12 +4,14 @@ import torch
 
 from conversions.select import MODEL_CONVERSION_OPTIONS
 
+
 def parse_benchmark_args(logger):
     # string_rep_of_conv_options = ""
-    string_rep_of_conv_options = "; \n".join([f"{key}: {value}" for key, value in MODEL_CONVERSION_OPTIONS.items()])
+    string_rep_of_conv_options = "; \n".join(
+        [f"{key}: {value}" for key, value in MODEL_CONVERSION_OPTIONS.items()]
+    )
     # for key, value in MODEL_CONVERSION_OPTIONS.items():
     #     string_rep_of_conv_options += f"{key}: {value}\n"
-
 
     parser = argparse.ArgumentParser(description="Benchmark PyTorch Models")
     parser.add_argument(
@@ -70,8 +72,9 @@ to different transforms. The mapping is this:\n{string_rep_of_conv_options}""",
         args.conversion in MODEL_CONVERSION_OPTIONS.keys()
     ), "Please select a valid option for the model conversion"
 
-    logger.info(f"{MODEL_CONVERSION_OPTIONS[args.conversion]} model selected for benchmarking")
-    
+    logger.info(
+        f"{MODEL_CONVERSION_OPTIONS[args.conversion]} model selected for benchmarking"
+    )
 
     if use_cuda:
         device = torch.device("cuda")
