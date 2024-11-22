@@ -121,4 +121,7 @@ def select_forward_call_function(
         case "FAKE_QUANTIZED":
             pass
 
+        case _:
+            assert conversion in MODEL_CONVERSION_OPTIONS.values()
+
     return forward
