@@ -2,8 +2,15 @@ import argparse
 
 import torch
 
+from conversions.select import MODEL_CONVERSION_OPTIONS
 
-def parse_benchmark_args():
+def parse_benchmark_args(logger):
+    # string_rep_of_conv_options = ""
+    string_rep_of_conv_options = "; \n".join([f"{key}: {value}" for key, value in MODEL_CONVERSION_OPTIONS.items()])
+    # for key, value in MODEL_CONVERSION_OPTIONS.items():
+    #     string_rep_of_conv_options += f"{key}: {value}\n"
+
+
     parser = argparse.ArgumentParser(description="Benchmark PyTorch Models")
     parser.add_argument(
         "--model-path",
@@ -43,33 +50,28 @@ def parse_benchmark_args():
         help="disables MPS acceleration",
     )
     parser.add_argument(
-        "--compile",
-        action="store_true",
-        default=False,
-        help="run torch.compile on the model",
+        "--conversion",
+        type=int,
+        choices=MODEL_CONVERSION_OPTIONS.keys(),
+        default=5,
+        help=f"""The model option you would like to benchmark. These are integers that correspond 
+to different transforms. The mapping is this:\n{string_rep_of_conv_options}""",
     )
-    parser.add_argument(
-        "--export",
-        action="store_true",
-        default=False,
-        help="run torch.export on the model",
-    )
-    parser.add_argument(
-        "--onnx",
-        action="store_true",
-        default=False,
-        help="export the model to ONNX",
-    )
-    parser.add_argument(
-        "--tensorrt",
-        action="store_true",
-        default=False,
-        help="when exporting, use TensorRT backend for torch.compile",
-    )
+
     args = parser.parse_args()
 
     use_cuda = not args.no_cuda and torch.cuda.is_available()
     use_mps = not args.no_mps and torch.backends.mps.is_available()
+
+    assert isinstance(
+        args.conversion, int
+    ), "Please select a valid option for the model conversion"
+    assert (
+        args.conversion in MODEL_CONVERSION_OPTIONS.keys()
+    ), "Please select a valid option for the model conversion"
+
+    logger.info(f"{MODEL_CONVERSION_OPTIONS[args.conversion]} model selected for benchmarking")
+    
 
     if use_cuda:
         device = torch.device("cuda")

@@ -1,25 +1,20 @@
-from typing import Union
+from typing import Union, Callable
 
 import torch
 import torch.fx as fx
-from torch.utils.data import DataLoader
-
-from data.utils import get_sample_data
 
 
-def get_compiled_model(
+def get_compiled_model_forward_call(
     model: Union[torch.nn.Module, fx.GraphModule],
-    data_loader: DataLoader,
-    device: torch.device,
+    data: torch.Tensor,
     logging,
-) -> torch._dynamo.eval_frame.OptimizedModule:
+) -> Callable:
     """
     Compile the model using torch.compile.
 
     Inputs:
     - model (torch.nn.Module): The model to export
-    - data_loader (DataLoader): The DataLoader to get a sample of data from
-    - device (torch.device): The device to run the model on
+    - data (torch.Tensor): A sample of data to feed through the model
     - logging: The logger to use for logging
 
     Outputs:
@@ -43,7 +38,6 @@ def get_compiled_model(
 
     model = torch.compile(model, **compile_settings)
 
-    data = get_sample_data(data_loader, device)
     _ = model(data)
 
     # Print model graph
@@ -53,44 +47,6 @@ def get_compiled_model(
         model, torch._dynamo.eval_frame.OptimizedModule
     ), f"model must be of type OptimizedModule, got {type(model)}"
 
-    return model
+    return model.forward
 
 
-def get_export_compiled_forward_call(
-    model: torch._dynamo.eval_frame.OptimizedModule, data: torch.Tensor
-):
-    """
-    Get the forward call function for the model using torch.compile.
-
-    Inputs:
-    - model (torch._dynamo.eval_frame.OptimizedModule): The model to get the forward call for.
-    - data (torch.Tensor): A sample of data to pass through the model.
-
-    Outputs:
-    - forward (Callable): The forward call function for the model.
-    """
-
-    # NOTE: not sure if this is correct. It may be correct for compile, or for compile+export.
-    # If the latter, move this into the export sub directory.
-    import ipdb
-
-    ipdb.set_trace()
-    assert isinstance(
-        model, torch._dynamo.eval_frame.OptimizedModule
-    ), f"model must be of type OptimizedModule, got {type(model)}"
-
-    # Set the comilation settings
-    compile_settings = {
-        # Good for small models
-        # 'mode': "reduce-overhead",
-        # Slow to compile, but should find the "best" option
-        "mode": "max-autotune",
-        # Compiles entire program into 1 graph, but only works with a restricted subset of Python
-        # (e.g. no data dependent control flow)
-        "fullgraph": True,
-    }
-
-    # Compile the model, and get the forward call
-    forward = torch.compile(model.module(), **compile_settings)  # , backend="inductor")
-
-    return forward

@@ -7,7 +7,6 @@ from torch.utils.data import DataLoader
 from tqdm import tqdm
 
 from arguments.benchmark_args import parse_benchmark_args
-from conversions import get_compiled_model, get_exported_model, save_onnx_model
 from conversions.select import select_forward_call_function
 from data.datasets import BenchmarkCustomImageDataset
 from data.loaders import CircularDataLoader
@@ -26,7 +25,7 @@ def load_model(model_path: str, device: torch.device) -> torch.nn.Module:
             model = torch.jit.load(model_path, map_location=device)
             model.eval()
         except RuntimeError:
-            state_dict = torch.load(model_path, map_location=device)
+            state_dict = torch.load(model_path, map_location=device, weights_only=True)
             model = Net()  # Define your model architecture (Net)
             model.load_state_dict(state_dict, strict=False)
             model.to(device)
@@ -55,6 +54,16 @@ def benchmark_model(
 
     # Get the forward call of the model, which we will benchmark
     forward_call = select_forward_call_function(model, args, data, logging)
+
+    # Warmup
+    counter = 0
+    with torch.no_grad():
+        for data, _ in data_loader:
+            data = data.to(device)
+            _ = forward_call(data)
+            counter += 1
+            if counter > 3:
+                break
 
     start_time = time.time()  # Start timing for the entire process
 
@@ -89,7 +98,7 @@ def benchmark_model(
 
 def main() -> None:
     setup_logging()
-    args, device = parse_benchmark_args()
+    args, device = parse_benchmark_args(logging)
 
     # Create dataset and data loader
     dataset = BenchmarkCustomImageDataset(
@@ -100,23 +109,8 @@ def main() -> None:
     # Load model
     model = load_model(args.model_path, device)
 
-    if args.compile:
-        model: torch._dynamo.eval_frame.OptimizedModule = get_compiled_model(
-            model, data_loader, device, logging
-        )
-
-    if args.export:
-        model: torch.export.ExportedProgram = get_exported_model(
-            model, data_loader, device
-        )
-
-    if args.onnx:
-        # Saves the model to ONNX format, to a file
-        save_onnx_model(model, data_loader, device, onxx_model_file="model/model.onnx")
-
     benchmark_model(model, device, data_loader, args.n_images, args, logging)
 
 
 if __name__ == "__main__":
-    setup_logging()
     main()

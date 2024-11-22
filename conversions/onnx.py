@@ -1,6 +1,8 @@
 import logging
 
 import onnx
+from typing import Any
+from pathlib import Path
 import onnxruntime
 import torch
 from torch.utils.data import DataLoader
@@ -9,24 +11,21 @@ from data.utils import get_sample_data
 
 
 def save_onnx_model(
-    model, data_loader: DataLoader, device: torch.device, onxx_model_file: str
+    model, data: torch.Tensor, logger: logging.Logger, onnx_model_path: Path
 ):
     """
     Export the model to ONNX using torch.onnx. Saves the model to "model.onnx".
 
     Inputs:
     - model (torch.nn.Module): The model to export
-    - data_loader (DataLoader): The DataLoader to get a sample of data from
-    - device (torch.device): The device to run the model on
-    - onxx_model_file (str): The file to save the ONNX model to
+    - data (torch.Tensor): A sample of data to pass through the model.
+    - logging: The logger to use for logging
+    - onnx_model_path (Path): The file to save the ONNX model to
 
     Outputs:
     None
     """
     logging.info("Running torch.onnx on the model")
-
-    # Get a sample of data to pass through the
-    data = get_sample_data(data_loader, device)
 
     # Providing input and output names sets the display names for values
     # within the model's graph. Setting these does not change the semantics
@@ -44,10 +43,11 @@ def save_onnx_model(
     model.eval()
 
     # Export the model
+    logging.info(f"Saving the torch.onnx model to {onnx_model_path}")
     torch.onnx.export(
         model,  # model being run
         data,  # model input (or a tuple for multiple inputs)
-        "model.onnx",  # where to save the model (can be a file or file-like object)
+        onnx_model_path,  # where to save the model (can be a file or file-like object)
         verbose=True,
         export_params=True,  # store the trained parameter weights inside the model file
         # opset_version=10,          # the ONNX version to export the model to
@@ -59,27 +59,37 @@ def save_onnx_model(
     )
 
     # Check the model is well formed
-    loaded_model = onnx.load(onxx_model_file)
+    loaded_model = onnx.load(onnx_model_path)
     onnx.checker.check_model(loaded_model)
 
     # Print a human readable representation of the graph
     print(onnx.helper.printable_graph(loaded_model.graph))
 
 
-def get_onnx_forward_call(model, data, logger):
+def get_onnx_forward_call(
+    model: Any,
+    data: torch.Tensor,
+    logger: logging.Logger,
+    onnx_model_path: Path = Path("model/model.onnx"),
+):
     """
     Get the forward call function for the model using ONNX.
 
     Inputs:
     - model (Any): The model to get the forward call for.
     - data (torch.Tensor): A sample of data to pass through the model.
+    - logging: The logger to use for logging
+    - onnx_model_path (Path): the path to save the ONNX model to.
 
     Outputs:
     - forward (Callable): The forward call function for the model.
     """
+    # We first save the ONNX model
+    save_onnx_model(model, data, logger, onnx_model_path)
+
     # Create ONNX runtime session for ONNX model
     ort_session = onnxruntime.InferenceSession(
-        "model.onnx", providers=["CPUExecutionProvider"]
+        onnx_model_path, providers=["CPUExecutionProvider"]
     )
     logger.info("Loaded ONNX model, using CPUExecutionProvider")
 

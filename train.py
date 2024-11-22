@@ -12,8 +12,8 @@ from arguments.train_args import parse_train_args
 from data.datasets import CustomImageDataset
 from data.transforms import TrainTransform
 from model.model import Net
-from quantization.quantize import quantize_model
-from quantization.utils import save_fake_quantized_model
+from conversion.quant.quantize import quantize_model
+from conversion.quant.utils import save_fake_quantized_model
 from utils.ipdb_hook import ipdb_sys_excepthook
 from utils.setup_logging import setup_logging
 
