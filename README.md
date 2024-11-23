@@ -33,7 +33,7 @@ to `.env`.
 
 Example command:
 ```bash
-CUDA_HOME='/usr/local/cuda' python benchmark.py --model path mnist_cnn.pt --data-dir 
+CUDA_HOME='/usr/local/cuda' python benchmark.py --model-path mnist_cnn.pt --data-dir 
 data_for_inference --conversion 1 
 ```
 
