@@ -15,6 +15,27 @@ digit,count
 
 You're free to change `setup-data.sh` and `train.py`, namely the data split and training setup, just document your reasoning. For convenience we include a `reset.sh` that you shouldn't need to change.
 
+## Benchmark
+
+We have the option to benchmark over a dozen different model conversion options. A full list of 
+conversion options can be seen in the conversion field by the command:
+```bash
+python benchmark.py --help
+```
+
+To benchmark one's model, one needs to provide the path to the weights, a path to the data, and 
+the desired conversion option (integers are used to select conversion options, for ease of use).
+
+For a number of the conversion options, one needs to provide one's CUDA path as an environmental
+variable. This can be fed in via the command line (as below), or added to a `.env` file. For the 
+laytter, an example `.env.example` has been provided, this can be adjiusted if needed and renamed
+to `.env`.
+
+Example command:
+```bash
+CUDA_HOME='/usr/local/cuda' python benchmark.py --model-path mnist_cnn.pt --data-dir 
+data_for_inference --conversion 1 
+```
 
 ## Code Standards
 - **Black**: Ensures consistency following a strict subset of PEP 8.
@@ -32,6 +53,7 @@ If you want to manually run all hooks on all files, you can do:
 git stage .
 pre-commit run --all-files
 ```
+
 
 
 To quantize the model running on Apple silicon, run:
