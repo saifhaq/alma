@@ -5,12 +5,16 @@ from typing import Any, Callable, Union
 import onnx
 import onnxruntime
 import torch
+
 from .config import ONNX_EXECUTION_PROVIDER
 from .utils import check_model_type
 
 
 def save_onnx_model(
-    model, data: torch.Tensor, logger: logging.Logger, onnx_model_path: str = "model/model.onnx"
+    model,
+    data: torch.Tensor,
+    logger: logging.Logger,
+    onnx_model_path: str = "model/model.onnx",
 ):
     """
     Export the model to ONNX using torch.onnx. Saves the model to `onnx_model_path`.

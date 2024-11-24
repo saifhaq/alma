@@ -5,6 +5,7 @@ import torch.fx as fx
 
 from .utils import check_model_type
 
+
 def get_compiled_model_forward_call(
     model: Union[torch.nn.Module, fx.GraphModule],
     data: torch.Tensor,

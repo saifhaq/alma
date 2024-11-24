@@ -1,16 +1,17 @@
 import copy
 import logging
 from argparse import Namespace
-from typing import Literal, Callable
-from ..utils import check_model_type
+from typing import Callable, Literal
 
 import torch
-from torch.export.exported_program import ExportedProgram
 from torch.ao.quantization.quantize_pt2e import convert_pt2e, prepare_pt2e
 from torch.ao.quantization.quantizer.xnnpack_quantizer import (
     XNNPACKQuantizer,
     get_symmetric_quantization_config,
 )
+from torch.export.exported_program import ExportedProgram
+
+from ..utils import check_model_type
 
 
 def get_quant_exported_model(

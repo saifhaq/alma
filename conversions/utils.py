@@ -1,5 +1,6 @@
 from typing import Any
 
+
 def check_model_type(model: Any, expected_type: Any):
     """
     Checks that the model is of the expected type.
