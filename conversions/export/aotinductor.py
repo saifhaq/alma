@@ -7,6 +7,7 @@ import torch._inductor
 from torch.export.exported_program import ExportedProgram
 from torch.fx.graph_module import GraphModule
 
+from ..utils import check_model_type
 from .quant import get_quant_exported_model
 from .utils import get_exported_model
 
@@ -33,9 +34,7 @@ def get_export_aot_inductor_forward_call(
 
     # NOTE: not sure if this is correct. It may be correct for compile, or for compile+export.
     # If the latter, move this into the export sub directory.
-    assert isinstance(
-        model, ExportedProgram
-    ), f"model must be of type ExportedProgram, got {type(model)}"
+    check_model_type(model, ExportedProgram)
 
     return get_AOTInductor_lowered_model_forward_call(model, data, logger)
 
@@ -59,10 +58,7 @@ def get_AOTInductor_lowered_model_forward_call(
             "To use the AOTInductor option for export, set CUDA_HOME when you call the script, e.g. `CUDA_HOME='/usr/local/cuda' python benchmark.py`"
         )
 
-    assert isinstance(
-        model, (ExportedProgram, GraphModule)
-    ), f"model must be of type ExportedProgram or GraphModule, got {type(model)}"
-
+    check_model_type(model, (ExportedProgram, GraphModule))
     logger.info("Lowering the model with AOTInductor")
 
     # Compile the exported program to a `.so` using ``AOTInductor``

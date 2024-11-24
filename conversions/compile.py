@@ -3,6 +3,7 @@ from typing import Callable, Union
 import torch
 import torch.fx as fx
 
+from .utils import check_model_type
 
 def get_compiled_model_forward_call(
     model: Union[torch.nn.Module, fx.GraphModule],
@@ -22,9 +23,7 @@ def get_compiled_model_forward_call(
 
     """
     logging.info("Running torch.compile on the model")
-    assert isinstance(
-        model, (torch.nn.Module, fx.GraphModule)
-    ), f"model must be of type torch.nn.Module or fx.GraphModule, got {type(model)}"
+    check_model_type(model, (torch.nn.Module, fx.GraphModule))
 
     torch._dynamo.reset()
 
@@ -43,8 +42,6 @@ def get_compiled_model_forward_call(
     # Print model graph
     model.graph.print_tabular()
 
-    assert isinstance(
-        model, torch._dynamo.eval_frame.OptimizedModule
-    ), f"model must be of type OptimizedModule, got {type(model)}"
+    check_model_type(model, torch._dynamo.eval_frame.OptimizedModule)
 
     return model.forward

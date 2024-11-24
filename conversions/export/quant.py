@@ -1,9 +1,11 @@
 import copy
 import logging
 from argparse import Namespace
-from typing import Literal
+from typing import Literal, Callable
+from ..utils import check_model_type
 
 import torch
+from torch.export.exported_program import ExportedProgram
 from torch.ao.quantization.quantize_pt2e import convert_pt2e, prepare_pt2e
 from torch.ao.quantization.quantizer.xnnpack_quantizer import (
     XNNPACKQuantizer,
@@ -74,11 +76,34 @@ def get_quant_exported_model(
     m_q.graph.print_tabular()
 
     # we have a model with aten ops doing integer computations when possible
-    assert isinstance(m_q, torch.fx.graph_module.GraphModule)
+    check_model_type(m_q, torch.fx.graph_module.GraphModule)
 
     return m_q
 
 
-def get_quant_exported_forward_call(model):
-    pass
-    # return model.forward
+def get_quant_exported_forward_call(
+    model,
+    data: torch.Tensor,
+    logging: logging.Logger,
+    int_or_dequant_op: Literal["int", "dequant"],
+) -> Callable:
+    """
+    Get the torch export + quantized model forward call.
+
+    Inputs:
+    - model (torch.nn.Module): The model to export
+    - data (torch.Tensor): Sample data to feed through the model for tracing.
+    - logging (logging.Logger): The logger to use for logging
+    - int_or_dequant_op (Literal["int", "dequant"]): do we use integer arithmetic operations on
+            quantized layers, or do we dequantize just prior to the op
+
+    Outputs:
+    - forward (Callable): The forward call function for the model.
+    """
+
+    model = get_quant_exported_model(model, data, logging, int_or_dequant_op)
+
+    check_model_type(model, expected_type=torch.fx.graph_module.GraphModule)
+    forward = model.forward
+
+    return forward

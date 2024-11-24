@@ -4,6 +4,7 @@ from typing import Callable
 import torch
 from torch.export.exported_program import ExportedProgram
 
+from ..utils import check_model_type
 from .utils import get_exported_model
 
 
@@ -25,9 +26,7 @@ def get_export_compiled_forward_call(
     # Export the model
     model = get_exported_model(model, data, logging)
 
-    assert isinstance(
-        model, ExportedProgram
-    ), f"model must be of type ExportedProgram, got {type(model)}"
+    check_model_type(model, ExportedProgram)
 
     # Set the comilation settings
     compile_settings = {
