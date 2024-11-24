@@ -13,7 +13,7 @@ from .export.aotinductor import (
 from .export.compile import get_export_compiled_forward_call
 from .export.eager import get_export_eager_forward_call
 from .export.quant import get_quant_exported_forward_call, get_quant_exported_model
-from .onnx import get_onnx_forward_call
+from .onnx import get_onnx_dynamo_forward_call, get_onnx_forward_call
 
 # from .tensorrt import get_tensorrt_dynamo_forward_call # commented out because it messes up imports if not on CUDA
 
@@ -22,16 +22,17 @@ MODEL_CONVERSION_OPTIONS = {
     1: "EXPORT+AOT_INDUCTOR",
     2: "EXPORT+EAGER",
     3: "EXPORT+TENSORRT",
-    4: "EXPORT+ONNX",
-    5: "EXPORT+QUANTIZED",
-    6: "EXPORT+INT-QUANTIZED+AOT_INDUCTOR",
-    7: "EXPORT+FLOAT-QUANTIZED+AOT_INDUCTOR",
-    8: "COMPILE",
-    9: "EAGER",
-    10: "TENSORRT",
-    11: "ONNX-CPU",
-    12: "CONVERT_QUANTIZED",
-    13: "FAKE_QUANTIZED",
+    4: "ONNX+DYNAMO_EXPORT",
+    5: "EXPORT+INT_QUANTIZED",
+    6: "EXPORT+FLOAT_QUANTIZED",
+    7: "EXPORT+INT-QUANTIZED+AOT_INDUCTOR",
+    8: "EXPORT+FLOAT-QUANTIZED+AOT_INDUCTOR",
+    9: "COMPILE",
+    10: "EAGER",
+    11: "TENSORRT",
+    12: "ONNX",
+    13: "CONVERT_QUANTIZED",
+    14: "FAKE_QUANTIZED",
 }
 
 
@@ -77,20 +78,25 @@ def select_forward_call_function(
                 "Installing torch_tensorrt is taking forever, have to do"
             )
 
-        case "EXPORT+ONNX":
-            raise NotImplementedError("Not Implemented")
-            # forward = get_export_onnx_forward_call(model, data, logging)
+        case "ONNX+DYNAMO_EXPORT":
+            forward = get_onnx_dynamo_forward_call(model, data, logging)
 
-        case "EXPORT+QUANTIZED":
-            raise NotImplementedError("Not Implemented")
-            # forward = get_quant_exported_forward_call(model, data, logging)
+        case "EXPORT+INT_QUANTIZED":
+            forward = get_quant_exported_forward_call(
+                model, data, logging, int_or_dequant_op="int"
+            )
 
-        case "EXPORT+INT-QUANTIZED+AOT_INDUCTOR":
+        case "EXPORT+FLOAT_QUANTIZED":
+            forward = get_quant_exported_forward_call(
+                model, data, logging, int_or_dequant_op="dequant"
+            )
+
+        case "EXPORT+INT_QUANTIZED+AOT_INDUCTOR":
             forward = get_quant_export_aot_inductor_forward_call(
                 model, data, logging, int_or_dequant_op="int"
             )
 
-        case "EXPORT+FLOAT-QUANTIZED+AOT_INDUCTOR":
+        case "EXPORT+FLOAT_QUANTIZED+AOT_INDUCTOR":
             forward = get_quant_export_aot_inductor_forward_call(
                 model, data, logging, int_or_dequant_op="dequant"
             )
@@ -111,7 +117,7 @@ def select_forward_call_function(
             # forward = get_tensorrt_dynamo_forward_call(model, data)
             raise NotImplementedError("Installing tensor RT is having some issues, fix")
 
-        case "ONNX-CPU":
+        case "ONNX":
             onnx_model_path = Path("model/model.onnx")
             forward = get_onnx_forward_call(model, data, logging, onnx_model_path)
 
@@ -122,6 +128,9 @@ def select_forward_call_function(
             pass
 
         case _:
-            assert conversion in MODEL_CONVERSION_OPTIONS.values()
+            assert (
+                conversion in MODEL_CONVERSION_OPTIONS.values()
+            ), f"The option {conversion} is not supported"
+            raise NotImplementedError("Option not currently supported")
 
     return forward
