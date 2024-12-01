@@ -15,4 +15,3 @@ rm mnist_images.csv
 mv mnist_images.csv.temp mnist_images.csv
 
 mkdir data_for_inference/more_data
-cp 4.jpg data_for_inference/more_data
