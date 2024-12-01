@@ -87,4 +87,8 @@ RUN uv pip install --system \
     pip-system-certs \
     cupy-cuda12x \
     pybind11[global] \
-    typing_extensions
+    typing_extensions \
+    torch-tensorrt \
+    onnx \
+    onnxruntime \
+    pandas
