@@ -7,7 +7,7 @@ from model.model import Net
 from utils.data.datasets import BenchmarkCustomImageDataset
 from utils.data.loaders import CircularDataLoader
 from utils.data.transforms import InferenceTransform
-from utils.ipdb_hook import ipdb_sys_excepthook
+from alma.utils.ipdb_hook import ipdb_sys_excepthook
 
 from alma.arguments.benchmark_args import parse_benchmark_args
 from alma.benchmark.benchmark_model import benchmark_model
@@ -41,6 +41,6 @@ def main() -> None:
 if __name__ == "__main__":
     # Adds an ipdb hook to the sys.excepthook, which will throw one into an ipdb shell when an
     # exception is raised
-    ipdb_sys_excepthook()
+    # ipdb_sys_excepthook()
     setup_logging()
     main()
