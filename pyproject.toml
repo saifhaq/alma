@@ -1,3 +1,27 @@
+[build-system]
+requires = ["setuptools>=45", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "alma"
+version = "0.0.1"
+authors = [
+  { name="Saif Haq", email="saif.haq99@gmail.com" },
+  { name="Oscar Savolainen", email="oscar.savolainen@hotmail.com" },
+]
+description = "A package for benchmarking the speed of different PyTorch conversion options"
+readme = "README.md"
+requires-python = ">=3.8"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+
+[project.urls]
+Homepage = "https://github.com/saifhaq/alma"
+Issues = "https://github.com/saifhaq/alma/issues"
+
 [tool.isort]
 profile = "black"
 
