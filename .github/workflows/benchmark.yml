@@ -1,0 +1,19 @@
+name: Train + benchmark model
+
+on:
+  push:
+    branches:
+      - 'feat/actions_1'
+
+jobs:
+  train-and-benchmark:
+    runs-on: titan
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Check current directory
+      run: pwd
+
+    - name: Install alma package
+      run: pip install . 
