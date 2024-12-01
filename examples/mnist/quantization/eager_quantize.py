@@ -1,8 +1,8 @@
 import logging
+from typing import Callable
 
 import torch
 import torch.quantization as tq
-from constants import SEE_EXAMPLES_MESSAGE
 from .qconfigs import (
     fake_quant_act,
     fixed_0255,
@@ -41,13 +41,11 @@ def eager_quantize(
     default_weight_scale = 2
 
     # Fuse the layers
-    assert hasattr(
-        model, "fuse_layers"
-    ), f"Model must have `fuse_layers` method. {SEE_EXAMPLES_MESSAGE}"
-    fused_model = model.fuse_layers()
+    fused_model = fuse_modules(model, logger)
 
     # We loop through the modules so that we can access the `out_channels` attribute
     for name, module in fused_model.named_modules():
+        # Convolutional layers
         if hasattr(module, "out_channels"):
             qconfig = tq.QConfig(
                 activation=learnable_act(range=default_act_scale),
@@ -55,7 +53,7 @@ def eager_quantize(
                     range=default_weight_scale, channels=module.out_channels
                 ),
             )
-        # Idiot pytorch, why do you have `out_features` for Linear but not Conv2d?
+        # Linear layers
         elif hasattr(module, "out_features"):
             qconfig = tq.QConfig(
                 activation=learnable_act(range=default_act_scale),

@@ -7,6 +7,7 @@ import torch.fx as fx
 from torch.optim.lr_scheduler import LRScheduler, StepLR
 
 from .fx_quantize import fx_quantize
+
 # from .eager_quantize import eager_quantize
 from alma.quantization.PTQ import PTQ
 from alma.quantization.QAT import QAT
@@ -18,6 +19,35 @@ from alma.utils.data import get_sample_data
 # One needs to set their quantization backend engine to what is appropriate for their system.
 # torch.backends.quantized.engine = 'x86'
 torch.backends.quantized.engine = "qnnpack"
+
+
+def fuse_layers(model: torch.nn.Module, logger: logging.Logger) -> torch.nn.Module:
+    """
+    Fuses the layers of the model, used in eager mode quantization.
+
+    Inputs:
+    model (torch.nn.Module): The model to fuse the layers of.
+    logger (logging.Logger): The logger to use for logging.
+
+    Outputs:
+    fused_model (torch.nn.Module): The model with fused layers.
+    """
+    logger.info("Fusing layers of model")
+    logger.warning(
+        "Fusing is a model-specific operation. Please customize the layers to fuse for your model."
+    )
+    list_of_layers_to_fuse: List[List[str]] = [
+        ["conv1", "relu1"],
+        ["conv2", "relu2"],
+        ["fc1", "relu3"],
+    ]
+    fused_model = torch.quantization.fuse_modules(
+        model,
+        list_of_layers_to_fuse,
+        inplace=False,
+    )
+    return fused_model
+
 
 def quantize_model(
     args: argparse.Namespace,
@@ -84,26 +114,3 @@ def quantize_model(
         qat_optimizer,
         qat_scheduler,
     )
-
-
-def fuse_layers(model: torch.nn.Module) -> torch.nn.Module:
-    """
-    Fuses the layers of the model, used in eager mode quantization.
-
-    Inputs:
-    model (torch.nn.Module): The model to fuse the layers of.
-
-    Outputs:
-    fused_model (torch.nn.Module): The model with fused layers.
-    """
-    list_of_layers_to_fuse: List[List[str]] = [
-        ["conv1", "relu1"],
-        ["conv2", "relu2"],
-        ["fc1", "relu3"],
-    ]
-    fused_model = torch.quantization.fuse_modules(
-        model,
-        list_of_layers_to_fuse,
-        inplace=False,
-    )
-    return fused_model
