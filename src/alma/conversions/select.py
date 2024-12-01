@@ -5,17 +5,20 @@ from typing import Any, Callable
 
 import torch
 
-from .compile import get_compiled_model_forward_call
-from .export.aotinductor import (
+from .options.compile import get_compiled_model_forward_call
+from .options.export_aotinductor import (
     get_export_aot_inductor_forward_call,
     get_quant_export_aot_inductor_forward_call,
 )
-from .export.compile import get_export_compiled_forward_call
-from .export.eager import get_export_eager_forward_call
-from .export.quant import get_quant_exported_forward_call, get_quant_exported_model
-from .onnx import get_onnx_dynamo_forward_call, get_onnx_forward_call
+from .options.export_compile import get_export_compiled_forward_call
+from .options.export_eager import get_export_eager_forward_call
+from .options.export_quant import (
+    get_quant_exported_forward_call,
+    get_quant_exported_model,
+)
+from .options.onnx import get_onnx_dynamo_forward_call, get_onnx_forward_call
 
-# from .tensorrt import get_tensorrt_dynamo_forward_call # commented out because it messes up imports if not on CUDA
+# from .options.tensorrt import get_tensorrt_dynamo_forward_call # commented out because it messes up imports if not on CUDA
 
 MODEL_CONVERSION_OPTIONS = {
     0: "EXPORT+COMPILE",

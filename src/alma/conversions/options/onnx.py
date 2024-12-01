@@ -6,8 +6,8 @@ import onnx
 import onnxruntime
 import torch
 
-from .config import ONNX_EXECUTION_PROVIDER
-from .utils import check_model_type
+from ..config import ONNX_EXECUTION_PROVIDER
+from .utils.check_type import check_model_type
 
 
 def save_onnx_model(

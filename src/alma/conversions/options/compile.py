@@ -3,7 +3,7 @@ from typing import Callable, Union
 import torch
 import torch.fx as fx
 
-from .utils import check_model_type
+from .utils.check_type import check_model_type
 
 
 def get_compiled_model_forward_call(
