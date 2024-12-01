@@ -17,3 +17,18 @@ jobs:
 
     - name: Install alma package
       run: pip install . 
+
+    - name: Setup data
+      run: |
+        cd examples/mnist/data
+        ./setup-data.sh
+
+    - name: Train
+      run: |
+        cd examples/mnist
+        python train.py --save-path ./model/mnist.pt
+
+    - name: Benchmark
+      run: |
+        cd examples/mnist
+        python benchmark.py --model-path ./model/mnist.pt    
