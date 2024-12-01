@@ -1,9 +1,9 @@
 name: Train + benchmark model
 
 on:
-  push:
+  pull_request:
     branches:
-      - 'feat/actions_1'
+      - main
 
 jobs:
   train-and-benchmark:
