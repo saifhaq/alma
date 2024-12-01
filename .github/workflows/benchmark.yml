@@ -26,7 +26,7 @@ jobs:
     - name: Train
       run: |
         cd examples/mnist
-        python train.py --save-path ./model/mnist.pt
+        python train.py --save-path ./model/mnist
 
 
     - name: Benchmark
