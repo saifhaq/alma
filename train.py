@@ -5,8 +5,8 @@ import torch
 import torch.fx as fx
 import torch.nn.functional as F
 import torch.optim as optim
-from conversion.quant.quantize import quantize_model
-from conversion.quant.utils import save_fake_quantized_model
+from quantization.quantize import quantize_model
+from quantization.utils import save_fake_quantized_model
 from torch.optim.lr_scheduler import StepLR
 from tqdm import tqdm
 
