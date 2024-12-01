@@ -1,23 +1,24 @@
 import argparse
 import logging
 import time
+from typing import Union
 
 import torch
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 
 from .conversions.select import select_forward_call_function
-from .utils.data import get_sample_data
+from .dataloader.create import create_single_tensor_dataloader
 from .utils.times import inference_time_benchmarking  # should we use this?
 
 
 def benchmark_model(
     model: torch.nn.Module,
     device: torch.device,
-    data_loader: DataLoader,
-    n_samples: int,
+    data: torch.Tensor,
     args: argparse.Namespace,
     logger: logging.Logger,
+    data_loader: Union[DataLoader, None] = None,
 ) -> None:
     """
     Benchmark the model using the given data loader. From the args, we can select which model
@@ -25,11 +26,12 @@ def benchmark_model(
 
     Inputs:
     - model (torch.nn.Module): The model to benchmark.
+    - data (torch.Tensor): The data to use for benchmarking.
     - device (torch.device): The device to run the model on.
-    - data_loader (DataLoader): The DataLoader to get samples of data from.
-    - n_samples (int): The number of samples to benchmark on.
     - args (argparse.Namespace): The command line arguments.
     - logger (logging.Logger): The logger to use for logging.
+    - data_loader (DataLoader): The DataLoader to get samples of data from. If provided, this will
+            be used. Else, a random dataloader will be created.
 
     Outputs:
     None
@@ -38,8 +40,21 @@ def benchmark_model(
     total_samples = 0
     num_batches = 0
 
-    # Get sample of data, used in some of the compilation methods
-    data = get_sample_data(data_loader, device)
+    # The number of samples to benchmark on
+    n_samples: int = args.n_samples
+
+    # Creates a dataloader with random data, of the same size as the input data sample
+    # If the data_loader has been provided by the user, we use that one
+    if not data_loader:
+        data_loader = create_single_tensor_dataloader(
+            tensor_size=data.size(),
+            num_tensors=int(
+                n_samples * 1.5
+            ),  # 1.5 is a magic number to ensure we have enough samples in the dataloader
+            random_type="normal",
+            random_params={"mean": 0.0, "std": 2.0},
+            batch_size=args.batch_size,
+        )
 
     # Get the forward call of the model, which we will benchmark
     forward_call = select_forward_call_function(model, args, data, logger)
@@ -55,7 +70,6 @@ def benchmark_model(
                 break
 
     start_time = time.perf_counter()  # Start timing for the entire process
-
     with torch.no_grad():
         for data, _ in tqdm(data_loader, desc="Benchmarking"):
             if total_samples >= n_samples:
