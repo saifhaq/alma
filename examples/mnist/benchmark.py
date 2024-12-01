@@ -7,10 +7,10 @@ from model.model import Net
 from utils.data.datasets import BenchmarkCustomImageDataset
 from utils.data.loaders import CircularDataLoader
 from utils.data.transforms import InferenceTransform
-from alma.utils.ipdb_hook import ipdb_sys_excepthook
 
 from alma.arguments.benchmark_args import parse_benchmark_args
 from alma.benchmark.benchmark_model import benchmark_model
+from alma.utils.ipdb_hook import ipdb_sys_excepthook
 from alma.utils.load_model import load_model
 from alma.utils.setup_logging import setup_logging
 
