@@ -1,16 +1,16 @@
 import argparse
 import logging
 import time
+from typing import Union
 
 import torch
 from torch.utils.data import DataLoader
 from tqdm import tqdm
-from typing import Union
 
 from .conversions.select import select_forward_call_function
+from .dataloader.create import create_single_tensor_dataloader
 from .utils.times import inference_time_benchmarking  # should we use this?
 
-from .dataloader.create import create_single_tensor_dataloader
 
 def benchmark_model(
     model: torch.nn.Module,
@@ -48,7 +48,9 @@ def benchmark_model(
     if not data_loader:
         data_loader = create_single_tensor_dataloader(
             tensor_size=data.size(),
-            num_tensors=int(n_samples*1.5),  # 1.5 is a magic number to ensure we have enough samples in the dataloader
+            num_tensors=int(
+                n_samples * 1.5
+            ),  # 1.5 is a magic number to ensure we have enough samples in the dataloader
             random_type="normal",
             random_params={"mean": 0.0, "std": 2.0},
             batch_size=args.batch_size,

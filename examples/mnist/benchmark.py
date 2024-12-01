@@ -10,10 +10,10 @@ from utils.data.transforms import InferenceTransform
 
 from alma.arguments.benchmark_args import parse_benchmark_args
 from alma.benchmark_model import benchmark_model
+from alma.utils.data import get_sample_data
 from alma.utils.ipdb_hook import ipdb_sys_excepthook
 from alma.utils.load_model import load_model
 from alma.utils.setup_logging import setup_logging
-from alma.utils.data import get_sample_data
 
 # One needs to set their quantization backend engine to what is appropriate for their system.
 # torch.backends.quantized.engine = 'x86'

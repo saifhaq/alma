@@ -1,6 +1,7 @@
+from typing import Optional, Tuple, Union
+
 import torch
-from torch.utils.data import Dataset, DataLoader
-from typing import Optional, Union, Tuple
+from torch.utils.data import DataLoader, Dataset
 
 from .dataloader import SingleTensorDataset
 

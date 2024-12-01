@@ -1,6 +1,7 @@
+from typing import List, Optional, Tuple, Union
+
 import torch
 from torch.utils.data import Dataset
-from typing import Optional, Union, Tuple, List
 
 
 class SingleTensorDataset(Dataset):
@@ -80,4 +81,3 @@ class SingleTensorDataset(Dataset):
     def __getitem__(self, idx: int) -> torch.Tensor:
         # Return the tensor at the specified index, and the index itself
         return self.tensors[idx], idx
-
