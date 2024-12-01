@@ -3,12 +3,8 @@ from typing import Callable
 
 import torch
 import torch.quantization as tq
-from .qconfigs import (
-    fake_quant_act,
-    fixed_0255,
-    learnable_act,
-    learnable_weights,
-)
+
+from .qconfigs import fake_quant_act, fixed_0255, learnable_act, learnable_weights
 
 
 def eager_quantize(

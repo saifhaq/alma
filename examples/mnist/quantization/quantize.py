@@ -6,15 +6,14 @@ import torch
 import torch.fx as fx
 from torch.optim.lr_scheduler import LRScheduler, StepLR
 
-from .fx_quantize import fx_quantize
-
 # from .eager_quantize import eager_quantize
 from alma.quantization.PTQ import PTQ
 from alma.quantization.QAT import QAT
-from .qconfigs import fixed_0255
 from alma.quantization.utils import replace_node_with_target
 from alma.utils.data import get_sample_data
 
+from .fx_quantize import fx_quantize
+from .qconfigs import fixed_0255
 
 # One needs to set their quantization backend engine to what is appropriate for their system.
 # torch.backends.quantized.engine = 'x86'

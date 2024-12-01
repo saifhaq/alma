@@ -48,14 +48,18 @@ def fx_quantize(
         if hasattr(module, "out_channels"):
             qconfig = tq.QConfig(
                 activation=learnable_act(range=default_act_scale),
-                weight=learnable_weights(range=default_weight_scale, channels=module.out_channels),
+                weight=learnable_weights(
+                    range=default_weight_scale, channels=module.out_channels
+                ),
             )
             qconfig_mapping.set_module_name(name, qconfig)
         # Linear layers
         elif hasattr(module, "out_features"):
             qconfig = tq.QConfig(
                 activation=learnable_act(range=default_act_scale),
-                weight=learnable_weights(range=default_weight_scale, channels=module.out_features),
+                weight=learnable_weights(
+                    range=default_weight_scale, channels=module.out_features
+                ),
             )
             qconfig_mapping.set_module_name(name, qconfig)
 
