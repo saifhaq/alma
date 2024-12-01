@@ -28,7 +28,18 @@ jobs:
         cd examples/mnist
         python train.py --save-path ./model/mnist.pt
 
+
     - name: Benchmark
       run: |
         cd examples/mnist
-        python benchmark.py --model-path ./model/mnist.pt    
+        mkdir -p ../results
+        for i in {0..14}; do
+          echo "Running benchmark with conversion $i"
+          python benchmark.py --model-path=./model/mnist.pt --data-dir=data_for_inference --conversion $i > ../results/benchmark_conversion_$i.txt
+        done
+
+    - name: Upload benchmark results
+      uses: actions/upload-artifact@v3
+      with:
+        name: benchmark-results
+        path: examples/results/

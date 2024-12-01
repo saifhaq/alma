@@ -41,6 +41,6 @@ def main() -> None:
 if __name__ == "__main__":
     # Adds an ipdb hook to the sys.excepthook, which will throw one into an ipdb shell when an
     # exception is raised
-    ipdb_sys_excepthook()
+    # ipdb_sys_excepthook()
     setup_logging()
     main()
