@@ -66,29 +66,31 @@ RUN pip install --upgrade pip
 
 RUN pip install uv
 
+ADD requirements.txt /build/requirements.txt
+RUN uv pip install --system -r /build/requirements.txt
 # Install other packages
-RUN uv pip install --system \
-    numpy==1.26.4 \
-    torch==2.4.0 \
-    torchvision==0.19.0 \
-    black==24.4.1 \
-    isort==5.13.2 \
-    tqdm==4.66.1 \
-    ipdb \
-    pre-commit \
-    ruff \
-    pylint \
-    mkl \
-    mkl-include \
-    cmake \
-    cffi \
-    Cython \
-    matplotlib \
-    pip-system-certs \
-    cupy-cuda12x \
-    pybind11[global] \
-    typing_extensions \
-    torch-tensorrt \
-    onnx \
-    onnxruntime \
-    pandas
+# RUN uv pip install --system \
+#     numpy==1.26.4 \
+#     torch==2.4.0 \
+#     torchvision==0.19.0 \
+#     black==24.4.1 \
+#     isort==5.13.2 \
+#     tqdm==4.66.1 \
+#     ipdb \
+#     pre-commit \
+#     ruff \
+#     pylint \
+#     mkl \
+#     mkl-include \
+#     cmake \
+#     cffi \
+#     Cython \
+#     matplotlib \
+#     pip-system-certs \
+#     cupy-cuda12x \
+#     pybind11[global] \
+#     typing_extensions \
+#     torch-tensorrt \
+#     onnx \
+#     onnxruntime \
+#     pandas
