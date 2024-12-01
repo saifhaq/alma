@@ -161,12 +161,14 @@ cython_debug/
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
 #.idea/
 
-mnist_images/
-data_for_inference
-mnist_images.zip
-mnist_images.csv
-mnist_cnn*
+examples/mnist/data/mnist_images/
+examples/mnist/data/data_for_inference
+examples/mnist/data/mnist_images.zip
+examples/mnist/data/mnist_images.csv
+examples/mnist/data/mnist_cnn*
+*.pt
 .legacy
 
 .secrets
-model.onnx
+*.onnx
+*egg-info

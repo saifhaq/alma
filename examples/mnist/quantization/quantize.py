@@ -6,13 +6,18 @@ import torch
 import torch.fx as fx
 from torch.optim.lr_scheduler import LRScheduler, StepLR
 
-from alma.quantization.fx_quantize import fx_quantize
+from .fx_quantize import fx_quantize
+# from .eager_quantize import eager_quantize
 from alma.quantization.PTQ import PTQ
 from alma.quantization.QAT import QAT
-from alma.quantization.qconfigs import fixed_0255
+from .qconfigs import fixed_0255
 from alma.quantization.utils import replace_node_with_target
 from alma.utils.data import get_sample_data
 
+
+# One needs to set their quantization backend engine to what is appropriate for their system.
+# torch.backends.quantized.engine = 'x86'
+torch.backends.quantized.engine = "qnnpack"
 
 def quantize_model(
     args: argparse.Namespace,
@@ -50,11 +55,11 @@ def quantize_model(
     data = get_sample_data(train_loader, device)
 
     # FX graph mode quantization
-    fx_model: fx.GraphModule = fx_quantize(model, data, act_scale=2, logger=logger)
+    fx_model: fx.GraphModule = fx_quantize(model, data, logger=logger)
 
     # Optional graph manipulation here.
     logger.info("Replacing activation_post_process_0 with fixed_0255")
-    replace_node_with_target(model, "activation_post_process_0", fixed_0255())
+    replace_node_with_target(fx_model, "activation_post_process_0", fixed_0255())
 
     # Do PTQ
     PTQ(fx_model, device, train_loader)
@@ -65,7 +70,7 @@ def quantize_model(
     assert test_loader is not None, "test_loader must be provided for QAT"
 
     # Reset the optimizer with included quantization parameters
-    qat_optimizer = torch.optim.Adadelta(model.parameters(), lr=args.lr)
+    qat_optimizer = torch.optim.Adadelta(fx_model.parameters(), lr=args.lr)
     # NOTE: we may want seperate gamma, epochs and step_size for QAT
     qat_scheduler: LRScheduler = StepLR(qat_optimizer, step_size=1, gamma=args.gamma)
     QAT(
