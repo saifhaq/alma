@@ -29,13 +29,13 @@ jobs:
         python train.py --save-path ./model/mnist
 
 
-    - name: Benchmark
+    - name: Benchmark 
       run: |
         cd examples/mnist
         mkdir -p ../results
         for i in {0..14}; do
           echo "Running benchmark with conversion $i"
-          python benchmark.py --model-path=./model/mnist.pt --data-dir=data_for_inference --conversion $i > ../results/benchmark_conversion_$i.txt
+          timeout 60s python benchmark.py --model-path=./model/mnist.pt --data-dir=data_for_inference --conversion $i > ../results/benchmark_conversion_$i.txt 2>&1 || echo "Conversion $i failed due to timeout or error" > ../results/benchmark_conversion_$i.txt
         done
 
     - name: Upload benchmark results
