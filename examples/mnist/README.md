@@ -73,11 +73,10 @@ benchmark_model(
 ```
 
 One would run this script (e.g., if one wanted to benchmark the same model as used in training)
-with the following command:
+with the following commands (all steps from loading data, to training, to benchmarking):
 
 ```bash
-cd examples/mnist
-python benchmark_with_dataloader.py --model-path ./model/mnist.pt --conversions EAGER,EXPORT+EAGER --batch-size 10
+python ABOVE_SCRIPT.py --model-path ./model/mnist.pt --conversions EAGER,EXPORT+EAGER --batch-size 10
 --n-samples 5000 --data-dir data/data_for_inference
 ```
 
@@ -85,7 +84,8 @@ This will run the EXPORT+EAGER conversion option and the EAGER conversion option
 model speed for each conversion option. The batch size of the data loader is controlled via the
 `batch_size` argument. The number of samples to run the benchmark on is controlled via the `n_samples`
 argument. For convenience, we also provide a `data-dir` argument, so that one can have one's
-data loader feed in specific data.
+data loader feed in specific data, and a `model-path` argument, so that one can feed in specific 
+model weights.
 
 The results will look like this, depending on one's model, dataloader and hardware.
 
@@ -105,9 +105,10 @@ Throughput: 12800.82 samples/second
 
 ```
 
-A working example can be found in `benchmark_with_dataloader.py`.
-E.g.
-
+#### Full working example:
+A full working example can be found in `benchmark_with_dataloader.py`.
+With the above command, the script will download the MNIST dataset, train a model, and then benchmark
+the model for the 2nd and 10th conversion options:
 ```bash
 cd examples/mnist/data
 ./setup-data.sh
@@ -180,11 +181,12 @@ benchmark_model(
 )
 ```
 
-One would then run this the same way as before. A working example can be found in
-`examples/mnist/benchmark_random_tensor.py` where a random input tensor is used, and the model is
-not trained at all.
-E.g.
+One would then run this the same way as before. 
 
+#### Full working example:
+A full working example can be found in `examples/mnist/benchmark_random_tensor.py` where a random 
+input tensor is used, and the model is not trained at all.
+E.g.
 ```bash
 cd examples/mnist
 python benchmark_random_tensor.py --conversion 10,2 --batch-size 100 --n-samples 5000

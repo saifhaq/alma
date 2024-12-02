@@ -1,5 +1,5 @@
 # alma
-A library for benchmarking PyTorch models for different conversion options.
+A library for benchmarking PyTorch model speed and performance for different conversion options.
 
 ## Benchmarking
 

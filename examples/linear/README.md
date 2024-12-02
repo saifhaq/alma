@@ -36,19 +36,19 @@ benchmark_model(
 )
 ```
 
-A working example can be found in `examples/mnist/benchmark_random_tensor.py` where a random model is used.
+#### Full working example:
+A full working example can be found in `examples/mnist/benchmark_random_tensor.py` where a random model is used.
 E.g.
 ```bash
 cd examples/mnist
-python YOUR_SCRIPT_NAME.py  --conversions EAGER,EXPORT+EAGER --batch-size 10
+python benchmark_random_tensor.py  --conversions EAGER,EXPORT+EAGER --batch-size 10
 --n-samples 5000 
 ```
 
 This will run the EXPORT+EAGER conversion option and the EAGER conversion option, benchmarking the
 model speed for each conversion option. The batch size of the data loader is controlled via the
 `batch_size` argument. The number of samples to run the benchmark on is controlled via the `n_samples`
-argument. For convenience, we also provide a `data-dir` argument, so that one can have one's
-data loader feed in specific data.
+argument. See the `mnist` example for more details on other available arguments.
 
 The results will look like this, depending on one's model, dataloader and hardware.
 
