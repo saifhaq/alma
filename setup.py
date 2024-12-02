@@ -7,5 +7,7 @@ except ImportError:
 
 if __name__ == "__main__":
     setup(
+        name="alma",
+        version="0.0.1",
         packages=find_packages(),
     )
