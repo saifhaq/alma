@@ -36,14 +36,35 @@ def main() -> None:
     load_end_time = time.perf_counter()
     logging.info(f"Model loading time: {load_end_time - load_start_time:.4f} seconds")
 
+
+    # Which conversions to benchmark the model on
+    conversions = [
+        # "EXPORT+COMPILE",
+        # "EXPORT+AOT_INDUCTOR",
+        "EXPORT+EAGER",
+        # "EXPORT+TENSORRT",
+        # "ONNX+DYNAMO_EXPORT",
+        # "EXPORT+INT_QUANTIZED",
+        # "EXPORT+FLOAT_QUANTIZED",
+        # "EXPORT+INT-QUANTIZED+AOT_INDUCTOR",
+        # "EXPORT+FLOAT-QUANTIZED+AOT_INDUCTOR",
+        # "COMPILE",
+        "EAGER",
+        # "TENSORRT",
+        "ONNX",
+        # "CONVERT_QUANTIZED",
+        # "FAKE_QUANTIZED",
+    ]
+
+
     # Benchmark the model. This will generate a dataloader that provides random tensors of the
     # same shape as `data`, which is used to benchmark the model.
     logging.info("Benchmarking model using random data")
-    benchmark_model(model, device, data[0, :, :, :].squeeze(), args, logging)
+    benchmark_model(model, device, args, conversions, data=data[0, :, :, :].squeeze())
 
     # Benchmark the model using the provided data loader.
     logging.info("Benchmarking model using provided data loader")
-    benchmark_model(model, device, data, args, logging, data_loader=data_loader)
+    benchmark_model(model, device, args, conversions, data_loader=data_loader)
 
 
 if __name__ == "__main__":

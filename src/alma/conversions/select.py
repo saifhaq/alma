@@ -41,7 +41,7 @@ MODEL_CONVERSION_OPTIONS = {
 
 def select_forward_call_function(
     model: Any,
-    args: argparse.Namespace,
+    conversion: str,
     data: torch.Tensor,
     logging: logging.Logger,
 ) -> Callable:
@@ -51,7 +51,7 @@ def select_forward_call_function(
 
     Inputs:
     - model (Any): The model to get the forward call for.
-    - args (argparse.Namespace): The command line arguments.
+    - conversion (str): The conversion method to use for the model.
     - data (torch.Tensor): A sample of data to pass through the model, which may be needed for
     some of the export methods.
     - logging (logging.Logger): The logger to use for logging.
@@ -60,7 +60,6 @@ def select_forward_call_function(
     - forward (Callable): The forward call function for the model.
     """
 
-    conversion = MODEL_CONVERSION_OPTIONS[args.conversion]
     match conversion:
         ###############
         # WITH EXPORT #
