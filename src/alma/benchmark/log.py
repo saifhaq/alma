@@ -1,5 +1,6 @@
 import logging
 
+
 def log_results(
     logger: logging.Logger,
     total_elapsed_time: float,
@@ -24,5 +25,3 @@ def log_results(
     logger.info(f"Total inference time (model only): {total_time:.4f} seconds")
     logger.info(f"Total samples: {total_samples}")
     logger.info(f"Throughput: {throughput:.2f} samples/second")
-
-

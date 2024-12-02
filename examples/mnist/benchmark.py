@@ -36,7 +36,6 @@ def main() -> None:
     load_end_time = time.perf_counter()
     logging.info(f"Model loading time: {load_end_time - load_start_time:.4f} seconds")
 
-
     # Which conversions to benchmark the model on
     conversions = [
         # "EXPORT+COMPILE",
@@ -55,7 +54,6 @@ def main() -> None:
         # "CONVERT_QUANTIZED",
         # "FAKE_QUANTIZED",
     ]
-
 
     # Benchmark the model. This will generate a dataloader that provides random tensors of the
     # same shape as `data`, which is used to benchmark the model.

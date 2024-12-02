@@ -1,14 +1,14 @@
 import argparse
 import logging
-from typing import Union, List, Callable
+from typing import Callable, List, Union
 
 import torch
 from torch.utils.data import DataLoader
 
+from .benchmark import benchmark, log_results
 from .dataloader.create import create_single_tensor_dataloader
 from .utils.setup_logging import setup_logging
 from .utils.times import inference_time_benchmarking  # should we use this?
-from .benchmark import benchmark, log_results
 
 
 def benchmark_model(

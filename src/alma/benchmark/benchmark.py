@@ -6,10 +6,10 @@ from torch.utils.data import DataLoader
 from tqdm import tqdm
 
 from ..conversions.select import select_forward_call_function
-from ..utils.times import inference_time_benchmarking  # should we use this?
 from ..utils.data import get_sample_data
-from .warmup import warmup
+from ..utils.times import inference_time_benchmarking  # should we use this?
 from .log import log_results
+from .warmup import warmup
 
 
 def benchmark(

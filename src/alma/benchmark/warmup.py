@@ -1,8 +1,8 @@
-
 from typing import Callable
 
 import torch
 from torch.utils.data import DataLoader
+
 
 def warmup(
     forward_call: Callable, data_loader: DataLoader, device: torch.device
@@ -27,4 +27,3 @@ def warmup(
             counter += 1
             if counter > 3:
                 return
-
