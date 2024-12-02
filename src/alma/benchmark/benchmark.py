@@ -38,7 +38,7 @@ def benchmark(
     - total_samples (int): The total number of samples benchmarked.
     - throughput (float): The throughput of the model.
     """
-    total_time = 0.0
+    total_inf_time = 0.0
     total_samples = 0
     num_batches = 0
 
@@ -65,7 +65,7 @@ def benchmark(
             batch_end_time = time.perf_counter()
 
             batch_size = min(data.size(0), n_samples - total_samples)
-            total_time += batch_end_time - batch_start_time
+            total_inf_time += batch_end_time - batch_start_time
             total_samples += batch_size
             num_batches += 1
 
@@ -76,6 +76,6 @@ def benchmark(
 
     total_elapsed_time = end_time - start_time
     throughput = total_samples / total_elapsed_time if total_elapsed_time > 0 else 0
-    log_results(logger, total_elapsed_time, total_time, total_samples, throughput)
+    log_results(logger, total_elapsed_time, total_inf_time, total_samples, throughput)
 
-    return total_elapsed_time, total_time, total_samples, throughput
+    return total_elapsed_time, total_inf_time, total_samples, throughput

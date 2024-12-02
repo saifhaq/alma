@@ -6,7 +6,6 @@ import onnx
 import onnxruntime
 import torch
 
-from ..config import ONNX_EXECUTION_PROVIDER
 from .utils.check_type import check_model_type
 
 
@@ -70,7 +69,9 @@ def save_onnx_model(
 
 
 def _get_onnx_forward_call(
-    model: Union[Path, torch.onnx.ONNXProgram], logger: logging.Logger
+    model: Union[Path, torch.onnx.ONNXProgram],
+    logger: logging.Logger,
+    onnx_provider: str = "CPUExecutionProvider",
 ) -> Callable:
     """
     A helper function to return the ONNX forward call.
@@ -79,15 +80,14 @@ def _get_onnx_forward_call(
     - model (Union[Path, torch.onnx.ONNXProgram]): this can be either a path to an ONNX model, or
         the ONNX model directly (if created via the torch.onnx.dynamo_export API).
     - logging (logging.Logger): The logger to use for logging.
+    - onnx_provider (str): the ONNX execution provider to use.
 
     Outputs:
     - onnx_forward (Callable): The forward call function for the model.
     """
     # Create ONNX runtime session for ONNX model
-    ort_session = onnxruntime.InferenceSession(
-        model, providers=[ONNX_EXECUTION_PROVIDER]
-    )
-    logger.info(f"Loaded ONNX model, using {ONNX_EXECUTION_PROVIDER}")
+    ort_session = onnxruntime.InferenceSession(model, providers=[onnx_provider])
+    logger.info(f"Loaded ONNX model, using {onnx_provider}")
     # NOTE: see here for a list of Execution providers: https://onnxruntime.ai/docs/execution-providers/
 
     # Onnx runtime forward call
@@ -104,6 +104,7 @@ def get_onnx_forward_call(
     data: torch.Tensor,
     logger: logging.Logger,
     onnx_model_path: str = "model/model.onnx",
+    onnx_provider: str = "CPUExecutionProvider",
 ):
     """
     Get the forward call function for the model using ONNX.
@@ -113,6 +114,7 @@ def get_onnx_forward_call(
     - data (torch.Tensor): A sample of data to pass through the model.
     - logging: The logger to use for logging
     - onnx_model_path (str): the path to save the ONNX model to.
+    - onnx_provider (str): the ONNX execution provider to use.
 
     Outputs:
     - onnx_forward (Callable): The forward call function for the model.
@@ -121,7 +123,9 @@ def get_onnx_forward_call(
     save_onnx_model(model, data, logger, onnx_model_path)
 
     # Get onnx forward call
-    onnx_forward: Callable = _get_onnx_forward_call(onnx_model_path, logger)
+    onnx_forward: Callable = _get_onnx_forward_call(
+        onnx_model_path, logger, onnx_provider
+    )
 
     return onnx_forward
 

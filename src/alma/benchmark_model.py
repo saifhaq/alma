@@ -6,6 +6,7 @@ import torch
 from torch.utils.data import DataLoader
 
 from .benchmark import benchmark, log_results
+from .conversions.select import MODEL_CONVERSION_OPTIONS
 from .dataloader.create import create_single_tensor_dataloader
 from .utils.setup_logging import setup_logging
 from .utils.times import inference_time_benchmarking  # should we use this?
@@ -48,6 +49,10 @@ def benchmark_model(
         assert (
             data is not None
         ), "If data_loader is not provided, a data tensor must be provided"
+
+    # If the conversions are not provided, we use all available conversions
+    if conversions is None:
+        conversions = list(MODEL_CONVERSION_OPTIONS.values())
 
     # The number of samples to benchmark on
     n_samples: int = args.n_samples

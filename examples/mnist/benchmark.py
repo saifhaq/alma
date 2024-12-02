@@ -50,7 +50,8 @@ def main() -> None:
         # "COMPILE",
         "EAGER",
         # "TENSORRT",
-        "ONNX",
+        "ONNX_CPU",
+        # "ONNX_GPU",
         # "CONVERT_QUANTIZED",
         # "FAKE_QUANTIZED",
     ]

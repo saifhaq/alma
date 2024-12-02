@@ -33,9 +33,10 @@ MODEL_CONVERSION_OPTIONS = {
     9: "COMPILE",
     10: "EAGER",
     11: "TENSORRT",
-    12: "ONNX",
-    13: "CONVERT_QUANTIZED",
-    14: "FAKE_QUANTIZED",
+    12: "ONNX_CPU",
+    13: "ONNX_GPU",
+    14: "CONVERT_QUANTIZED",
+    15: "FAKE_QUANTIZED",
 }
 
 
@@ -119,9 +120,19 @@ def select_forward_call_function(
             # forward = get_tensorrt_dynamo_forward_call(model, data)
             raise NotImplementedError("Installing tensor RT is having some issues, fix")
 
-        case "ONNX":
+        case "ONNX_CPU":
             onnx_model_path = Path("model/model.onnx")
-            forward = get_onnx_forward_call(model, data, logging, onnx_model_path)
+            onnx_backend = "CPUExecutionProvider"
+            forward = get_onnx_forward_call(
+                model, data, logging, onnx_model_path, onnx_backend
+            )
+
+        case "ONNX_GPU":
+            onnx_model_path = Path("model/model.onnx")
+            onnx_backend = "CUDAExecutionProvider"
+            forward = get_onnx_forward_call(
+                model, data, logging, onnx_model_path, onnx_backend
+            )
 
         case "CONVERT_QUANTIZED":
             pass
