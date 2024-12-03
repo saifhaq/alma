@@ -60,6 +60,9 @@ def get_quant_exported_model(
         model, (data,)
     ).module()
 
+    # TODO: mess around with export_for_inference
+    import ipdb; ipdb.set_trace()
+
     # Step 2. quantization
     # TODO: mess around with affine quantization
     to_quant_model = copy.deepcopy(m_export)
@@ -105,7 +108,7 @@ def get_quant_exported_forward_call(
     - forward (Callable): The forward call function for the model.
     """
 
-    model = get_quant_exported_model(model, data, logging, int_or_dequant_op)
+    model = get_quant_exported_model(model, data, int_or_dequant_op)
 
     check_model_type(model, expected_type=torch.fx.graph_module.GraphModule)
     forward = model.forward

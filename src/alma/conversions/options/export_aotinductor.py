@@ -98,6 +98,6 @@ def get_quant_export_aot_inductor_forward_call(
     - forward (Callable): The forward call function for the model.
     """
 
-    model = get_quant_exported_model(model, data, logging, int_or_dequant_op)
+    model = get_quant_exported_model(model, data, int_or_dequant_op)
     forward = get_export_aot_inductor_forward_call(model, data, logger)
     return forward
