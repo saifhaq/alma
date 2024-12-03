@@ -1,4 +1,3 @@
-import argparse
 import logging
 import time
 
@@ -24,6 +23,7 @@ def main() -> None:
     args, device = parse_benchmark_args(logging)
 
     # Create dataset and data loader
+    assert args.data_dir is not None, "Please provide a data directory"
     dataset = BenchmarkCustomImageDataset(
         img_dir=args.data_dir, transform=InferenceTransform
     )
@@ -31,19 +31,38 @@ def main() -> None:
     data = get_sample_data(data_loader, device)
 
     # Load model
+    assert args.model_path is not None, "Please provide a model path"
     load_start_time = time.perf_counter()
     model = load_model(args.model_path, device, logger=logging, modelArchitecture=Net)
     load_end_time = time.perf_counter()
     logging.info(f"Model loading time: {load_end_time - load_start_time:.4f} seconds")
 
-    # Benchmark the model. This will generate a dataloader that provides random tensors of the
-    # same shape as `data`, which is used to benchmark the model.
-    logging.info("Benchmarking model using random data")
-    benchmark_model(model, device, data[0, :, :, :].squeeze(), args, logging)
+    # Which conversions to benchmark the model on
+    if args.conversions:
+        conversions = args.conversions
+    else:
+        conversions = [
+            # "EXPORT+COMPILE",
+            "EXPORT+AOT_INDUCTOR",
+            "EXPORT+EAGER",
+            # "EXPORT+TENSORRT",
+            "ONNX+DYNAMO_EXPORT",
+            "EXPORT+INT_QUANTIZED",
+            "EXPORT+FLOAT_QUANTIZED",
+            # "EXPORT+INT-QUANTIZED+AOT_INDUCTOR",
+            # "EXPORT+FLOAT-QUANTIZED+AOT_INDUCTOR",
+            # "COMPILE",
+            "EAGER",
+            # "TENSORRT",
+            "ONNX_CPU",
+            "ONNX_GPU",
+            # "CONVERT_QUANTIZED",
+            # "FAKE_QUANTIZED",
+        ]
 
     # Benchmark the model using the provided data loader.
     logging.info("Benchmarking model using provided data loader")
-    benchmark_model(model, device, data, args, logging, data_loader=data_loader)
+    benchmark_model(model, device, args, conversions, data_loader=data_loader)
 
 
 if __name__ == "__main__":

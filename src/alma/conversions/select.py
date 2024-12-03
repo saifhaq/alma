@@ -5,17 +5,20 @@ from typing import Any, Callable
 
 import torch
 
-from .compile import get_compiled_model_forward_call
-from .export.aotinductor import (
+from .options.compile import get_compiled_model_forward_call
+from .options.export_aotinductor import (
     get_export_aot_inductor_forward_call,
     get_quant_export_aot_inductor_forward_call,
 )
-from .export.compile import get_export_compiled_forward_call
-from .export.eager import get_export_eager_forward_call
-from .export.quant import get_quant_exported_forward_call, get_quant_exported_model
-from .onnx import get_onnx_dynamo_forward_call, get_onnx_forward_call
+from .options.export_compile import get_export_compiled_forward_call
+from .options.export_eager import get_export_eager_forward_call
+from .options.export_quant import (
+    get_quant_exported_forward_call,
+    get_quant_exported_model,
+)
+from .options.onnx import get_onnx_dynamo_forward_call, get_onnx_forward_call
 
-# from .tensorrt import get_tensorrt_dynamo_forward_call # commented out because it messes up imports if not on CUDA
+# from .options.tensorrt import get_tensorrt_dynamo_forward_call # commented out because it messes up imports if not on CUDA
 
 MODEL_CONVERSION_OPTIONS = {
     0: "EXPORT+COMPILE",
@@ -30,15 +33,16 @@ MODEL_CONVERSION_OPTIONS = {
     9: "COMPILE",
     10: "EAGER",
     11: "TENSORRT",
-    12: "ONNX",
-    13: "CONVERT_QUANTIZED",
-    14: "FAKE_QUANTIZED",
+    12: "ONNX_CPU",
+    13: "ONNX_GPU",
+    14: "CONVERT_QUANTIZED",
+    15: "FAKE_QUANTIZED",
 }
 
 
 def select_forward_call_function(
     model: Any,
-    args: argparse.Namespace,
+    conversion: str,
     data: torch.Tensor,
     logging: logging.Logger,
 ) -> Callable:
@@ -48,7 +52,7 @@ def select_forward_call_function(
 
     Inputs:
     - model (Any): The model to get the forward call for.
-    - args (argparse.Namespace): The command line arguments.
+    - conversion (str): The conversion method to use for the model.
     - data (torch.Tensor): A sample of data to pass through the model, which may be needed for
     some of the export methods.
     - logging (logging.Logger): The logger to use for logging.
@@ -57,7 +61,6 @@ def select_forward_call_function(
     - forward (Callable): The forward call function for the model.
     """
 
-    conversion = MODEL_CONVERSION_OPTIONS[args.conversion]
     match conversion:
         ###############
         # WITH EXPORT #
@@ -117,9 +120,19 @@ def select_forward_call_function(
             # forward = get_tensorrt_dynamo_forward_call(model, data)
             raise NotImplementedError("Installing tensor RT is having some issues, fix")
 
-        case "ONNX":
+        case "ONNX_CPU":
             onnx_model_path = Path("model/model.onnx")
-            forward = get_onnx_forward_call(model, data, logging, onnx_model_path)
+            onnx_backend = "CPUExecutionProvider"
+            forward = get_onnx_forward_call(
+                model, data, logging, onnx_model_path, onnx_backend
+            )
+
+        case "ONNX_GPU":
+            onnx_model_path = Path("model/model.onnx")
+            onnx_backend = "CUDAExecutionProvider"
+            forward = get_onnx_forward_call(
+                model, data, logging, onnx_model_path, onnx_backend
+            )
 
         case "CONVERT_QUANTIZED":
             pass

@@ -7,9 +7,9 @@ import torch._inductor
 from torch.export.exported_program import ExportedProgram
 from torch.fx.graph_module import GraphModule
 
-from ..utils import check_model_type
-from .quant import get_quant_exported_model
-from .utils import get_exported_model
+from .export_quant import get_quant_exported_model
+from .utils.check_type import check_model_type
+from .utils.export import get_exported_model
 
 CUDA_HOME = os.environ.get("CUDA_HOME")
 

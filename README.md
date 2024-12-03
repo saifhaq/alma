@@ -1,52 +1,116 @@
 # alma
+A library for benchmarking PyTorch model speed and performance for different conversion options.
 
-Our customers have large amounts of images with digits that they want to classify using a ML model. The team has prepared the `setup-data.sh` and `train.py` scripts to come up with a classification model for digits. Have a look at that code and:
-1. Train a model and save it to file;
-2. Write a new Python script that loads the trained model and, given the `data_for_inference` folder, inspects all sub-folders and files and outputs the count of highest-likelihood predictions across all files - essentially how many occurrences of each digit are found in the target folder and subfolders.
+## Benchmarking
 
-Your inference script should scale to hundreds of thousands of files, and should be usable as part as a larger codebase. There is no need to worry about the results being "pretty", they only need to be human-readable, e.g.
+The `benchmark_model` API is used to benchmark the speed of a model for different conversion options.
+The API is used as follows:
 
+```python
+from alma import benchmark_model
+from alma.arguments.benchmark_args import parse_benchmark_args
+
+# Parse the arguments, e.g. the model path, device, and conversion options
+# This is provided for convenience, but one can also just pass in the arguments directly to the
+# `benchmark_model` API.
+args, device = parse_benchmark_args()
+
+# Load the model
+model = ...
+
+# Load the data
+data_loader = ...
+
+# Benchmark the model
+benchmark_model(
+    model, device, args, args.conversions, data_loader=data_loader
+)
 ```
-$ python your_script.py --model mnist_cnn.pt --target data_for_inference
-digit,count
-0,29
-4,1
-```
 
-You're free to change `setup-data.sh` and `train.py`, namely the data split and training setup, just document your reasoning. For convenience we include a `reset.sh` that you shouldn't need to change.
-
-## Benchmark
-
-We have the option to benchmark over a dozen different model conversion options. A full list of 
-conversion options can be seen in the conversion field by the command:
+One can then run the sxript from the command line with the following command:
 ```bash
-python benchmark.py --help
+python YOUR_BENCHMARK_SCRIPT.py --conversions EAGER,EXPORT+EAGER --batch-size 10
+--n-samples 5000 
 ```
 
-To benchmark one's model, one needs to provide the path to the weights, a path to the data, and 
-the desired conversion option (integers are used to select conversion options, for ease of use).
+This will run the EXPORT+EAGER conversion option and the EAGER conversion option, benchmarking the
+model speed for each conversion option. The batch size of the data loader is controlled via the
+`batch_size` argument. The number of samples to run the benchmark on is controlled via the `n_samples`
+argument. 
 
-For a number of the conversion options, one needs to provide one's CUDA path as an environmental
-variable. This can be fed in via the command line (as below), or added to a `.env` file. For the 
-laytter, an example `.env.example` has been provided, this can be adjiusted if needed and renamed
-to `.env`.
+The results will look like this, depending on one's model, dataloader and hardware.
 
-Example command:
 ```bash
-CUDA_HOME='/usr/local/cuda' python benchmark.py --model-path mnist_cnn.pt --data-dir 
-data_for_inference --conversion 1 
+
+EAGER results:
+Total elapsed time: 0.4148 seconds
+Total inference time (model only): 0.0436 seconds
+Total samples: 5000
+Throughput: 12054.50 samples/second
+
+EXPORT+EAGER results:
+Total elapsed time: 0.3906 seconds
+Total inference time (model only): 0.0394 seconds
+Total samples: 5000
+Throughput: 12800.82 samples/second
+
 ```
 
-## Code Standards
+All of the command line arguments are optional, subject to one using the `parse_benchmark_args` API.
+The defaults are set in `alma/arguments/benchmark_args.py`. These include standard arguments for 
+convenience, e.g. `--model-path` for model weight loading, and `--data-dir` for data loading.
+One can of course feed in one's variables straight into the `benchmark_model` API.
+
+The see all of the arguments, run the following command:
+```bash
+cd examples/mnist
+python benchmark_with_dataloader.py --help
+```
+
+This will also show all of the model conversion options, which include:
+```bash
+XXX
+YYY
+```
+
+
+## Examples:
+For extensice examples on how to use `alma`, as well as simple clean examples on how train a model and
+quantize it, see the `examples` directory.
+
+## How to contribute:
+
+### Conversion Options
+All conversion options are set in `src/alma/conversions/`. In that directory, one can find the conversion
+options inside `options/`, where each file contains a single conversion option. At the risk of some code
+duplication, we have chosen to keep the conversion options separate, so that one can easily add new conversion
+options without having to modify the existing ones. It also makes it easier for the user to see what conversion
+options are available, and to understand what each conversion option does.
+
+The conversion options are then selected for benchmarking in the `src/alma/conversions/select.py` file. 
+This is just a glorified match-case statement that returns the forward calls of each model conversion option,
+which is returned to the benchmarking loop. It is that simple!
+
+#### Naming conventions
+The convention for naming convention options in the match-case statement is to use the names of the conversion
+steps, e.g. `EAGER`, `EXPORT+EAGER`, `EXPORT+TENSORRT`, etc. If multiple "techniques" are used in a
+single conversion option, then the names are separated by a `+` sign. Underscores `_` are used within each
+technique name to seperate the words for readability, e.g. `EXPORT+AOT_INDUCTOR`.
+
+#### Dependencies
+Some conversion options may require package dependencies, which should be added to the Docker image.
+
+
+### Code Standards
 - **Black**: Ensures consistency following a strict subset of PEP 8.
 - **isort**: Organizes Python imports systematically.
 
-### Automatic Formatting Before Commit
+#### Automatic Formatting Before Commit
 1. From the repo root, run:
 ```bash
 pre-commit install
 ```
-### Manually Running Hooks
+#### Manually Running Hooks
 If you want to manually run all hooks on all files, you can do:
 
 ```bash
@@ -54,9 +118,3 @@ git stage .
 pre-commit run --all-files
 ```
 
-
-
-To quantize the model running on Apple silicon, run:
-```
-PYTORCH_ENABLE_MPS_FALLBACK=1 python train.py  --quantize
-```

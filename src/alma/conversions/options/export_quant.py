@@ -11,7 +11,7 @@ from torch.ao.quantization.quantizer.xnnpack_quantizer import (
 )
 from torch.export.exported_program import ExportedProgram
 
-from ..utils import check_model_type
+from .utils.check_type import check_model_type
 
 
 def get_quant_exported_model(
@@ -41,9 +41,9 @@ def get_quant_exported_model(
 
     # We do this check early to save time, used when converting the quantized model
     if int_or_dequant_op == "int":
-        int_op: bool = True
+        int_op = True
     elif int_or_dequant_op == "dequant":
-        int_op: bool = False
+        int_op = False
     else:
         raise ValueError(
             f"`int_or_dequant_op` shoudl equal `int` or `dequant, not {int_or_dequant_op}"

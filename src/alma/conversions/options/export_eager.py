@@ -3,8 +3,8 @@ from typing import Callable
 import torch
 from torch.export.exported_program import ExportedProgram
 
-from ..utils import check_model_type
-from .utils import get_exported_model
+from .utils.check_type import check_model_type
+from .utils.export import get_exported_model
 
 
 def get_export_eager_forward_call(
