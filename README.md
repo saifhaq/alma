@@ -22,9 +22,8 @@ from alma.arguments.benchmark_args import parse_benchmark_args
 from alma.utils.setup_logging import setup_logging
 from typing import Dict
 
-# Set up logging (comment out for no logging, or set DEBUG for more logging)
 # A `setup_logging` function is provided for convenience, but one can use whatever logging one 
-# wishes, or none.
+# wishes, or none. DEBUG level will also log the model graphs.
 setup_logging(level="INFO")
 
 # Parse the arguments, e.g. the model path, device, and conversion options

@@ -45,4 +45,3 @@ def get_sample_data(data_loader: DataLoader, device: torch.device) -> torch.Tens
         data = data.to(device)
         return data
     raise ValueError("DataLoader is empty")
-
