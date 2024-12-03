@@ -8,6 +8,9 @@ import torch.optim as optim
 import torch.quantization as tq
 from torch.optim.lr_scheduler import LRScheduler
 
+logger = logging.getLogger(__name__)
+logger.addHandler(logging.NullHandler())
+
 
 def QAT(
     train: Callable,

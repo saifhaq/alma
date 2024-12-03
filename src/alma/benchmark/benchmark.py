@@ -1,5 +1,6 @@
 import logging
 import time
+from typing import Dict
 
 import torch
 from torch.utils.data import DataLoader
@@ -11,6 +12,9 @@ from ..utils.times import inference_time_benchmarking  # should we use this?
 from .log import log_results
 from .warmup import warmup
 
+logger = logging.getLogger(__name__)
+logger.addHandler(logging.NullHandler())
+
 
 def benchmark(
     model: torch.nn.Module,
@@ -18,8 +22,7 @@ def benchmark(
     device: torch.device,
     data_loader: DataLoader,
     n_samples: int,
-    logger: logging.Logger,
-):
+) -> Dict[str, float]:
     """
     Benchmark the model using the given data loader. This function will benchmark the model using the
     given conversion method.
@@ -30,7 +33,6 @@ def benchmark(
     - device (torch.device): The device we are targetting.
     - data_loader (DataLoader): The DataLoader to get samples of data from.
     - n_samples (int): The number of samples to benchmark on.
-    - logger (logging.Logger): The logger to use for logging.
 
     Outputs:
     - total_elapsed_time (float): The total elapsed time for the benchmark.
@@ -46,7 +48,7 @@ def benchmark(
     data = get_sample_data(data_loader, device)
 
     # Get the forward call of the model, which we will benchmark
-    forward_call = select_forward_call_function(model, conversion, data, logger)
+    forward_call = select_forward_call_function(model, conversion, data)
 
     # Warmup
     warmup(forward_call, data_loader, device)
@@ -76,6 +78,13 @@ def benchmark(
 
     total_elapsed_time = end_time - start_time
     throughput = total_samples / total_elapsed_time if total_elapsed_time > 0 else 0
-    log_results(logger, total_elapsed_time, total_inf_time, total_samples, throughput)
+    result: Dict[str, float] = {
+        "total_elapsed_time": total_elapsed_time,
+        "total_inf_time": total_inf_time,
+        "total_samples": total_samples,
+        "throughput": throughput,
+    }
+    if logger.root.level <= logging.DEBUG:
+        log_results(result)
 
-    return total_elapsed_time, total_inf_time, total_samples, throughput
+    return result

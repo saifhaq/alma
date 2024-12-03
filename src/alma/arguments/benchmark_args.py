@@ -7,17 +7,18 @@ import torch
 
 from ..conversions.select import MODEL_CONVERSION_OPTIONS
 
+# Create a module-level logger
+logger = logging.getLogger(__name__)
+# Don't add handlers - let the application configure logging
+logger.addHandler(logging.NullHandler())
+
 
 # Define a custom argument type for a list of strings
 def list_of_strings(arg):
     return arg.split(",")
 
 
-def parse_benchmark_args(
-    logger: Union[logging.Logger, None] = None
-) -> Tuple[argparse.Namespace, torch.device]:
-    if logger is None:
-        logger = logging.getLogger(__name__)
+def parse_benchmark_args() -> Tuple[argparse.Namespace, torch.device]:
 
     # Create a string represenation of the model conversion options
     # to add to the argparser description.
@@ -86,41 +87,46 @@ to different transforms, or their string names. MUltiple options can be selected
 
     # If no conversion options are provided, we use all available options
     if not args.conversions:
-        args.conversions = valid_conversion_options
+        conversions = valid_conversion_options
+    else:
+        conversions = args.conversions
 
     # Checks on the model conversion options
     assert isinstance(
-        args.conversions, (list, int, str)
+        conversions, (list, int, str)
     ), "Please select a valid option for the model conversion"
-    if not isinstance(args.conversions, list):
-        conversions = [args.conversions]
-    else:
-        conversions = args.conversions
+    if not isinstance(conversions, list):
+        conversions = [conversions]
 
     error_msg = (
         lambda conversion: f"Please select a valid option for the model conversion, {conversion} not in {valid_conversion_options}. Call `-h` for help."
     )
-    for conversion in conversions:
-        if conversion.isnumeric():
-            conversion = int(conversion)
-        assert conversion in valid_conversion_options, error_msg(conversion)
-        logger.info(
-            f"{MODEL_CONVERSION_OPTIONS[conversion]} model selected for benchmarking"
-        )
-
     # Convert all selected conversion options to a list of strings. I.e., all ints become strings
-    new_conversions = []
+    # We also check that the provided conversion options are valid
+    selected_conversions = []
     for conversion in conversions:
-        if conversion.isnumeric():
+        if isinstance(conversion, str) and conversion.isnumeric():
             conversion = int(conversion)
-        if isinstance(conversion, int):
-            if MODEL_CONVERSION_OPTIONS[conversion] not in new_conversions:
-                conversions.append(MODEL_CONVERSION_OPTIONS[conversion])
+            assert conversion in valid_conversion_options, error_msg(conversion)
+            selected_conversions.append(MODEL_CONVERSION_OPTIONS[conversion])
+        elif isinstance(conversion, str) and not conversion.isnumeric():
+            assert conversion in valid_conversion_options, error_msg(conversion)
+            selected_conversions.append(conversion)
+        elif isinstance(conversion, int):
+            assert conversion in valid_conversion_options, error_msg(conversion)
+            selected_conversions.append(MODEL_CONVERSION_OPTIONS[conversion])
         else:
-            if conversion not in new_conversions:
-                new_conversions.append(conversion)
+            raise ValueError(error_msg(conversion))
 
-    args.conversions = new_conversions
+    # Convert the list of selected conversions to a "pretty" string for logging
+    format_list = lambda lst: ", ".join(lst[:-1]) + (
+        " and " + lst[-1] if len(lst) > 1 else lst[0] if lst else ""
+    )
+    logger.info(
+        f"{format_list(selected_conversions)} model conversions selected for benchmarking\n"
+    )
+
+    args.conversions = selected_conversions
 
     if use_cuda:
         device = torch.device("cuda")

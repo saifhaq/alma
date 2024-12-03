@@ -1,27 +1,26 @@
 import logging
+from typing import Dict
 
 
 def log_results(
-    logger: logging.Logger,
-    total_elapsed_time: float,
-    total_inf_time: float,
-    total_samples: float,
-    throughput: float,
+    results: Dict[str, float],
 ) -> None:
     """
     Logs the benchmarking results.
 
     Inputs:
-    - logger (logging.Logger): The logger to use for logging.
-    - total_elapsed_time (float): The total elapsed time for the benchmark.
-    - total_inf_time (float): The total time taken for inference.
-    - total_samples (int): The total number of samples benchmarked.
-    - throughput (float): The throughput of the model.
+    - results (Dict[str, float]): The results of the benchmarking. This contains the following:
+        - total_elapsed_time (float): The total elapsed time for the benchmark.
+        - total_inf_time (float): The total time taken for inference.
+        - total_samples (int): The total number of samples benchmarked.
+        - throughput (float): The throughput of the model.
 
     Outputs:
     None
     """
-    logger.info(f"Total elapsed time: {total_elapsed_time:.4f} seconds")
-    logger.info(f"Total inference time (model only): {total_inf_time:.4f} seconds")
-    logger.info(f"Total samples: {total_samples}")
-    logger.info(f"Throughput: {throughput:.2f} samples/second")
+    logging.info(f"Total elapsed time: {results['total_elapsed_time']:.4f} seconds")
+    logging.info(
+        f"Total inference time (model only): {results['total_inf_time']:.4f} seconds"
+    )
+    logging.info(f"Total samples: {results['total_samples']}")
+    logging.info(f"Throughput: {results['throughput']:.2f} samples/second")

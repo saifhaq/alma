@@ -13,11 +13,15 @@ from torch.export.exported_program import ExportedProgram
 
 from .utils.check_type import check_model_type
 
+# Create a module-level logger
+logger = logging.getLogger(__name__)
+# Don't add handlers - let the application configure logging
+logger.addHandler(logging.NullHandler())
+
 
 def get_quant_exported_model(
     model,
     data: torch.Tensor,
-    logging: logging.Logger,
     int_or_dequant_op: Literal["int", "dequant"],
 ) -> torch.fx.graph_module.GraphModule:
     """
@@ -27,7 +31,6 @@ def get_quant_exported_model(
     Inputs:
     - model (torch.nn.Module): The model to export
     - data (torch.Tensor): Sample data to feed through the model for tracing.
-    - logging (logging.Logger): The logger to use for logging
     - int_or_dequant_op (Literal["int", "dequant"]): do we use integer arithmetic operations on
             quantized layers, or do we dequantize just prior to the op
 
@@ -35,7 +38,7 @@ def get_quant_exported_model(
     model (torch.export.Model): The exported model
     """
 
-    logging.info(
+    logger.info(
         "Running torch.export.export_for_training on the model to get a quantized exported model"
     )
 
@@ -74,7 +77,9 @@ def get_quant_exported_model(
     m_q: torch.fx.graph_module.GraphModule = convert_pt2e(
         m_fq, use_reference_representation=int_op
     )
-    m_q.graph.print_tabular()
+
+    logger.debug("Quantized model graph:")
+    logger.debug(m_q.graph.print_tabular())
 
     # we have a model with aten ops doing integer computations when possible
     check_model_type(m_q, torch.fx.graph_module.GraphModule)
@@ -85,7 +90,6 @@ def get_quant_exported_model(
 def get_quant_exported_forward_call(
     model,
     data: torch.Tensor,
-    logging: logging.Logger,
     int_or_dequant_op: Literal["int", "dequant"],
 ) -> Callable:
     """
@@ -94,7 +98,6 @@ def get_quant_exported_forward_call(
     Inputs:
     - model (torch.nn.Module): The model to export
     - data (torch.Tensor): Sample data to feed through the model for tracing.
-    - logging (logging.Logger): The logger to use for logging
     - int_or_dequant_op (Literal["int", "dequant"]): do we use integer arithmetic operations on
             quantized layers, or do we dequantize just prior to the op
 

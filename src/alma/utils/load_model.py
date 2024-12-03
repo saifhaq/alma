@@ -4,6 +4,9 @@ from typing import Union
 
 import torch
 
+logger = logging.getLogger(__name__)
+logger.addHandler(logging.NullHandler())
+
 
 def load_model(
     model_path: Path,

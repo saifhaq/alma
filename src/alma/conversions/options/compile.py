@@ -1,3 +1,4 @@
+import logging
 from typing import Callable, Union
 
 import torch
@@ -5,11 +6,13 @@ import torch.fx as fx
 
 from .utils.check_type import check_model_type
 
+logger = logging.getLogger(__name__)
+logger.addHandler(logging.NullHandler())
+
 
 def get_compiled_model_forward_call(
     model: Union[torch.nn.Module, fx.GraphModule],
     data: torch.Tensor,
-    logging,
 ) -> Callable:
     """
     Compile the model using torch.compile.
@@ -17,7 +20,6 @@ def get_compiled_model_forward_call(
     Inputs:
     - model (torch.nn.Module): The model to export
     - data (torch.Tensor): A sample of data to feed through the model
-    - logging: The logger to use for logging
 
     Outputs:
     model (torch._dynamo.eval_frame.OptimizedModule): The compiled model
@@ -38,10 +40,12 @@ def get_compiled_model_forward_call(
 
     model = torch.compile(model, **compile_settings)
 
-    _ = model(data)
+    with torch.no_grad():
+        _ = model(data)
 
-    # Print model graph
-    model.graph.print_tabular()
+    # # Print model graph
+    # logging.debug("Model graph:")
+    # logging.debug(model.graph.print_tabular())
 
     check_model_type(model, torch._dynamo.eval_frame.OptimizedModule)
 

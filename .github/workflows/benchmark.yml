@@ -34,8 +34,8 @@ jobs:
         cd examples/mnist
         mkdir -p ../results
         for i in {0..14}; do
-          echo "Running benchmark with conversion $i"
-          timeout 60s python benchmark.py --model-path=./model/mnist.pt --data-dir=data_for_inference --conversion $i > ../results/benchmark_conversion_$i.txt 2>&1 || echo "Conversion $i failed due to timeout or error" > ../results/benchmark_conversion_$i.txt
+          echo "Running benchmark with data loader, with conversion $i"
+          timeout 60s python benchmark_with_dataloader.py --model-path ./model/mnist.pt --data-dir data/data_for_inference --conversions $i > ../results/benchmark_conversion_$i.txt 2>&1 || echo "Conversion $i failed due to timeout or error" > ../results/benchmark_conversion_$i.txt
         done
 
     - name: Upload benchmark results

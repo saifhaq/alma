@@ -1,4 +1,3 @@
-import argparse
 import logging
 from pathlib import Path
 from typing import Any, Callable
@@ -20,23 +19,31 @@ from .options.onnx import get_onnx_dynamo_forward_call, get_onnx_forward_call
 
 # from .options.tensorrt import get_tensorrt_dynamo_forward_call # commented out because it messes up imports if not on CUDA
 
+
+logger = logging.getLogger(__name__)
+logger.addHandler(logging.NullHandler())
+
 MODEL_CONVERSION_OPTIONS = {
-    0: "EXPORT+COMPILE",
-    1: "EXPORT+AOT_INDUCTOR",
-    2: "EXPORT+EAGER",
-    3: "EXPORT+TENSORRT",
-    4: "ONNX+DYNAMO_EXPORT",
-    5: "EXPORT+INT_QUANTIZED",
-    6: "EXPORT+FLOAT_QUANTIZED",
-    7: "EXPORT+INT-QUANTIZED+AOT_INDUCTOR",
-    8: "EXPORT+FLOAT-QUANTIZED+AOT_INDUCTOR",
-    9: "COMPILE",
-    10: "EAGER",
-    11: "TENSORRT",
-    12: "ONNX_CPU",
-    13: "ONNX_GPU",
-    14: "CONVERT_QUANTIZED",
-    15: "FAKE_QUANTIZED",
+    0: "EXPORT+COMPILE_INDUCTOR",
+    1: "EXPORT+COMPILE_CUDAGRAPH",
+    2: "EXPORT+COMPILE_ONNXRT",
+    3: "EXPORT+COMPILE_OPENXLA",
+    4: "EXPORT+COMPILE_TVM",
+    5: "EXPORT+AOT_INDUCTOR",
+    6: "EXPORT+EAGER",
+    7: "EXPORT+TENSORRT",
+    8: "ONNX+DYNAMO_EXPORT",
+    9: "EXPORT+INT_QUANTIZED",
+    10: "EXPORT+FLOAT_QUANTIZED",
+    11: "EXPORT+INT-QUANTIZED+AOT_INDUCTOR",
+    12: "EXPORT+FLOAT-QUANTIZED+AOT_INDUCTOR",
+    13: "COMPILE",
+    14: "EAGER",
+    15: "TENSORRT",
+    16: "ONNX_CPU",
+    17: "ONNX_GPU",
+    18: "CONVERT_QUANTIZED",
+    19: "FAKE_QUANTIZED",
 }
 
 
@@ -44,7 +51,6 @@ def select_forward_call_function(
     model: Any,
     conversion: str,
     data: torch.Tensor,
-    logging: logging.Logger,
 ) -> Callable:
     """
     Get the forward call function for the model. The complexity is because there are multiple
@@ -55,7 +61,6 @@ def select_forward_call_function(
     - conversion (str): The conversion method to use for the model.
     - data (torch.Tensor): A sample of data to pass through the model, which may be needed for
     some of the export methods.
-    - logging (logging.Logger): The logger to use for logging.
 
     Outputs:
     - forward (Callable): The forward call function for the model.
@@ -65,43 +70,57 @@ def select_forward_call_function(
         ###############
         # WITH EXPORT #
         ###############
-        case "EXPORT+COMPILE":
-            # This is torch compile, fed into torch export
-            forward = get_export_compiled_forward_call(model, data, logging)
+        case "EXPORT+COMPILE_INDUCTOR":
+            forward = get_export_compiled_forward_call(model, data, "inductor")
+
+        case "EXPORT+COMPILE_CUDAGRAPH":
+            forward = get_export_compiled_forward_call(model, data, "cudagraphs")
+
+        case "EXPORT+COMPILE_ONNXRT":
+            # Make sure all dependencies are installed, see here for a discussion by the ONNX team:
+            # https://github.com/pytorch/pytorch/blob/main/torch/_dynamo/backends/onnxrt.py
+            pass
+            # forward = get_export_compiled_forward_call(model, data, "onnxrt")
+
+        case "EXPORT+COMPILE_OPENXLA":
+            forward = get_export_compiled_forward_call(model, data, "openxla")
+
+        case "EXPORT+COMPILE_TVM":
+            forward = get_export_compiled_forward_call(model, data, "tvm")
 
         case "EXPORT+AOT_INDUCTOR":
-            forward = get_export_aot_inductor_forward_call(model, data, logging)
+            forward = get_export_aot_inductor_forward_call(model, data)
 
         case "EXPORT+EAGER":
-            forward = get_export_eager_forward_call(model, data, logging)
+            forward = get_export_eager_forward_call(model, data)
 
         case "EXPORT+TENSORRT":
-            # forward = get_tensorrt_dynamo_forward_call(model, data, logging)
+            # forward = get_tensorrt_dynamo_forward_call(model, data)
             raise NotImplementedError(
                 "Installing torch_tensorrt is taking forever, have to do"
             )
 
         case "ONNX+DYNAMO_EXPORT":
-            forward = get_onnx_dynamo_forward_call(model, data, logging)
+            forward = get_onnx_dynamo_forward_call(model, data)
 
         case "EXPORT+INT_QUANTIZED":
             forward = get_quant_exported_forward_call(
-                model, data, logging, int_or_dequant_op="int"
+                model, data, int_or_dequant_op="int"
             )
 
         case "EXPORT+FLOAT_QUANTIZED":
             forward = get_quant_exported_forward_call(
-                model, data, logging, int_or_dequant_op="dequant"
+                model, data, int_or_dequant_op="dequant"
             )
 
         case "EXPORT+INT_QUANTIZED+AOT_INDUCTOR":
             forward = get_quant_export_aot_inductor_forward_call(
-                model, data, logging, int_or_dequant_op="int"
+                model, data, int_or_dequant_op="int"
             )
 
         case "EXPORT+FLOAT_QUANTIZED+AOT_INDUCTOR":
             forward = get_quant_export_aot_inductor_forward_call(
-                model, data, logging, int_or_dequant_op="dequant"
+                model, data, int_or_dequant_op="dequant"
             )
 
         ##################
@@ -110,7 +129,7 @@ def select_forward_call_function(
         case "COMPILE":
             # Torch.compile without export. This is basically just a regular forward call,
             # maybe with some fusing
-            forward = get_compiled_model_forward_call(model, data, logging)
+            forward = get_compiled_model_forward_call(model, data)
 
         case "EAGER":
             # Regular eager model forward call
@@ -123,16 +142,12 @@ def select_forward_call_function(
         case "ONNX_CPU":
             onnx_model_path = Path("model/model.onnx")
             onnx_backend = "CPUExecutionProvider"
-            forward = get_onnx_forward_call(
-                model, data, logging, onnx_model_path, onnx_backend
-            )
+            forward = get_onnx_forward_call(model, data, onnx_model_path, onnx_backend)
 
         case "ONNX_GPU":
             onnx_model_path = Path("model/model.onnx")
             onnx_backend = "CUDAExecutionProvider"
-            forward = get_onnx_forward_call(
-                model, data, logging, onnx_model_path, onnx_backend
-            )
+            forward = get_onnx_forward_call(model, data, onnx_model_path, onnx_backend)
 
         case "CONVERT_QUANTIZED":
             pass

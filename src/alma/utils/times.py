@@ -8,6 +8,9 @@ from tqdm import tqdm
 
 from .data import process_batch
 
+logger = logging.getLogger(__name__)
+logger.addHandler(logging.NullHandler())
+
 
 def log_benchmark_times(
     logging: logging.Logger,
