@@ -21,7 +21,7 @@ def benchmark_model(
     conversions: Union[List[str], None] = None,
     data: Union[torch.Tensor, None] = None,
     data_loader: Union[DataLoader, None] = None,
-) -> None:
+) -> Dict[str, Dict[str, float]]:
     """
     Benchmark the model on different conversion methods. If provided, the dataloader will be used.
     Else, a random dataloader will be created, in which case the `data` tensor must be provided
@@ -45,7 +45,7 @@ def benchmark_model(
             be used. Else, a random dataloader will be created.
 
     Outputs:
-    - all_results (Dict[str, tuple]): The results of the benchmarking for each conversion method.
+    - all_results (Dict[str, Dict[str, float]]): The results of the benchmarking for each conversion method.
         The key is the conversion method, and the value is a tuple containing the total elapsed
         time, the total time taken, the total number of samples, and the
     """
