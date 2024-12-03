@@ -6,6 +6,8 @@ on:
 concurrency:
     group: ${{ github.workflow }}-deployment
     cancel-in-progress: false
+
+jobs:
     tag:
         runs-on: ubuntu-latest
 
