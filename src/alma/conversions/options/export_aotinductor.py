@@ -11,8 +11,6 @@ from .export_quant import get_quant_exported_model
 from .utils.check_type import check_model_type
 from .utils.export import get_exported_model
 
-CUDA_HOME = os.environ.get("CUDA_HOME")
-
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())
 
@@ -54,10 +52,6 @@ def get_AOTInductor_lowered_model_forward_call(
     Outputs:
     - forward (Callable): The forward call function for the model.
     """
-    if not CUDA_HOME:
-        raise ValueError(
-            "To use the AOTInductor option for export, set CUDA_HOME when you call the script, e.g. `CUDA_HOME='/usr/local/cuda' python benchmark.py`"
-        )
 
     check_model_type(model, (ExportedProgram, GraphModule))
     logger.info("Lowering the model with AOTInductor")
