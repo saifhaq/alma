@@ -1,0 +1,38 @@
+name: Version bump
+on:
+    push:
+        branches:
+            - main
+concurrency:
+    group: ${{ github.workflow }}-deployment
+    cancel-in-progress: false
+    tag:
+        runs-on: ubuntu-latest
+
+        outputs:
+            next_version: ${{ steps.semver.outputs.nextStrict }}
+
+        steps:
+            - uses: actions/checkout@v4
+              with:
+                  fetch-depth: 1
+
+            - name: Get next version
+              id: semver
+              uses: ietf-tools/semver-action@v1
+              with:
+                  majorList: major,breaking
+                  minorList: minor,feat,feature
+                  noVersionBumpBehavior: patch
+                  token: ${{ github.token }}
+                  branch: main
+
+            - name: Create release
+              uses: ncipollo/release-action@v1.14.0
+              with:
+                  allowUpdates: true
+                  draft: false
+                  makeLatest: true
+                  name: ${{ steps.semver.outputs.next }}
+                  tag: ${{ steps.semver.outputs.next }}
+                  token: ${{ github.token }}
