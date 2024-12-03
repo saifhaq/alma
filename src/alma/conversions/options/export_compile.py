@@ -38,10 +38,11 @@ def get_export_compiled_forward_call(
 
     # Log graph
     if logger.root.level <= logging.DEBUG:
-        logger.debug("Model graph:")
-        # logger.debug(model.module().)
+        logger.debug("Exported model graph:")
+        logger.debug(model.module().graph.print_tabular())
 
     # Compile the model, and get the forward call
+    logger.info("Compiling the exported model")
     forward = torch.compile(model.module(), **compile_settings).forward
 
     with torch.no_grad():
