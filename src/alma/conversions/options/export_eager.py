@@ -8,7 +8,7 @@ from .utils.export import get_exported_model
 
 
 def get_export_eager_forward_call(
-    model: torch.nn.Module, data: torch.Tensor, logger
+    model: torch.nn.Module, data: torch.Tensor
 ) -> Callable:
     """
     Get eager mode forward call of export (shouldn't be much faster than basic eager
@@ -18,14 +18,13 @@ def get_export_eager_forward_call(
     Inputs:
     - model (torch.nn.Module): The model to get the forward call for.
     - data (torch.Tensor): A sample of data to pass through the model.
-    - logger (logging.Logger): The logger to use for logging
 
     Outputs:
     - forward (Callable): The forward call function for the model.
 
     """
     # Get exported model
-    model = get_exported_model(model, data, logger)
+    model = get_exported_model(model, data)
 
     check_model_type(model, ExportedProgram)
     forward = model.module().forward
