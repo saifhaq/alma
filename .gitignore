@@ -172,3 +172,6 @@ examples/mnist/data/mnist_cnn*
 .secrets
 *.onnx
 *egg-info
+data_for_inference
+mnist_images*
+data_for_inference/
