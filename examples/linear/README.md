@@ -116,5 +116,5 @@ to `.env`.
 
 Example command:
 ```bash
-CUDA_HOME='/usr/local/cuda' python benchmark_random_tensor.py  --conversion 1,2 --n-samples 5000 --batch-size 100
+python benchmark_random_tensor.py  --conversion 1,2 --n-samples 5000 --batch-size 100
 ```

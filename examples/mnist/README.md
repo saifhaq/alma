@@ -244,15 +244,3 @@ E.g.
 cd examples/mnist
 python benchmark_random_tensor.py --conversion 10,2 --batch-size 100 --n-samples 5000
 ```
-
-
-## CUDA pathing
-For a number of the conversion options, one needs to provide one's CUDA path as an environmental
-variable. This can be fed in via the command line (as below), or added to a `.env` file. For the 
-laytter, an example `.env.example` has been provided, this can be adjiusted if needed and renamed
-to `.env`.
-
-Example command:
-```bash
-CUDA_HOME='/usr/local/cuda' python benchmark_random_tensor.py --conversion 10,2 --batch-size 100 --n-samples 5000
-```
