@@ -109,8 +109,12 @@ to different transforms, or their string names. MUltiple options can be selected
             conversion = int(conversion)
             assert conversion in valid_conversion_options, error_msg(conversion)
             selected_conversions.append(MODEL_CONVERSION_OPTIONS[conversion])
-        elif conversion in valid_conversion_options:
+        elif isinstance(conversion, str) and not conversion.isnumeric():
+            assert conversion in valid_conversion_options, error_msg(conversion)
             selected_conversions.append(conversion)
+        elif isinstance(conversion, int):
+            assert conversion in valid_conversion_options, error_msg(conversion)
+            selected_conversions.append(MODEL_CONVERSION_OPTIONS[conversion])
         else:
             raise ValueError(error_msg(conversion))
 
