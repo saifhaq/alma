@@ -115,8 +115,12 @@ to different transforms, or their string names. MUltiple options can be selected
             raise ValueError(error_msg(conversion))
 
     # Convert the list of selected conversions to a "pretty" string for logging
-    format_list = lambda lst: ", ".join(lst[:-1]) + (" and " + lst[-1] if len(lst) > 1 else lst[0] if lst else "")
-    logger.info(f"{format_list(selected_conversions)} model conversions selected for benchmarking\n")
+    format_list = lambda lst: ", ".join(lst[:-1]) + (
+        " and " + lst[-1] if len(lst) > 1 else lst[0] if lst else ""
+    )
+    logger.info(
+        f"{format_list(selected_conversions)} model conversions selected for benchmarking\n"
+    )
 
     args.conversions = selected_conversions
 

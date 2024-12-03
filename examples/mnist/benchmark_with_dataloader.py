@@ -24,7 +24,7 @@ def main() -> None:
     ipdb_sys_excepthook()
 
     # Set up logging. DEBUG level will also log the model graphs
-    # A `setup_logging` function is provided for convenience, but one can use whatever logging one 
+    # A `setup_logging` function is provided for convenience, but one can use whatever logging one
     # wishes, or none.
     setup_logging(log_file=None, level="INFO")
 
