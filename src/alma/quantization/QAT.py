@@ -1,5 +1,4 @@
 import argparse
-import logging
 import time
 from typing import Callable, Union
 
@@ -8,6 +7,10 @@ import torch.optim as optim
 import torch.quantization as tq
 from torch.optim.lr_scheduler import LRScheduler
 
+import logging
+
+logger = logging.getLogger(__name__)
+logger.addHandler(logging.NullHandler())
 
 def QAT(
     train: Callable,

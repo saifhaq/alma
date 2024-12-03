@@ -5,6 +5,11 @@ import torch.fx as fx
 
 from .utils.check_type import check_model_type
 
+import logging
+
+logger = logging.getLogger(__name__)
+logger.addHandler(logging.NullHandler())
+
 
 def get_compiled_model_forward_call(
     model: Union[torch.nn.Module, fx.GraphModule],
@@ -41,7 +46,8 @@ def get_compiled_model_forward_call(
     _ = model(data)
 
     # Print model graph
-    model.graph.print_tabular()
+    logging.debug("Model graph:")
+    logging.debug(model.graph.print_tabular())
 
     check_model_type(model, torch._dynamo.eval_frame.OptimizedModule)
 

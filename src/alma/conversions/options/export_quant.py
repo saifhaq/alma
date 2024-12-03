@@ -1,5 +1,4 @@
 import copy
-import logging
 from argparse import Namespace
 from typing import Callable, Literal
 
@@ -13,6 +12,12 @@ from torch.export.exported_program import ExportedProgram
 
 from .utils.check_type import check_model_type
 
+import logging
+
+# Create a module-level logger
+logger = logging.getLogger(__name__)
+# Don't add handlers - let the application configure logging
+logger.addHandler(logging.NullHandler())
 
 def get_quant_exported_model(
     model,
@@ -74,7 +79,9 @@ def get_quant_exported_model(
     m_q: torch.fx.graph_module.GraphModule = convert_pt2e(
         m_fq, use_reference_representation=int_op
     )
-    m_q.graph.print_tabular()
+
+    logging.debug("Quantized model graph:")
+    logging.debug(m_q.graph.print_tabular())
 
     # we have a model with aten ops doing integer computations when possible
     check_model_type(m_q, torch.fx.graph_module.GraphModule)

@@ -9,7 +9,6 @@ from utils.data.transforms import InferenceTransform
 
 from alma.arguments.benchmark_args import parse_benchmark_args
 from alma.benchmark_model import benchmark_model
-from alma.utils.data import get_sample_data
 from alma.utils.ipdb_hook import ipdb_sys_excepthook
 from alma.utils.load_model import load_model
 from alma.utils.setup_logging import setup_logging
@@ -20,7 +19,14 @@ torch.backends.quantized.engine = "qnnpack"
 
 
 def main() -> None:
-    args, device = parse_benchmark_args(logging)
+    args, device = parse_benchmark_args()
+
+    # Set up logging. DEBUG level will also log the model graphs
+    setup_logging(log_file=None, level="INFO")
+
+    # Adds an ipdb hook to the sys.excepthook, which will throw one into an ipdb shell when an
+    # exception is raised. Comment out to have the program crash as normal during an unhandled exception
+    ipdb_sys_excepthook()
 
     # Create dataset and data loader
     assert args.data_dir is not None, "Please provide a data directory"
@@ -28,7 +34,6 @@ def main() -> None:
         img_dir=args.data_dir, transform=InferenceTransform
     )
     data_loader = CircularDataLoader(dataset, batch_size=args.batch_size, shuffle=False)
-    data = get_sample_data(data_loader, device)
 
     # Load model
     assert args.model_path is not None, "Please provide a model path"
@@ -60,14 +65,15 @@ def main() -> None:
             # "FAKE_QUANTIZED",
         ]
 
+    # Configuration for the benchmarking
+    config = {
+        "n_samples": args.n_samples,
+        "batch_size": args.batch_size,
+    }
+
     # Benchmark the model using the provided data loader.
     logging.info("Benchmarking model using provided data loader")
-    benchmark_model(model, device, args, conversions, data_loader=data_loader)
-
+    benchmark_model(model, config, conversions, data_loader=data_loader)
 
 if __name__ == "__main__":
-    # Adds an ipdb hook to the sys.excepthook, which will throw one into an ipdb shell when an
-    # exception is raised
-    ipdb_sys_excepthook()
-    setup_logging()
     main()

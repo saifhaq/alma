@@ -1,4 +1,3 @@
-import logging
 from pathlib import Path
 from typing import Any, Callable, Union
 
@@ -8,6 +7,12 @@ import torch
 
 from .utils.check_type import check_model_type
 
+import logging
+
+# Create a module-level logger
+logger = logging.getLogger(__name__)
+# Don't add handlers - let the application configure logging
+logger.addHandler(logging.NullHandler())
 
 def save_onnx_model(
     model,
@@ -65,7 +70,8 @@ def save_onnx_model(
     onnx.checker.check_model(loaded_model)
 
     # Print a human readable representation of the graph
-    print(onnx.helper.printable_graph(loaded_model.graph))
+    logging.debug("ONNX model graph:")
+    logger.debug(onnx.helper.printable_graph(loaded_model.graph))
 
 
 def _get_onnx_forward_call(

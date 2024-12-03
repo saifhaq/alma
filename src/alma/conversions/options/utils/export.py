@@ -24,6 +24,9 @@ def get_exported_model(
     # Call torch export, which decomposes the forward pass of the model
     # into a graph of Aten primitive operators
     model = torch.export.export(model, (data,))
-    model.graph.print_tabular()
+
+    logging.debug("Model graph:")
+    if logging.root.level <= logging.DEBUG:
+        logging.debug(model.graph.print_tabular())
 
     return model

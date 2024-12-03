@@ -66,9 +66,15 @@ model = ...
 # Load the data
 data_loader = ...
 
+# Set the configuration
+config = {
+    "batch_size": args.batch_size,
+    "n_samples": args.n_samples,
+}
+
 # Benchmark the model
 benchmark_model(
-    model, device, args, args.conversions, data_loader=data_loader
+   model, config, args.conversions, data_loader=data_loader
 )
 ```
 
@@ -82,12 +88,12 @@ python ABOVE_SCRIPT.py --model-path ./model/mnist.pt --conversions EAGER,EXPORT+
 
 This will run the EXPORT+EAGER conversion option and the EAGER conversion option, benchmarking the
 model speed for each conversion option. The batch size of the data loader is controlled via the
-`batch_size` argument. The number of samples to run the benchmark on is controlled via the `n_samples`
-argument. For convenience, we also provide a `data-dir` argument, so that one can have one's
-data loader feed in specific data, and a `model-path` argument, so that one can feed in specific 
-model weights.
+`batch_size` argument, fed in via the config object. The number of samples to run the benchmark on 
+is controlled via the `n_samples` argument. For convenience, we also provide a `data-dir` 
+argument, so that one can have one's data loader feed in specific data, and a `model-path` 
+argument, so that one can feed in specific model weights.
 
-The results will look like this, depending on one's model, dataloader and hardware.
+The results will look like this, depending on one's model, dataloader, hardware, and logging.
 
 ```bash
 
@@ -118,6 +124,42 @@ python benchmark_with_dataloader.py --model-path ./model/mnist.pt --conversion 1
 100 --n-samples 5000 --data-dir data/data_for_inference
 cd examples/mnist/data
 ./reset.sh
+```
+
+This option also has some logging options, so the user can set up logging as desired.
+`alma` comes with a default logger that can be imported, or the user can set up their own logger.
+
+```python
+from alma import benchmark_model
+from alma.arguments.benchmark_args import parse_benchmark_args
+from alma.utils.setup_logging import setup_logging
+from typing import Dict
+
+# Parse the arguments, e.g. the model path, device, and conversion options
+# This is provided for convenience, but one can also just pass in the arguments directly to the
+# `benchmark_model` API.
+args, device = parse_benchmark_args()
+
+# Set up logging (comment out for no logging, or set DEBUG for more logging)
+# A `setup_logging` function is provided for convenience, but one can use whatever logging one 
+# wishes, or none.
+setup_logging(level="INFO")
+    
+# Load the model
+model = ...
+
+# Load the data
+data_loader = ...
+
+config = {
+    "batch_size": args.batch_size,
+    "n_samples": args.n_samples,
+}
+
+# Benchmark the model
+results: Dict[str, Dict[str, float]] =benchmark_model(
+   model, config, args.conversions, data_loader=data_loader
+)
 ```
 
 ### Selecting conversion options:
@@ -164,20 +206,32 @@ controlled via the `batch_size` argument.
 ```python
 from alma import benchmark_model
 from alma.arguments.benchmark_args import parse_benchmark_args
+from alma.utils.setup_logging import setup_logging
+from typing import Dict
 
 # Parse the arguments, e.g. the model path, device, and conversion options
 # This is provided for convenience, but one can also just pass in the arguments directly to the
 # `benchmark_model` API.
 args, device = parse_benchmark_args()
 
+# Set up logging (comment out for no logging, or set DEBUG for more logging)
+# A `setup_logging` function is provided for convenience, but one can use whatever logging one 
+# wishes, or none.
+setup_logging(level="INFO")
+
 # Load the model
 model = ...
+
+config = {
+    "batch_size": args.batch_size,
+    "n_samples": args.n_samples,
+}
 
 # Benchmark the model
 # We squeeze the data tensor's dimensions prior to feeding it in, as the batch size of the generated
 # data loader is controlled via the `batch_size` argument.
-benchmark_model(
-    model, device, args, args.conversions, data=torch.randn(1, 3, 28, 28).squeeze()
+results: Dict[str, Dict[str, float]] = benchmark_model(
+   model, config, args.conversions, data=torch.randn(1, 3, 28, 28).squeeze()
 )
 ```
 

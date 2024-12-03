@@ -1,12 +1,13 @@
 import logging
 import time
 
+from typing import Dict
 import torch
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 
 from ..conversions.select import select_forward_call_function
-from ..utils.data import get_sample_data
+from ..utils.data import get_sample_data, args_to_dict
 from ..utils.times import inference_time_benchmarking  # should we use this?
 from .log import log_results
 from .warmup import warmup
@@ -19,7 +20,7 @@ def benchmark(
     data_loader: DataLoader,
     n_samples: int,
     logger: logging.Logger,
-):
+) -> Dict[str, float]:
     """
     Benchmark the model using the given data loader. This function will benchmark the model using the
     given conversion method.
@@ -76,6 +77,9 @@ def benchmark(
 
     total_elapsed_time = end_time - start_time
     throughput = total_samples / total_elapsed_time if total_elapsed_time > 0 else 0
-    log_results(logger, total_elapsed_time, total_inf_time, total_samples, throughput)
+    if logger.root.level <= logging.DEBUG:
+        result: Dict[str, float] = args_to_dict(total_elapsed_time, total_inf_time, total_samples, throughput)
+        log_results(result)
 
-    return total_elapsed_time, total_inf_time, total_samples, throughput
+    results: Dict[str, float] = args_to_dict(total_elapsed_time, total_inf_time, total_samples, throughput)
+    return results

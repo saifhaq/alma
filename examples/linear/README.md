@@ -21,18 +21,31 @@ which is why we squeeze the data tensor's dimensions prior to feeding it in.
 ```python
 from alma import benchmark_model
 from alma.arguments.benchmark_args import parse_benchmark_args
+from alma.utils.setup_logging import setup_logging
+from typing import Dict
 
 # Parse the arguments, e.g. the model path, device, and conversion options
 # This is provided for convenience, but one can also just pass in the arguments directly to the
 # `benchmark_model` API.
 args, device = parse_benchmark_args()
 
+# Set up logging (comment out for no logging, or set DEBUG for more logging)
+# A `setup_logging` function is provided for convenience, but one can use whatever logging one 
+# wishes, or none.
+setup_logging(level="INFO")
+    
 # Load the model
 model = ...
 
+# Set the configuration
+config = {
+    "batch_size": args.batch_size,
+    "n_samples": args.n_samples,
+}
+
 # Benchmark the model
-benchmark_model(
-    model, device, args, args.conversions, data=torch.randn(1, 3, 28, 28).squeeze()
+results: Dict[str, Dict[str, float]] = benchmark_model(
+    model, config, args.conversions, data=torch.randn(1, 3, 28, 28).squeeze()
 )
 ```
 
@@ -50,7 +63,7 @@ model speed for each conversion option. The batch size of the data loader is con
 `batch_size` argument. The number of samples to run the benchmark on is controlled via the `n_samples`
 argument. See the `mnist` example for more details on other available arguments.
 
-The results will look like this, depending on one's model, dataloader and hardware.
+The results will look like this, depending on one's model, dataloader, hardware, and logging.
 
 ```bash
 EAGER results:

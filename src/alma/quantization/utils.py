@@ -1,9 +1,12 @@
-import logging
 from typing import Optional, Tuple
 
 import torch
 import torch.fx as fx
 
+import logging
+
+logger = logging.getLogger(__name__)
+logger.addHandler(logging.NullHandler())
 
 def save_fake_quantized_model(model: torch.nn.Module, path: str) -> None:
     """

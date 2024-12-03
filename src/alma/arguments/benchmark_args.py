@@ -1,5 +1,4 @@
 import argparse
-import logging
 from pathlib import Path
 from typing import Tuple, Union
 
@@ -7,6 +6,12 @@ import torch
 
 from ..conversions.select import MODEL_CONVERSION_OPTIONS
 
+import logging
+
+# Create a module-level logger
+logger = logging.getLogger(__name__)
+# Don't add handlers - let the application configure logging
+logger.addHandler(logging.NullHandler())
 
 # Define a custom argument type for a list of strings
 def list_of_strings(arg):
@@ -14,10 +19,7 @@ def list_of_strings(arg):
 
 
 def parse_benchmark_args(
-    logger: Union[logging.Logger, None] = None
 ) -> Tuple[argparse.Namespace, torch.device]:
-    if logger is None:
-        logger = logging.getLogger(__name__)
 
     # Create a string represenation of the model conversion options
     # to add to the argparser description.
