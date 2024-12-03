@@ -19,14 +19,14 @@ def get_exported_model(model, data: torch.Tensor) -> ExportedProgram:
     model (torch.export.Model): The exported model
     """
 
-    logging.info("Running torch.export on the model")
+    logger.info("Running torch.export on the model")
 
     # Call torch export, which decomposes the forward pass of the model
     # into a graph of Aten primitive operators
     model = torch.export.export(model, (data,))
 
-    logging.debug("Model graph:")
-    if logging.root.level <= logging.DEBUG:
-        logging.debug(model.graph.print_tabular())
+    logger.debug("Model graph:")
+    if logger.root.level <= logging.DEBUG:
+        logger.debug(model.graph.print_tabular())
 
     return model
