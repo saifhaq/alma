@@ -108,7 +108,6 @@ def _get_onnx_forward_call(
 def get_onnx_forward_call(
     model: Any,
     data: torch.Tensor,
-    logger: logging.Logger,
     onnx_model_path: str = "model/model.onnx",
     onnx_provider: str = "CPUExecutionProvider",
 ):
@@ -118,7 +117,6 @@ def get_onnx_forward_call(
     Inputs:
     - model (Any): The model to get the forward call for.
     - data (torch.Tensor): A sample of data to pass through the model.
-    - logging: The logger to use for logging
     - onnx_model_path (str): the path to save the ONNX model to.
     - onnx_provider (str): the ONNX execution provider to use.
 

@@ -15,7 +15,8 @@ torch.backends.quantized.engine = "qnnpack"
 
 def main() -> None:
     # Set up logging. DEBUG level will also log the model graphs
-    setup_logging(log_file=None, level="DEBUG")
+    # setup_logging(log_file=None, level="DEBUG")
+    setup_logging(log_file=None, level="INFO")
 
     # Adds an ipdb hook to the sys.excepthook, which will throw one into an ipdb shell when an
     # exception is raised. Comment out to have the program crash as normal during an unhandled exception

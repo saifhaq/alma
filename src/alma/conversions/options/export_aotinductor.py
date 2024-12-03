@@ -18,7 +18,7 @@ logger.addHandler(logging.NullHandler())
 
 
 def get_export_aot_inductor_forward_call(
-    model: ExportedProgram | GraphModule, data: torch.Tensor, logger: logging.Logger
+    model: ExportedProgram | GraphModule, data: torch.Tensor
 ) -> Callable:
     """
     Get the forward call function for the exported model using AOTInductor.
@@ -26,24 +26,23 @@ def get_export_aot_inductor_forward_call(
     Inputs:
     - model (Union[ExportedProram, GraphModule]): The model to get the forward call for.
     - data (torch.Tensor): A sample of data to pass through the model.
-    - logging (logging.Logger): The logger to use for logging
 
     Outputs:
     - forward (Callable): The forward call function for the model.
     """
 
     # Export the model
-    model = get_exported_model(model, data, logging)
+    model = get_exported_model(model, data)
 
     # NOTE: not sure if this is correct. It may be correct for compile, or for compile+export.
     # If the latter, move this into the export sub directory.
     check_model_type(model, ExportedProgram)
 
-    return get_AOTInductor_lowered_model_forward_call(model, data, logger)
+    return get_AOTInductor_lowered_model_forward_call(model, data)
 
 
 def get_AOTInductor_lowered_model_forward_call(
-    model: ExportedProgram | GraphModule, data: torch.Tensor, logger: logging.Logger
+    model: ExportedProgram | GraphModule, data: torch.Tensor
 ) -> Callable:
     """
     Get the forward call function for the model using AOTInductor.
@@ -51,7 +50,6 @@ def get_AOTInductor_lowered_model_forward_call(
     Inputs:
     - model (Union[ExportedProram, GraphModule]): The model to get the forward call for.
     - data (torch.Tensor): A sample of data to pass through the model.
-    - logging (logging.Logger): The logger to use for logging
 
     Outputs:
     - forward (Callable): The forward call function for the model.
@@ -84,7 +82,6 @@ def get_AOTInductor_lowered_model_forward_call(
 def get_quant_export_aot_inductor_forward_call(
     model,
     data: torch.Tensor,
-    logger: logging.Logger,
     int_or_dequant_op: Literal["int", "dequant"],
 ) -> Callable:
     """
@@ -94,7 +91,6 @@ def get_quant_export_aot_inductor_forward_call(
     Inputs:
     - model (torch.nn.Module): The model to export
     - data (torch.Tensor): Sample data to feed through the model for tracing.
-    - logger (logging.Logger): The logger to use for logging
     - int_or_dequant_op (Literal["int", "dequant"]): do we use integer arithmetic operations on
             quantized layers, or do we dequantize just prior to the op
 

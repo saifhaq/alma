@@ -12,6 +12,9 @@ from ..utils.times import inference_time_benchmarking  # should we use this?
 from .log import log_results
 from .warmup import warmup
 
+logger = logging.getLogger(__name__)
+logger.addHandler(logging.NullHandler())
+
 
 def benchmark(
     model: torch.nn.Module,
@@ -19,7 +22,6 @@ def benchmark(
     device: torch.device,
     data_loader: DataLoader,
     n_samples: int,
-    logger: logging.Logger,
 ) -> Dict[str, float]:
     """
     Benchmark the model using the given data loader. This function will benchmark the model using the
@@ -31,7 +33,6 @@ def benchmark(
     - device (torch.device): The device we are targetting.
     - data_loader (DataLoader): The DataLoader to get samples of data from.
     - n_samples (int): The number of samples to benchmark on.
-    - logger (logging.Logger): The logger to use for logging.
 
     Outputs:
     - total_elapsed_time (float): The total elapsed time for the benchmark.
@@ -47,7 +48,7 @@ def benchmark(
     data = get_sample_data(data_loader, device)
 
     # Get the forward call of the model, which we will benchmark
-    forward_call = select_forward_call_function(model, conversion, data, logger)
+    forward_call = select_forward_call_function(model, conversion, data)
 
     # Warmup
     warmup(forward_call, data_loader, device)

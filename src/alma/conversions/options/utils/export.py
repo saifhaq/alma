@@ -3,17 +3,17 @@ import logging
 import torch
 from torch.export.exported_program import ExportedProgram
 
+logger = logging.getLogger(__name__)
+logger.addHandler(logging.NullHandler())
 
-def get_exported_model(
-    model, data: torch.Tensor, logging: logging.Logger
-) -> ExportedProgram:
+
+def get_exported_model(model, data: torch.Tensor) -> ExportedProgram:
     """
     Export the model using torch.export.
 
     Inputs:
     - model (torch.nn.Module): The model to export
     - data (torch.Tensor): A sample of data to feed through the model for tracing
-    - logging (logging.Logger): The logger to use for logging
 
     Outputs:
     model (torch.export.Model): The exported model

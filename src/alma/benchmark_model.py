@@ -7,6 +7,7 @@ from torch.utils.data import DataLoader
 
 from .benchmark import benchmark, log_results
 from .conversions.select import MODEL_CONVERSION_OPTIONS
+from .dataloader.checks import check_consistent_batch_size
 from .dataloader.create import create_single_tensor_dataloader
 from .utils.times import inference_time_benchmarking  # should we use this?
 
@@ -20,8 +21,6 @@ def benchmark_model(
     conversions: Union[List[str], None] = None,
     data: Union[torch.Tensor, None] = None,
     data_loader: Union[DataLoader, None] = None,
-    # logger: Union[logging.Logger, None] = None,
-    # verbose: bool = False,
 ) -> None:
     """
     Benchmark the model on different conversion methods. If provided, the dataloader will be used.
@@ -44,21 +43,12 @@ def benchmark_model(
             not been provided, then the data shape will be used as the basis for the data loader.
     - data_loader (DataLoader): The DataLoader to get samples of data from. If provided, this will
             be used. Else, a random dataloader will be created.
-    - logger (logging.Logger): The logger to use for logging. If None, a default logger is created.
-    - verbose (bool): Whether to set the logger level to DEBUG. If False, the INFO level is used.
 
     Outputs:
     - all_results (Dict[str, tuple]): The results of the benchmarking for each conversion method.
         The key is the conversion method, and the value is a tuple containing the total elapsed
         time, the total time taken, the total number of samples, and the
     """
-    # # If no logger is provided, we set up the default logger
-    # if logger is None:
-    #     setup_logging()
-    # # If the verbose flag is set, we set the logger level to DEBUG
-    # if verbose:
-    #     logging.getLogger().setLevel(logging.DEBUG)
-
     # We determine the device to run the model on
     # NOTE: this will only work for single-device set ups. Benchmarking on multiple devices is not
     # currently supported.
@@ -86,6 +76,7 @@ def benchmark_model(
 
     # The number of samples to benchmark on
     n_samples: int = config["n_samples"]
+    batch_size: int = config["batch_size"]
 
     # Creates a dataloader with random data, of the same size as the input data sample
     # If the data_loader has been provided by the user, we use that one
@@ -100,9 +91,11 @@ def benchmark_model(
 
     all_results: Dict[str, Dict[str, float]] = {}
     for conversion_method in conversions:
+        check_consistent_batch_size(conversion_method, n_samples, batch_size)
+
         logging.info(f"Benchmarking model using conversion: {conversion_method}")
         times: Dict[str, float] = benchmark(
-            model, conversion_method, device, data_loader, n_samples, logging
+            model, conversion_method, device, data_loader, n_samples
         )
         all_results[conversion_method] = times
 
