@@ -27,7 +27,7 @@ benchmark_model(
 )
 ```
 
-One can then run the sxript from the command line with the following command:
+One can then run the script from the command line with the following command:
 ```bash
 python YOUR_BENCHMARK_SCRIPT.py --conversions EAGER,EXPORT+EAGER --batch-size 10
 --n-samples 5000 
@@ -75,7 +75,7 @@ YYY
 
 
 ## Examples:
-For extensice examples on how to use `alma`, as well as simple clean examples on how train a model and
+For extensive examples on how to use `alma`, as well as simple clean examples on how train a model and
 quantize it, see the `examples` directory.
 
 ## How to contribute:
