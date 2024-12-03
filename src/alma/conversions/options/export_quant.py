@@ -1,4 +1,5 @@
 import copy
+import logging
 from argparse import Namespace
 from typing import Callable, Literal
 
@@ -12,12 +13,11 @@ from torch.export.exported_program import ExportedProgram
 
 from .utils.check_type import check_model_type
 
-import logging
-
 # Create a module-level logger
 logger = logging.getLogger(__name__)
 # Don't add handlers - let the application configure logging
 logger.addHandler(logging.NullHandler())
+
 
 def get_quant_exported_model(
     model,

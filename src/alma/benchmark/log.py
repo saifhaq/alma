@@ -19,6 +19,8 @@ def log_results(
     None
     """
     logging.info(f"Total elapsed time: {results['total_elapsed_time']:.4f} seconds")
-    logging.info(f"Total inference time (model only): {results['total_inf_time']:.4f} seconds")
+    logging.info(
+        f"Total inference time (model only): {results['total_inf_time']:.4f} seconds"
+    )
     logging.info(f"Total samples: {results['total_samples']}")
     logging.info(f"Throughput: {results['throughput']:.2f} samples/second")

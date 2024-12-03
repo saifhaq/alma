@@ -75,5 +75,6 @@ def main() -> None:
     logging.info("Benchmarking model using provided data loader")
     benchmark_model(model, config, conversions, data_loader=data_loader)
 
+
 if __name__ == "__main__":
     main()

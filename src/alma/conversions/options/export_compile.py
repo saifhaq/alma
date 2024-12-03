@@ -1,3 +1,4 @@
+import logging
 from typing import Callable
 
 import torch
@@ -6,10 +7,9 @@ from torch.export.exported_program import ExportedProgram
 from .utils.check_type import check_model_type
 from .utils.export import get_exported_model
 
-import logging
-
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())
+
 
 def get_export_compiled_forward_call(
     model: torch.nn.Module, data: torch.Tensor, logging: logging.Logger

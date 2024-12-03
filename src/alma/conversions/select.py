@@ -1,3 +1,4 @@
+import logging
 from pathlib import Path
 from typing import Any, Callable
 
@@ -18,7 +19,6 @@ from .options.onnx import get_onnx_dynamo_forward_call, get_onnx_forward_call
 
 # from .options.tensorrt import get_tensorrt_dynamo_forward_call # commented out because it messes up imports if not on CUDA
 
-import logging
 
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())

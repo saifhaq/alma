@@ -1,3 +1,4 @@
+import logging
 from pathlib import Path
 from typing import Any, Callable, Union
 
@@ -7,12 +8,11 @@ import torch
 
 from .utils.check_type import check_model_type
 
-import logging
-
 # Create a module-level logger
 logger = logging.getLogger(__name__)
 # Don't add handlers - let the application configure logging
 logger.addHandler(logging.NullHandler())
+
 
 def save_onnx_model(
     model,

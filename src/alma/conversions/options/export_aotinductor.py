@@ -1,3 +1,4 @@
+import logging
 import os
 from typing import Callable, Literal
 
@@ -9,12 +10,12 @@ from torch.fx.graph_module import GraphModule
 from .export_quant import get_quant_exported_model
 from .utils.check_type import check_model_type
 from .utils.export import get_exported_model
-import logging
 
 CUDA_HOME = os.environ.get("CUDA_HOME")
 
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())
+
 
 def get_export_aot_inductor_forward_call(
     model: ExportedProgram | GraphModule, data: torch.Tensor, logger: logging.Logger

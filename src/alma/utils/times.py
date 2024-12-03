@@ -1,4 +1,5 @@
 import concurrent.futures
+import logging
 import time
 from typing import Dict, Tuple
 
@@ -7,10 +8,9 @@ from tqdm import tqdm
 
 from .data import process_batch
 
-import logging
-
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())
+
 
 def log_benchmark_times(
     logging: logging.Logger,

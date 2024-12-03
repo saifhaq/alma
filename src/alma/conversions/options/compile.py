@@ -1,11 +1,10 @@
+import logging
 from typing import Callable, Union
 
 import torch
 import torch.fx as fx
 
 from .utils.check_type import check_model_type
-
-import logging
 
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())

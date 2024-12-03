@@ -1,12 +1,12 @@
+import logging
 from pathlib import Path
 from typing import Union
 
 import torch
 
-import logging
-
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())
+
 
 def load_model(
     model_path: Path,

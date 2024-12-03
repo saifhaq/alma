@@ -1,11 +1,11 @@
-from typing import Union, Dict, Any
+import inspect
+import re
+from typing import Any, Dict, Union
 
 import numpy as np
 import torch
 import torch.fx as fx
 from torch.utils.data import DataLoader
-import inspect
-import re
 
 
 def process_batch(

@@ -2,7 +2,9 @@ import logging
 from typing import Literal, Union
 
 
-def setup_logging(log_file: Union[str, None] = None, level: Literal[str] = "INFO") -> None:
+def setup_logging(
+    log_file: Union[str, None] = None, level: Literal[str] = "INFO"
+) -> None:
     """
     Sets up logging to print to console and optionally to a file.
 

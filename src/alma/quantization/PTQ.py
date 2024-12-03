@@ -1,13 +1,13 @@
+import logging
 import time
 
 import torch
 import torch.quantization as tq
 from tqdm import tqdm
 
-import logging
-
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())
+
 
 def PTQ(
     model: torch.nn.Module,

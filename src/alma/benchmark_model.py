@@ -1,5 +1,6 @@
 import argparse
-from typing import Callable, List, Union, Any, Dict
+import logging
+from typing import Any, Callable, Dict, List, Union
 
 import torch
 from torch.utils.data import DataLoader
@@ -8,8 +9,6 @@ from .benchmark import benchmark, log_results
 from .conversions.select import MODEL_CONVERSION_OPTIONS
 from .dataloader.create import create_single_tensor_dataloader
 from .utils.times import inference_time_benchmarking  # should we use this?
-
-import logging
 
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())
@@ -67,7 +66,9 @@ def benchmark_model(
 
     # Check the configuration
     assert "batch_size" in config, "The batch size must be provided in the config"
-    assert "n_samples" in config, "The number of samples (n_samples) to benchmark on must be provided in the config"
+    assert (
+        "n_samples" in config
+    ), "The number of samples (n_samples) to benchmark on must be provided in the config"
 
     # Either the `data` Tensor must be provided, or a data loader
     if data is None:

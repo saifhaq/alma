@@ -1,13 +1,13 @@
 import logging
 import time
-
 from typing import Dict
+
 import torch
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 
 from ..conversions.select import select_forward_call_function
-from ..utils.data import get_sample_data, args_to_dict
+from ..utils.data import args_to_dict, get_sample_data
 from ..utils.times import inference_time_benchmarking  # should we use this?
 from .log import log_results
 from .warmup import warmup
@@ -78,8 +78,12 @@ def benchmark(
     total_elapsed_time = end_time - start_time
     throughput = total_samples / total_elapsed_time if total_elapsed_time > 0 else 0
     if logger.root.level <= logging.DEBUG:
-        result: Dict[str, float] = args_to_dict(total_elapsed_time, total_inf_time, total_samples, throughput)
+        result: Dict[str, float] = args_to_dict(
+            total_elapsed_time, total_inf_time, total_samples, throughput
+        )
         log_results(result)
 
-    results: Dict[str, float] = args_to_dict(total_elapsed_time, total_inf_time, total_samples, throughput)
+    results: Dict[str, float] = args_to_dict(
+        total_elapsed_time, total_inf_time, total_samples, throughput
+    )
     return results

@@ -41,7 +41,10 @@ def main() -> None:
     # benchmark the model.
     # NOTE: one needs to squeeze the data tensor to remove the batch dimension
     logging.info("Benchmarking model using random data")
-    results: Dict[str, tuple] = benchmark_model(model, config, args.conversions, data=data.squeeze())
+    results: Dict[str, tuple] = benchmark_model(
+        model, config, args.conversions, data=data.squeeze()
+    )
+
 
 if __name__ == "__main__":
     main()

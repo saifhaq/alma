@@ -45,5 +45,6 @@ def main() -> None:
     logging.info("Benchmarking model using random data")
     results = benchmark_model(model, config, args.conversions, data=data.squeeze())
 
+
 if __name__ == "__main__":
     main()
