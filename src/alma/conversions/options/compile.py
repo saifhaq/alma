@@ -25,7 +25,7 @@ def get_compiled_model_forward_call(
     model (torch._dynamo.eval_frame.OptimizedModule): The compiled model
 
     """
-    logging.info("Running torch.compile on the model")
+    logger.info("Running torch.compile on the model")
     check_model_type(model, (torch.nn.Module, fx.GraphModule))
 
     torch._dynamo.reset()
@@ -44,8 +44,8 @@ def get_compiled_model_forward_call(
         _ = model(data)
 
     # # Print model graph
-    # logging.debug("Model graph:")
-    # logging.debug(model.graph.print_tabular())
+    # logger.debug("Model graph:")
+    # logger.debug(model.graph.print_tabular())
 
     check_model_type(model, torch._dynamo.eval_frame.OptimizedModule)
 

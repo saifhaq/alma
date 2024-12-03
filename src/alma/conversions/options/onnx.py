@@ -17,7 +17,6 @@ logger.addHandler(logging.NullHandler())
 def save_onnx_model(
     model,
     data: torch.Tensor,
-    logger: logging.Logger,
     onnx_model_path: str = "model/model.onnx",
 ):
     """
@@ -26,13 +25,12 @@ def save_onnx_model(
     Inputs:
     - model (torch.nn.Module): The model to export
     - data (torch.Tensor): A sample of data to pass through the model.
-    - logging logging.Logger): The logger to use for logging
     - onnx_model_path (str): The path to save the ONNX model to
 
     Outputs:
     None
     """
-    logging.info("Running torch.onnx on the model")
+    logger.info("Running torch.onnx on the model")
 
     # Providing input and output names sets the display names for values
     # within the model's graph. Setting these does not change the semantics
@@ -50,7 +48,7 @@ def save_onnx_model(
     model.eval()
 
     # Export the model
-    logging.info(f"Saving the torch.onnx model to {onnx_model_path}")
+    logger.info(f"Saving the torch.onnx model to {onnx_model_path}")
     torch.onnx.export(
         model,  # model being run
         data,  # model input (or a tuple for multiple inputs)
@@ -70,13 +68,12 @@ def save_onnx_model(
     onnx.checker.check_model(loaded_model)
 
     # Print a human readable representation of the graph
-    logging.debug("ONNX model graph:")
+    logger.debug("ONNX model graph:")
     logger.debug(onnx.helper.printable_graph(loaded_model.graph))
 
 
 def _get_onnx_forward_call(
     model: Union[Path, torch.onnx.ONNXProgram],
-    logger: logging.Logger,
     onnx_provider: str = "CPUExecutionProvider",
 ) -> Callable:
     """
@@ -85,7 +82,6 @@ def _get_onnx_forward_call(
     Inputs:
     - model (Union[Path, torch.onnx.ONNXProgram]): this can be either a path to an ONNX model, or
         the ONNX model directly (if created via the torch.onnx.dynamo_export API).
-    - logging (logging.Logger): The logger to use for logging.
     - onnx_provider (str): the ONNX execution provider to use.
 
     Outputs:
@@ -124,11 +120,11 @@ def get_onnx_forward_call(
     - onnx_forward (Callable): The forward call function for the model.
     """
     # We first save the ONNX model
-    save_onnx_model(model, data, logger, onnx_model_path)
+    save_onnx_model(model, data, onnx_model_path)
 
     # Get onnx forward call
     onnx_forward: Callable = _get_onnx_forward_call(
-        onnx_model_path, logger, onnx_provider
+        onnx_model_path, onnx_provider
     )
 
     return onnx_forward
@@ -137,7 +133,6 @@ def get_onnx_forward_call(
 def get_onnx_dynamo_forward_call(
     model: Any,
     data: torch.Tensor,
-    logger: logging.Logger,
     onnx_model_path: str = "model/model.onnx",
 ):
     """
@@ -146,14 +141,13 @@ def get_onnx_dynamo_forward_call(
     Inputs:
     - model (Any): The model to get the forward call for.
     - data (torch.Tensor): A sample of data to pass through the model.
-    - logging: The logger to use for logging
     - onnx_model_path (str): the path to save the ONNX model to.
 
     Outputs:
     - forward (Callable): The forward call function for the model.
     """
 
-    logging.info("Running torch.onnx.dynamo_export (beta) on the model")
+    logger.info("Running torch.onnx.dynamo_export (beta) on the model")
     onnx_program = torch.onnx.dynamo_export(model, data)
 
     check_model_type(onnx_program, torch.onnx.ONNXProgram)
@@ -162,6 +156,6 @@ def get_onnx_dynamo_forward_call(
     onnx_program.save(onnx_model_path)
 
     # Get onnx forward call
-    onnx_forward: Callable = _get_onnx_forward_call(onnx_model_path, logger)
+    onnx_forward: Callable = _get_onnx_forward_call(onnx_model_path)
 
     return onnx_forward
