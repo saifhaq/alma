@@ -65,6 +65,10 @@ def benchmark_model(
     # currently supported.
     device: torch.device = next(model.parameters()).device
 
+    # Check the configuration
+    assert "batch_size" in config, "The batch size must be provided in the config"
+    assert "n_samples" in config, "The number of samples (n_samples) to benchmark on must be provided in the config"
+
     # Either the `data` Tensor must be provided, or a data loader
     if data is None:
         assert (
