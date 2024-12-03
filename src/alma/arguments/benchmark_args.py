@@ -68,7 +68,7 @@ def parse_benchmark_args() -> Tuple[argparse.Namespace, torch.device]:
         help="disables MPS acceleration",
     )
     parser.add_argument(
-        "--conversions",
+        "--conversion",
         type=list_of_strings,
         # choices=[str(i) for i in MODEL_CONVERSION_OPTIONS.keys()] + list(MODEL_CONVERSION_OPTIONS.values()),
         default=None,
@@ -87,32 +87,36 @@ to different transforms, or their string names. MUltiple options can be selected
 
     # If no conversion options are provided, we use all available options
     if not args.conversions:
-        args.conversions = valid_conversion_options
+        conversions = valid_conversion_options
+    else:
+        conversions = args.conversions
 
     # Checks on the model conversion options
     assert isinstance(
-        args.conversions, (list, int, str)
+        conversions, (list, int, str)
     ), "Please select a valid option for the model conversion"
-    if not isinstance(args.conversions, list):
-        conversions = [args.conversions]
-    else:
-        conversions = args.conversions
+    if not isinstance(conversions, list):
+        conversions = [conversions]
 
     error_msg = (
         lambda conversion: f"Please select a valid option for the model conversion, {conversion} not in {valid_conversion_options}. Call `-h` for help."
     )
     for conversion in conversions:
-        if conversion.isnumeric():
+        if isinstance(conversion, str) and conversion.isnumeric():
             conversion = int(conversion)
-        assert conversion in valid_conversion_options, error_msg(conversion)
-        logger.info(
-            f"{MODEL_CONVERSION_OPTIONS[conversion]} model selected for benchmarking"
-        )
+            assert conversion in valid_conversion_options, error_msg(conversion)
+            logger.info(
+                f"{MODEL_CONVERSION_OPTIONS[conversion]} model selected for benchmarking"
+            )
+        elif conversion in valid_conversion_options:
+            logger.info(f"{conversion} model selected for benchmarking")
+        else:
+            raise ValueError(error_msg(conversion))
 
     # Convert all selected conversion options to a list of strings. I.e., all ints become strings
     new_conversions = []
     for conversion in conversions:
-        if conversion.isnumeric():
+        if isinstance(conversion, str) and conversion.isnumeric():
             conversion = int(conversion)
         if isinstance(conversion, int):
             if MODEL_CONVERSION_OPTIONS[conversion] not in new_conversions:

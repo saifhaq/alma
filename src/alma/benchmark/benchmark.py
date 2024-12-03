@@ -77,13 +77,13 @@ def benchmark(
 
     total_elapsed_time = end_time - start_time
     throughput = total_samples / total_elapsed_time if total_elapsed_time > 0 else 0
+    result: Dict[str, float] = {
+        "total_elapsed_time": total_elapsed_time,
+        "total_inf_time": total_inf_time,
+        "total_samples": total_samples,
+        "throughput": throughput,
+    }
     if logger.root.level <= logging.DEBUG:
-        result: Dict[str, float] = args_to_dict(
-            total_elapsed_time, total_inf_time, total_samples, throughput
-        )
         log_results(result)
 
-    results: Dict[str, float] = args_to_dict(
-        total_elapsed_time, total_inf_time, total_samples, throughput
-    )
-    return results
+    return result

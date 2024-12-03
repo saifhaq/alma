@@ -24,15 +24,15 @@ from alma.arguments.benchmark_args import parse_benchmark_args
 from alma.utils.setup_logging import setup_logging
 from typing import Dict
 
+# Set up logging. DEBUG level will also log the model graphs.
+# A `setup_logging` function is provided for convenience, but one can use whatever logging one 
+# wishes, or none.
+setup_logging(log_file=None, level="INFO")
+
 # Parse the arguments, e.g. the model path, device, and conversion options
 # This is provided for convenience, but one can also just pass in the arguments directly to the
 # `benchmark_model` API.
 args, device = parse_benchmark_args()
-
-# Set up logging (comment out for no logging, or set DEBUG for more logging)
-# A `setup_logging` function is provided for convenience, but one can use whatever logging one 
-# wishes, or none.
-setup_logging(level="INFO")
     
 # Load the model
 model = ...

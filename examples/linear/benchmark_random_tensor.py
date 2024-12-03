@@ -13,14 +13,18 @@ torch.backends.quantized.engine = "qnnpack"
 
 
 def main() -> None:
-    args, device = parse_benchmark_args()
-
-    # Set up logging. DEBUG level will also log the model graphs
-    setup_logging(log_file=None, level="INFO")
 
     # Adds an ipdb hook to the sys.excepthook, which will throw one into an ipdb shell when an
     # exception is raised. Comment out to have the program crash as normal during an unhandled exception
     ipdb_sys_excepthook()
+
+    # Set up logging. DEBUG level will also log the model graphs
+    # A `setup_logging` function is provided for convenience, but one can use whatever logging one 
+    # wishes, or none.
+    setup_logging(log_file=None, level="INFO")
+
+    # Parse the benchmarking arguments
+    args, device = parse_benchmark_args()
 
     # Create a random model
     model = torch.nn.Sequential(
