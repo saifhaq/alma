@@ -7,7 +7,7 @@ from torch.utils.data import DataLoader
 from tqdm import tqdm
 
 from ..conversions.select import select_forward_call_function
-from ..utils.data import args_to_dict, get_sample_data
+from ..utils.data import get_sample_data
 from ..utils.times import inference_time_benchmarking  # should we use this?
 from .log import log_results
 from .warmup import warmup
