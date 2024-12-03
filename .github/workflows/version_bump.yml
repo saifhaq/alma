@@ -6,7 +6,8 @@ on:
 concurrency:
     group: ${{ github.workflow }}-deployment
     cancel-in-progress: false
-
+permissions:
+  contents: write
 
 jobs:
     tag:
