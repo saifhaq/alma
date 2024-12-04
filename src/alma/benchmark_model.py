@@ -49,6 +49,9 @@ def benchmark_model(
         The key is the conversion method, and the value is a tuple containing the total elapsed
         time, the total time taken, the total number of samples, and the
     """
+    # Set to eval mode
+    model.eval()
+
     # We determine the device to run the model on
     # NOTE: this will only work for single-device set ups. Benchmarking on multiple devices is not
     # currently supported.
