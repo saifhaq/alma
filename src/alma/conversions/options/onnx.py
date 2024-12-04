@@ -123,7 +123,9 @@ def get_onnx_forward_call(
     save_onnx_model(model, data, onnx_model_path)
 
     # Get onnx forward call
-    onnx_forward: Callable = _get_onnx_forward_call(onnx_model_path, onnx_provider)
+    onnx_forward: Callable = _get_onnx_forward_call(
+        onnx_model_path, onnx_provider
+    )
 
     return onnx_forward
 
