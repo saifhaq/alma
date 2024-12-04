@@ -61,9 +61,8 @@ def get_quant_exported_model(
     ).module()
 
     # TODO: mess around with export_for_inference
-    import ipdb
+    import ipdb; ipdb.set_trace()
 
-    ipdb.set_trace()
     # Step 2. quantization
     # TODO: mess around with affine quantization
     to_quant_model = copy.deepcopy(m_export)
