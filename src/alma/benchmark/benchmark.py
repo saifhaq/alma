@@ -1,6 +1,6 @@
 import logging
 import time
-from typing import Dict, Any
+from typing import Any, Dict
 
 import torch
 from torch.utils.data import DataLoader
@@ -51,7 +51,9 @@ def benchmark(
     # Get the forward call of the model, which we will benchmark. We also return the device we will
     # benchmark on, since some conversions are only supported for certain devices, e.g.
     # PyTorch native quantized conversions requires CPU
-    forward_call, conversion_device = select_forward_call_function(model, conversion, data)
+    forward_call, conversion_device = select_forward_call_function(
+        model, conversion, data
+    )
     if conversion_device is None:
         conversion_device = device
 

@@ -1,12 +1,11 @@
 import logging
 from typing import Callable, List
 
-from torch.ao.quantization.qconfig_mapping import QConfigMapping
-from torch.ao.quantization.quantize_fx import prepare_qat_fx
-
-import torch.quantization as tq
 import torch
 import torch.fx as fx
+import torch.quantization as tq
+from torch.ao.quantization.qconfig_mapping import QConfigMapping
+from torch.ao.quantization.quantize_fx import prepare_qat_fx
 
 from .utils.check_type import check_model_type
 from .utils.qconfigs import fake_quant_act, fixed_0255, learnable_act, learnable_weights

@@ -1,10 +1,9 @@
 import logging
 from typing import Callable, Tuple
 
-from torch.ao.quantization.quantize_fx import convert_fx
-
 import torch
 import torch.fx as fx
+from torch.ao.quantization.quantize_fx import convert_fx
 
 from .fake_quant import fx_quantize
 
@@ -40,4 +39,3 @@ def get_converted_quantized_model_forward_call(
 
     # Return forward call
     return model_quantized.forward, device
-
