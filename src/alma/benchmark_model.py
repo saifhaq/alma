@@ -1,5 +1,6 @@
 import argparse
 import logging
+import traceback
 from typing import Any, Callable, Dict, List, Union
 
 import torch
@@ -77,7 +78,7 @@ def benchmark_model(
     if conversions is None:
         conversions = list(MODEL_CONVERSION_OPTIONS.values())
 
-    # The number of samples to benchmark on
+    # The number of samples to benchmark on, batch size, and whether or not to give verbose logging
     n_samples: int = config["n_samples"]
     batch_size: int = config["batch_size"]
 
@@ -98,24 +99,32 @@ def benchmark_model(
 
         logger.info(f"Benchmarking model using conversion: {conversion_method}")
         try:
-            times: Dict[str, float] = benchmark(
+            result: Dict[str, float] = benchmark(
                 model, conversion_method, device, data_loader, n_samples
             )
-            times["status"] = "success"
-            all_results[conversion_method] = times
+            result["status"] = "success"
+            all_results[conversion_method] = result
         except Exception as e:
-            logger.error(
+            # If there is an error, we log the error. In the returned "results", we include the
+            # full traceback
+            error_msg = (
                 f"Benchmarking conversion {conversion_method} failed. Error: {e}"
             )
-            all_results[conversion_method] = {"status": "error", "error": e}
+            logger.error(error_msg)
+            all_results[conversion_method] = {
+                "status": "error",
+                "error": e,
+                "traceback": traceback.format_exc(),
+            }
 
+    # Print results across all conversion options
     print("\n\nAll results:")
     for conversion_method, result in all_results.items():
         print(f"{conversion_method} results:")
         if result["status"] == "success":
             log_results(result)
         elif result["status"] == "error":
-            log_failure(result["error"])
+            log_failure(result)
         print("\n")
 
     return all_results

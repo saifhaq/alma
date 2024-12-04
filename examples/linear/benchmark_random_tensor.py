@@ -24,7 +24,8 @@ def main() -> None:
     # Set up logging. DEBUG level will also log the model graphs
     # A `setup_logging` function is provided for convenience, but one can use whatever logging one
     # wishes, or none.
-    setup_logging(log_file=None, level="WARNING")
+    setup_logging(log_file=None, level="INFO")
+    # setup_logging(log_file=None, level="WARNING")
 
     # Parse the benchmarking arguments
     args, device = parse_benchmark_args()
@@ -51,6 +52,9 @@ def main() -> None:
     # at a DEBUG level.
     logging.info("Benchmarking model using random data")
     results = benchmark_model(model, config, args.conversions, data=data.squeeze())
+    import ipdb
+
+    ipdb.set_trace()
 
 
 if __name__ == "__main__":
