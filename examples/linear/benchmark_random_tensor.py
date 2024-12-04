@@ -11,6 +11,8 @@ from alma.utils.setup_logging import setup_logging
 # torch.backends.quantized.engine = 'x86'
 torch.backends.quantized.engine = "qnnpack"
 
+logger = logging.getLogger(__name__)
+logger.addHandler(logging.NullHandler())
 
 def main() -> None:
 
@@ -21,7 +23,7 @@ def main() -> None:
     # Set up logging. DEBUG level will also log the model graphs
     # A `setup_logging` function is provided for convenience, but one can use whatever logging one
     # wishes, or none.
-    setup_logging(log_file=None, level="DEBUG")
+    setup_logging(log_file=None, level="INFO")
 
     # Parse the benchmarking arguments
     args, device = parse_benchmark_args()
