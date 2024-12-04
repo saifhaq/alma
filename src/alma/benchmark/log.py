@@ -6,7 +6,7 @@ logger.addHandler(logging.NullHandler())
 
 
 def log_results(
-    results: Dict[str, float|int],
+    results: Dict[str, float | int],
 ) -> None:
     """
     Logs the benchmarking results.
@@ -22,9 +22,23 @@ def log_results(
     Outputs:
     None
     """
-    logger.info(f"Total elapsed time: {results['total_elapsed_time']:.4f} seconds")
-    logger.info(
-        f"Total inference time (model only): {results['total_inf_time']:.4f} seconds"
+
+    print(f"Total elapsed time: {results['total_elapsed_time']:.4f} seconds")
+    print(f"Total inference time (model only): {results['total_inf_time']:.4f} seconds")
+    print(
+        f"Total samples: {results['total_samples']} - Batch size: {results['batch_size']}"
     )
-    logger.info(f"Total samples: {results['total_samples']} - Batch size: {results['batch_size']}")
-    logger.info(f"Throughput: {results['throughput']:.2f} samples/second")
+    print(f"Throughput: {results['throughput']:.2f} samples/second")
+
+
+def log_failure(error: str):
+    """
+    Log the error message, when logging the results of a conversion benchmark.
+
+    Inputs:
+    - error (str): the error message.
+
+    Outputs:
+    None
+    """
+    print(f"Benchmarking failed, error: {error}")
