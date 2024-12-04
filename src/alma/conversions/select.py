@@ -100,7 +100,7 @@ def select_forward_call_function(
         case "EXPORT+TENSORRT":
             # forward = get_tensorrt_dynamo_forward_call(model, data)
             raise NotImplementedError(
-                "Installing torch_tensorrt is taking forever, have to do"
+                "Installing torch_tensorrt is taking forever, need to install."
             )
 
         case "ONNX+DYNAMO_EXPORT":
