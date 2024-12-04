@@ -96,13 +96,13 @@ def benchmark_model(
     for conversion_method in conversions:
         check_consistent_batch_size(conversion_method, n_samples, batch_size)
 
-        logging.info(f"Benchmarking model using conversion: {conversion_method}")
+        logger.info(f"Benchmarking model using conversion: {conversion_method}")
         times: Dict[str, float] = benchmark(
             model, conversion_method, device, data_loader, n_samples
         )
         all_results[conversion_method] = times
 
-    logging.info("\n\nAll results:")
+    logger.info("\n\nAll results:")
     for conversion_method, result in all_results.items():
         logging.info(f"{conversion_method} results:")
         log_results(result)

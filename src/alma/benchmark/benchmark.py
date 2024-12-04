@@ -82,6 +82,7 @@ def benchmark(
         "total_elapsed_time": total_elapsed_time,
         "total_inf_time": total_inf_time,
         "total_samples": total_samples,
+        "batch_size": data.shape[0],
         "throughput": throughput,
     }
     if logger.root.level <= logging.DEBUG:
