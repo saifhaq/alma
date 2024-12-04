@@ -16,7 +16,7 @@ def setup_logging(
     Outputs:
     - None
     """
-    log_format = "%(levelname)s: %(message)s"
+    log_format = "%(levelname)s: [%(filename)s:%(lineno)d] %(message)s"
     date_format = "%Y-%m-%d %H:%M:%S"
     log_level = getattr(logging, level)
 
