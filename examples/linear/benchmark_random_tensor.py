@@ -52,7 +52,9 @@ def main() -> None:
     # at a DEBUG level.
     logging.info("Benchmarking model using random data")
     results = benchmark_model(model, config, args.conversions, data=data.squeeze())
-    import ipdb; ipdb.set_trace()
+    import ipdb
+
+    ipdb.set_trace()
 
 
 if __name__ == "__main__":

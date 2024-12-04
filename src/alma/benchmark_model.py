@@ -1,8 +1,8 @@
 import argparse
 import logging
+import traceback
 from typing import Any, Callable, Dict, List, Union
 
-import traceback
 import torch
 from torch.utils.data import DataLoader
 
@@ -105,11 +105,17 @@ def benchmark_model(
             result["status"] = "success"
             all_results[conversion_method] = result
         except Exception as e:
-            # If there is an error, we log the error. In the returned "results", we include the 
+            # If there is an error, we log the error. In the returned "results", we include the
             # full traceback
-            error_msg = f"Benchmarking conversion {conversion_method} failed. Error: {e}"
+            error_msg = (
+                f"Benchmarking conversion {conversion_method} failed. Error: {e}"
+            )
             logger.error(error_msg)
-            all_results[conversion_method] = {"status": "error", "error": e, "traceback": traceback.format_exc()}
+            all_results[conversion_method] = {
+                "status": "error",
+                "error": e,
+                "traceback": traceback.format_exc(),
+            }
 
     # Print results across all conversion options
     print("\n\nAll results:")
