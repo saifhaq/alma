@@ -20,7 +20,7 @@ logger.addHandler(logging.NullHandler())
 
 
 def get_quant_exported_model(
-    model,
+    model: torch.nn.Module,
     data: torch.Tensor,
     int_or_dequant_op: Literal["int", "dequant"],
 ) -> torch.fx.graph_module.GraphModule:
