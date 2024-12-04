@@ -1,6 +1,7 @@
 import logging
 from pathlib import Path
-from typing import Any, Callable
+from typing import Any, Callable, Tuple
+import copy
 
 import torch
 
@@ -11,11 +12,10 @@ from .options.export_aotinductor import (
 )
 from .options.export_compile import get_export_compiled_forward_call
 from .options.export_eager import get_export_eager_forward_call
-from .options.export_quant import (
-    get_quant_exported_forward_call,
-    get_quant_exported_model,
-)
+from .options.export_quant import get_quant_exported_forward_call
 from .options.onnx import get_onnx_dynamo_forward_call, get_onnx_forward_call
+from .options.fake_quant import get_fake_quantized_model_forward_call
+from .options.quant_convert import get_converted_quantized_model_forward_call
 
 # from .options.tensorrt import get_tensorrt_dynamo_forward_call # commented out because it messes up imports if not on CUDA
 
@@ -51,7 +51,7 @@ def select_forward_call_function(
     model: Any,
     conversion: str,
     data: torch.Tensor,
-) -> Callable:
+) -> Tuple[Callable, torch.device]:
     """
     Get the forward call function for the model. The complexity is because there are multiple
     ways to export the model, and the forward call is different for each.
@@ -64,8 +64,9 @@ def select_forward_call_function(
 
     Outputs:
     - forward (Callable): The forward call function for the model.
+    - device (torch.device): The device of the model
     """
-
+    device = data.device
     match conversion:
         ###############
         # WITH EXPORT #
@@ -153,10 +154,12 @@ def select_forward_call_function(
             forward = get_onnx_forward_call(model, data, onnx_model_path, onnx_backend)
 
         case "CONVERT_QUANTIZED":
+            # Also returns device, as PyTorch-natively converted models are only currently for CPU
+            forward, device = get_converted_quantized_model_forward_call(model, data)
             pass
 
         case "FAKE_QUANTIZED":
-            pass
+            forward = get_fake_quantized_model_forward_call(model, data)
 
         case _:
             assert (
@@ -164,4 +167,4 @@ def select_forward_call_function(
             ), f"The option {conversion} is not supported"
             raise NotImplementedError("Option not currently supported")
 
-    return forward
+    return forward, device
