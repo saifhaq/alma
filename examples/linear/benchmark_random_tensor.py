@@ -21,7 +21,7 @@ def main() -> None:
     # Set up logging. DEBUG level will also log the model graphs
     # A `setup_logging` function is provided for convenience, but one can use whatever logging one
     # wishes, or none.
-    setup_logging(log_file=None, level="INFO")
+    setup_logging(log_file=None, level="DEBUG")
 
     # Parse the benchmarking arguments
     args, device = parse_benchmark_args()

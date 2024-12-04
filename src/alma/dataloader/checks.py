@@ -13,5 +13,7 @@ def check_consistent_batch_size(
     """
     if "COMPILE" in conversion_method:
         if n_samples % batch_size != 0:
-            error_msg = f"{n_samples} must be a multiple of {batch_size} for compilation based methods, otherwise the last batch will fail due to havign a different shape."
+            error_msg = f"""n_samples must be a multiple of batch_size for compilation based methods, 
+otherwise the last batch will fail due to having a different shape. n-samples was {n_samples}, and 
+batch size was {batch_size} """
             raise ValueError(error_msg)

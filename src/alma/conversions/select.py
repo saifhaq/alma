@@ -77,10 +77,13 @@ def select_forward_call_function(
             forward = get_export_compiled_forward_call(model, data, "cudagraphs")
 
         case "EXPORT+COMPILE_ONNXRT":
-            # Make sure all dependencies are installed, see here for a discussion by the ONNX team:
-            # https://github.com/pytorch/pytorch/blob/main/torch/_dynamo/backends/onnxrt.py
-            pass
-            # forward = get_export_compiled_forward_call(model, data, "onnxrt")
+            if not torch.onnx.is_onnxrt_backend_supported():
+                # Make sure all dependencies are installed, see here for a discussion by the ONNX team:
+                # https://github.com/pytorch/pytorch/blob/main/torch/_dynamo/backends/onnxrt.py
+                raise RuntimeError(
+                    "Need to install all dependencies. See here for more details: https://github.com/pytorch/pytorch/blob/main/torch/_dynamo/backends/onnxrt.py"
+                )
+            forward = get_export_compiled_forward_call(model, data, "onnxrt")
 
         case "EXPORT+COMPILE_OPENXLA":
             forward = get_export_compiled_forward_call(model, data, "openxla")
