@@ -1,5 +1,5 @@
-import copy
 import logging
+import tempfile
 from pathlib import Path
 from typing import Any, Callable, Tuple
 
@@ -144,14 +144,22 @@ def select_forward_call_function(
             raise NotImplementedError("Installing tensor RT is having some issues, fix")
 
         case "ONNX_CPU":
-            onnx_model_path = Path("model/model.onnx")
-            onnx_backend = "CPUExecutionProvider"
-            forward = get_onnx_forward_call(model, data, onnx_model_path, onnx_backend)
+            # We create temporary file to save the onnx model
+            with tempfile.TemporaryDirectory() as tmpdirname:
+                onnx_model_path = Path(f"{tmpdirname}/model.onnx")
+                onnx_backend = "CPUExecutionProvider"
+                forward = get_onnx_forward_call(
+                    model, data, onnx_model_path, onnx_backend
+                )
 
         case "ONNX_GPU":
-            onnx_model_path = Path("model/model.onnx")
-            onnx_backend = "CUDAExecutionProvider"
-            forward = get_onnx_forward_call(model, data, onnx_model_path, onnx_backend)
+            # We create temporary file to save the onnx model
+            with tempfile.TemporaryDirectory() as tmpdirname:
+                onnx_model_path = Path(f"{tmpdirname}/model.onnx")
+                onnx_backend = "CUDAExecutionProvider"
+                forward = get_onnx_forward_call(
+                    model, data, onnx_model_path, onnx_backend
+                )
 
         case "CONVERT_QUANTIZED":
             # Also returns device, as PyTorch-natively converted models are only currently for CPU
