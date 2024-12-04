@@ -36,8 +36,8 @@ def QAT(
     - device (torch.device): The device to run the model on.
     - train_loader (DataLoader): The DataLoader to get a sample of data from.
     - test_loader (DataLoader): The DataLoader to get a sample of data from.
-    - optimizer (optim.Optimizer): The optimizer to use for training.
-    - scheduler (Union[LRScheduler, None]): The learning rate scheduler to use.
+    - qat_optimizer (optim.Optimizer): The optimizer to use for training.
+    - qat_scheduler (Union[LRScheduler, None]): The learning rate scheduler to use.
 
     Returns:
     None
