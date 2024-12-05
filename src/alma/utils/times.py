@@ -1,52 +1,36 @@
 import concurrent.futures
 import logging
 import time
-from typing import Dict, Tuple
+from typing import Dict, Tuple, Union
+import numpy as np
 
 import torch
 from tqdm import tqdm
-
-from .data import process_batch
 
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())
 
 
-def log_benchmark_times(
-    logging: logging.Logger,
-    times: Dict[str, float],
-):
+def process_batch(
+    batch: torch.Tensor,
+    model: Union[torch.nn.Module, fx.GraphModule],
+    device: torch.device,
+) -> np.ndarray:
     """
-    Log the benchmark times.
+    Process a batch of data through a model.
 
     Inputs:
-    - logging (logging.Logger): The logger to use for logging.
-    - times (Dict[str, float]): The dictionary of times.
+    - batch (torch.Tensor): A batch of data.
+    - model (torch.nn.Module): The model to process the data with.
+    - device (torch.device): The device to run the model on.
 
-    Returns:
-    - total_execution_time (float): The total execution time.
-    - inference_time (float): The inference time.
-    - model_load_time (float): The model load time.
-    - image_paths_gather_time (float): The image paths gather time.
+    Outputs:
+    - preds (np.ndarray): The model predictions.
     """
-    total_execution_time = times["inference_end_time"] - times["model_load_start_time"]
-    inference_time = times["inference_end_time"] - times["inference_start_time"]
-    model_load_time = times["model_load_end_time"] - times["model_load_start_time"]
-
-    image_paths_gather_time = (
-        times["image_paths_gather_end_time"] - times["image_paths_gather_start_time"]
-    )
-
-    logging.info(f"model loading time: {model_load_time:.2f} seconds")
-    logging.info(f"image paths gathering time: {image_paths_gather_time:.2f} seconds")
-    logging.info(f"inference time: {inference_time:.2f} seconds")
-    logging.info(f"total execution time: {total_execution_time:.2f} seconds")
-    return (
-        total_execution_time,
-        inference_time,
-        model_load_time,
-        image_paths_gather_time,
-    )
+    data = batch.to(device)
+    output = model(data)
+    preds = output.argmax(dim=1, keepdim=True)
+    return preds.cpu().numpy()
 
 
 def inference_time_benchmarking(

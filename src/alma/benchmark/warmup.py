@@ -25,5 +25,5 @@ def warmup(
             data = data.to(device)
             _ = forward_call(data)
             counter += 1
-            if counter > 100:
+            if counter > 10:
                 return
