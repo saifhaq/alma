@@ -175,9 +175,4 @@ examples/mnist/data/mnist_cnn*
 data_for_inference
 mnist_images*
 data_for_inference/
-<<<<<<< Updated upstream
-
-report_dynamo_export.sarif
-=======
 results/
->>>>>>> Stashed changes
