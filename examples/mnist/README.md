@@ -54,6 +54,7 @@ The API is used as follows (see `benchmark_with_dataloader.py`):
 ```python
 from alma import benchmark_model
 from alma.arguments.benchmark_args import parse_benchmark_args
+from alma.benchmark.log import display_all_results
 
 # Parse the arguments, e.g. the model path, device, and conversion options
 # This is provided for convenience, but one can also just pass in the arguments directly to the
@@ -73,9 +74,12 @@ config = {
 }
 
 # Benchmark the model
-benchmark_model(
+results = benchmark_model(
    model, config, args.conversions, data_loader=data_loader
 )
+
+# Display the results
+display_all_results(results)
 ```
 
 One would run this script (e.g., if one wanted to benchmark the same model as used in training)
@@ -93,22 +97,22 @@ is controlled via the `n_samples` argument. For convenience, we also provide a `
 argument, so that one can have one's data loader feed in specific data, and a `model-path` 
 argument, so that one can feed in specific model weights.
 
-The results will look like this, depending on one's model, dataloader, hardware, and logging.
+The results will look like this, depending on one's model, dataloader, and hardware.
 
 ```bash
-
 EAGER results:
+device: cuda:0
 Total elapsed time: 0.4148 seconds
 Total inference time (model only): 0.0436 seconds
 Total samples: 5000
 Throughput: 12054.50 samples/second
 
 EXPORT+EAGER results:
+device: cuda:0
 Total elapsed time: 0.3906 seconds
 Total inference time (model only): 0.0394 seconds
 Total samples: 5000
 Throughput: 12800.82 samples/second
-
 ```
 
 #### Full working example:
