@@ -7,6 +7,7 @@ from model.model import Net
 from utils.data.datasets import BenchmarkCustomImageDataset
 from utils.data.loaders import CircularDataLoader
 from utils.data.transforms import InferenceTransform
+from utils.file_utils import save_dict_to_json
 
 from alma.arguments.benchmark_args import parse_benchmark_args
 from alma.benchmark.log import display_all_results
@@ -14,7 +15,6 @@ from alma.benchmark_model import benchmark_model
 from alma.utils.ipdb_hook import ipdb_sys_excepthook
 from alma.utils.load_model import load_model
 from alma.utils.setup_logging import setup_logging
-from utils.file_utils import save_dict_to_json 
 
 # One needs to set their quantization backend engine to what is appropriate for their system.
 # torch.backends.quantized.engine = 'x86'
@@ -57,15 +57,14 @@ def main() -> None:
     logging.info("Benchmarking model using provided data loader")
 
     results: Dict[str, Dict[str, Any]] = benchmark_model(
-        model, config, conversions, data_loader=data_loader
+        model, config, args.conversions, data_loader=data_loader
     )
 
     # Display the results
     display_all_results(
         results, display_function=print, include_traceback_for_errors=True
     )
-    save_dict_to_json(results, 'result.json')
-
+    save_dict_to_json(results, "result.json")
 
 
 if __name__ == "__main__":

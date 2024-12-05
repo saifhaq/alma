@@ -1,4 +1,5 @@
 import logging
+from typing import Any, Dict
 
 import torch
 from model.model import Net
@@ -50,7 +51,7 @@ def main() -> None:
 
     # Display the results
     display_all_results(
-        results, display_function=print, include_traceback_for_errors=True
+        results, display_function=print, include_traceback_for_errors=False
     )
 
 

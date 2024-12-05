@@ -1,10 +1,11 @@
-import os
 import json
+import os
+
 
 def make_serializable(data):
     """
     Recursively converts non-serializable fields in a dictionary into strings.
-    
+
     Args:
         data (dict): The input dictionary to process.
 
@@ -20,6 +21,7 @@ def make_serializable(data):
         return data
     except (TypeError, ValueError):
         return str(data)
+
 
 def save_dict_to_json(data: dict, file_name: str, dir_path: str = "results/") -> None:
     """

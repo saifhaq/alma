@@ -84,4 +84,4 @@ def log_failure(
     """
     display_function(f"Benchmarking failed, error: {error_result['error']}")
     if include_traceback:
-        display_function(f"Traceback: {error_result['traceback']}")
+        display_function(error_result['traceback'])

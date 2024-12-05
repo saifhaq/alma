@@ -2,16 +2,13 @@ import logging
 from typing import Any, Dict
 
 import torch
+from typing import Any, Dict
 
 from alma.arguments.benchmark_args import parse_benchmark_args
 from alma.benchmark_model import benchmark_model
 from alma.benchmark.log import display_all_results
 from alma.utils.ipdb_hook import ipdb_sys_excepthook
 from alma.utils.setup_logging import setup_logging
-
-# One needs to set their quantization backend engine to what is appropriate for their system.
-# torch.backends.quantized.engine = 'x86'
-torch.backends.quantized.engine = "qnnpack"
 
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())
@@ -56,7 +53,7 @@ def main() -> None:
     results: Dict[str, Dict[str, Any]] = benchmark_model(model, config, args.conversions, data=data.squeeze())
 
     # Display the results
-    display_all_results(results, display_function=print, include_traceback_for_errors=True)
+    display_all_results(results, display_function=print, include_traceback_for_errors=False)
 
 
 if __name__ == "__main__":
