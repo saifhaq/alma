@@ -15,11 +15,6 @@ logger.addHandler(logging.NullHandler())
 
 
 def main() -> None:
-
-    # Adds an ipdb hook to the sys.excepthook, which will throw one into an ipdb shell when an
-    # exception is raised. Comment out to have the program crash as normal during an unhandled exception
-    ipdb_sys_excepthook()
-
     # Set up logging. DEBUG level will also log the model graphs
     # A `setup_logging` function is provided for convenience, but one can use whatever logging one
     # wishes, or none.
