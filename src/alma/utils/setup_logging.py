@@ -36,3 +36,4 @@ def setup_logging(
         force=True,
         handlers=handlers,
     )
+

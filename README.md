@@ -18,6 +18,94 @@ The API is used as follows:
 
 ```python
 from alma import benchmark_model
+from typing import Dict
+
+device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
+
+# Load the model
+model = ...
+
+# Load the dataloader used in benchmarking
+data_loader = ...
+
+# Set the configuration
+config = {
+    "batch_size": 128,
+    "n_samples": 4096,
+}
+
+# Choose with conversions to benchmark:
+conversions = ["EAGER", "EXPORT+EAGER"]
+
+# Benchmark the model
+results: Dict[str, Dict[str, float]] = benchmark_model(
+    model, config, conversions, data_loader=data_loader
+)
+
+
+```
+
+The results will look like this, depending on one's model, dataloader, hardware, and logging.
+
+```bash
+
+EAGER results:
+Total elapsed time: 0.4148 seconds
+Total inference time (model only): 0.0436 seconds
+Total samples: 5000
+Throughput: 12054.50 samples/second
+
+EXPORT+EAGER results:
+Total elapsed time: 0.3906 seconds
+Total inference time (model only): 0.0394 seconds
+Total samples: 5000
+Throughput: 12800.82 samples/second
+
+```
+
+In case where the benchmarking of a given conversion fails, it will return a dict for that conversion
+which contains the error message as well as the full traceback. This is useful for debugging and 
+understanding why a given conversion failed, e.g. because of hardware incompatabilities, mising
+dependencies, etc.
+
+For example, if the `EXPORT+TENSORRT` conversion fails, the results will look like this:
+
+```bash
+ONNX_GPU results:
+Device: mps:0
+Total elapsed time: 0.7245 seconds
+Total inference time (model only): 0.3237 seconds
+Total samples: 5000 - Batch size: 50
+Throughput: 6901.42 samples/second
+
+
+CONVERT_QUANTIZED results:
+Device: cpu
+Total elapsed time: 0.8287 seconds
+Total inference time (model only): 0.4822 seconds
+Total samples: 5000 - Batch size: 50
+Throughput: 6033.89 samples/second
+
+
+FAKE_QUANTIZED results:
+Benchmarking failed, error: The operator 'aten::_fake_quantize_learnable_per_tensor_affine' is not currently implemented for the MPS device. If you want this op to be added in priority during the prototype phase of this feature, please comment on https://github.com/pytorch/pytorch/issues/77764. As a temporary fix, you can set the environment variable `PYTORCH_ENABLE_MPS_FALLBACK=1` to use the CPU as a fallback for this op. WARNING: this will be slower than running natively on MPS.
+```
+
+If one investigates the failed `FAKE_QUANTIZED` conversion, one can see that the traceback tells us that
+
+```python
+print(results["FAKE_QUANTIZED"]["traceback"])
+ output: 
+
+
+```
+
+
+
+
+
+```python
+from alma import benchmark_model
 from alma.arguments.benchmark_args import parse_benchmark_args
 from alma.utils.setup_logging import setup_logging
 from typing import Dict
