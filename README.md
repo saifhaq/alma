@@ -66,6 +66,37 @@ Total samples: 5000
 Throughput: 12800.82 samples/second
 ```
 
+### Feeding in a single `data` tensor instead of a dataloader
+We also provide the option to feed in a single `data` tensor instead of a dataloader. This is useful
+for cases where one does not want to set up a dataloader. If a `data` tensor is fed in, `benchmark_model`
+will automatically generate a dataloader of random tensors, of the same shape as `data`. The 
+batch size of the dataloader will be equal to the `batch_size` in the `config` dict.
+
+```python
+from alma import benchmark_model
+
+device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
+
+# Load the model
+model = ...
+
+# Initialise a random tensor to benchmark the model on. It must have batch size 1.
+data = torch.randn(1, 3, 224, 224).to(device)
+
+# Set the configuration
+config = {
+    "batch_size": 128,
+    "n_samples": 4096,
+}
+
+# Choose with conversions to benchmark:
+conversions = ["EAGER", "EXPORT+EAGER"]
+
+# Benchmark the model
+results = benchmark_model(model, config, conversions, data=data.squeeze())
+```
+
+
 ### Error handling
 
 In case where the benchmarking of a given conversion fails, it will return a dict for that conversion
