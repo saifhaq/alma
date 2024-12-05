@@ -2,6 +2,7 @@ import logging
 
 import torch
 from model.model import Net
+from typing import Any, Dict
 
 from alma.arguments.benchmark_args import parse_benchmark_args
 from alma.benchmark.log import display_all_results
@@ -50,7 +51,7 @@ def main() -> None:
 
     # Display the results
     display_all_results(
-        results, display_function=print, include_traceback_for_errors=True
+        results, display_function=print, include_traceback_for_errors=False
     )
 
 

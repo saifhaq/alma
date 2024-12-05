@@ -1,5 +1,6 @@
 import logging
 import time
+from typing import Any, Dict
 
 import torch
 from model.model import Net
@@ -54,13 +55,11 @@ def main() -> None:
     # Benchmark the model using the provided data loader.
     logging.info("Benchmarking model using provided data loader")
     results: Dict[str, Dict[str, Any]] = benchmark_model(
-        model, config, conversions, data_loader=data_loader
+        model, config, args.conversions, data_loader=data_loader
     )
 
     # Display the results
-    display_all_results(
-        results, display_function=print, include_traceback_for_errors=True
-    )
+    display_all_results(results, display_function=print, include_traceback_for_errors=False)
 
 
 if __name__ == "__main__":
