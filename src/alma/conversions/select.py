@@ -86,10 +86,27 @@ def select_forward_call_function(
                 )
             forward = get_export_compiled_forward_call(model, data, "onnxrt")
 
+
         case "EXPORT+COMPILE_OPENXLA":
+            # Check if 'openxla' backend is available
+            if "openxla" not in torch._dynamo.list_backends():
+                raise RuntimeError("OpenXLA backend is not available. Please ensure OpenXLA is installed and properly configured.")
+            
+            # Check if torch-xla is installed
+            try:
+                import torch_xla
+            except ImportError:
+                raise RuntimeError(
+                    "The torch-xla package is not available. Please install torch-xla to use 'openxla' backend.\n"
+                    "For installation instructions: https://github.com/pytorch/xla"
+                )
+
             forward = get_export_compiled_forward_call(model, data, "openxla")
 
         case "EXPORT+COMPILE_TVM":
+            # Check if 'tvm' backend is available
+            if "tvm" not in torch._dynamo.list_backends():
+                raise RuntimeError("TVM backend is not available. Please ensure TVM is installed and properly configured.")
             forward = get_export_compiled_forward_call(model, data, "tvm")
 
         case "EXPORT+AOT_INDUCTOR":

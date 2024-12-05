@@ -1,5 +1,6 @@
 import logging
 import time
+from typing import Any, Dict
 
 import torch
 from model.model import Net
