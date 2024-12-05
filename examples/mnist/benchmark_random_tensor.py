@@ -4,8 +4,8 @@ import torch
 from model.model import Net
 
 from alma.arguments.benchmark_args import parse_benchmark_args
-from alma.benchmark_model import benchmark_model
 from alma.benchmark.log import display_all_results
+from alma.benchmark_model import benchmark_model
 from alma.utils.ipdb_hook import ipdb_sys_excepthook
 from alma.utils.setup_logging import setup_logging
 
@@ -49,9 +49,9 @@ def main() -> None:
     )
 
     # Display the results
-    display_all_results(results, display_function=print, include_traceback_for_errors=True)
-
-
+    display_all_results(
+        results, display_function=print, include_traceback_for_errors=True
+    )
 
 
 if __name__ == "__main__":

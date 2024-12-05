@@ -8,8 +8,8 @@ from utils.data.loaders import CircularDataLoader
 from utils.data.transforms import InferenceTransform
 
 from alma.arguments.benchmark_args import parse_benchmark_args
-from alma.benchmark_model import benchmark_model
 from alma.benchmark.log import display_all_results
+from alma.benchmark_model import benchmark_model
 from alma.utils.ipdb_hook import ipdb_sys_excepthook
 from alma.utils.load_model import load_model
 from alma.utils.setup_logging import setup_logging
@@ -53,10 +53,14 @@ def main() -> None:
 
     # Benchmark the model using the provided data loader.
     logging.info("Benchmarking model using provided data loader")
-    results: Dict[str, Dict[str, Any]] = benchmark_model(model, config, conversions, data_loader=data_loader)
+    results: Dict[str, Dict[str, Any]] = benchmark_model(
+        model, config, conversions, data_loader=data_loader
+    )
 
     # Display the results
-    display_all_results(results, display_function=print, include_traceback_for_errors=True)
+    display_all_results(
+        results, display_function=print, include_traceback_for_errors=True
+    )
 
 
 if __name__ == "__main__":
