@@ -57,7 +57,7 @@ def main() -> None:
     logging.info("Benchmarking model using provided data loader")
 
     results: Dict[str, Dict[str, Any]] = benchmark_model(
-        model, config, conversions, data_loader=data_loader
+        model, config, args.conversions, data_loader=data_loader
     )
 
     # Display the results
@@ -65,7 +65,6 @@ def main() -> None:
         results, display_function=print, include_traceback_for_errors=True
     )
     save_dict_to_json(results, 'result.json')
-
 
 
 if __name__ == "__main__":
