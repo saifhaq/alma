@@ -8,6 +8,7 @@ from utils.data.loaders import CircularDataLoader
 from utils.data.transforms import InferenceTransform
 
 from alma.arguments.benchmark_args import parse_benchmark_args
+from alma.benchmark.log import display_all_results
 from alma.benchmark_model import benchmark_model
 from alma.utils.ipdb_hook import ipdb_sys_excepthook
 from alma.utils.load_model import load_model
@@ -45,29 +46,6 @@ def main() -> None:
     load_end_time = time.perf_counter()
     logging.info(f"Model loading time: {load_end_time - load_start_time:.4f} seconds")
 
-    # Which conversions to benchmark the model on
-    if args.conversions:
-        conversions = args.conversions
-    else:
-        conversions = [
-            # "EXPORT+COMPILE",
-            "EXPORT+AOT_INDUCTOR",
-            "EXPORT+EAGER",
-            # "EXPORT+TENSORRT",
-            "ONNX+DYNAMO_EXPORT",
-            "EXPORT+INT_QUANTIZED",
-            "EXPORT+FLOAT_QUANTIZED",
-            # "EXPORT+INT-QUANTIZED+AOT_INDUCTOR",
-            # "EXPORT+FLOAT-QUANTIZED+AOT_INDUCTOR",
-            # "COMPILE",
-            "EAGER",
-            # "TENSORRT",
-            "ONNX_CPU",
-            "ONNX_GPU",
-            # "CONVERT_QUANTIZED",
-            # "FAKE_QUANTIZED",
-        ]
-
     # Configuration for the benchmarking
     config = {
         "n_samples": args.n_samples,
@@ -76,8 +54,18 @@ def main() -> None:
 
     # Benchmark the model using the provided data loader.
     logging.info("Benchmarking model using provided data loader")
-    result = benchmark_model(model, config, conversions, data_loader=data_loader)
-    save_dict_to_json(result, 'result.json')
+
+    results: Dict[str, Dict[str, Any]] = benchmark_model(
+        model, config, conversions, data_loader=data_loader
+    )
+
+    # Display the results
+    display_all_results(
+        results, display_function=print, include_traceback_for_errors=True
+    )
+    save_dict_to_json(results, 'result.json')
+
+
 
 if __name__ == "__main__":
     main()
