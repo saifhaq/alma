@@ -2,11 +2,10 @@ import logging
 from typing import Any, Dict
 
 import torch
-from typing import Any, Dict
 
 from alma.arguments.benchmark_args import parse_benchmark_args
-from alma.benchmark_model import benchmark_model
 from alma.benchmark.log import display_all_results
+from alma.benchmark_model import benchmark_model
 from alma.utils.setup_logging import setup_logging
 
 logger = logging.getLogger(__name__)
@@ -44,10 +43,14 @@ def main() -> None:
     # benchmark the model. As verbose logging is provided, it will log the benchmarking
     # at a DEBUG level.
     logging.info("Benchmarking model using random data")
-    results: Dict[str, Dict[str, Any]] = benchmark_model(model, config, args.conversions, data=data.squeeze())
+    results: Dict[str, Dict[str, Any]] = benchmark_model(
+        model, config, args.conversions, data=data.squeeze()
+    )
 
     # Display the results
-    display_all_results(results, display_function=print, include_traceback_for_errors=False)
+    display_all_results(
+        results, display_function=print, include_traceback_for_errors=False
+    )
 
 
 if __name__ == "__main__":

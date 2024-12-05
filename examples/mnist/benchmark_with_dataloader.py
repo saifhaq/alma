@@ -59,7 +59,7 @@ def main() -> None:
     display_all_results(
         results, display_function=print, include_traceback_for_errors=True
     )
-    save_dict_to_json(results, 'result.json')
+    save_dict_to_json(results, "result.json")
 
 
 if __name__ == "__main__":
