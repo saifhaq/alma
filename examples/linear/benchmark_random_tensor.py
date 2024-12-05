@@ -11,6 +11,9 @@ from alma.utils.setup_logging import setup_logging
 # torch.backends.quantized.engine = 'x86'
 torch.backends.quantized.engine = "qnnpack"
 
+logger = logging.getLogger(__name__)
+logger.addHandler(logging.NullHandler())
+
 
 def main() -> None:
 
@@ -22,6 +25,7 @@ def main() -> None:
     # A `setup_logging` function is provided for convenience, but one can use whatever logging one
     # wishes, or none.
     setup_logging(log_file=None, level="INFO")
+    # setup_logging(log_file=None, level="WARNING")
 
     # Parse the benchmarking arguments
     args, device = parse_benchmark_args()
@@ -48,6 +52,9 @@ def main() -> None:
     # at a DEBUG level.
     logging.info("Benchmarking model using random data")
     results = benchmark_model(model, config, args.conversions, data=data.squeeze())
+    import ipdb
+
+    ipdb.set_trace()
 
 
 if __name__ == "__main__":

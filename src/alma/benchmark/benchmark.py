@@ -1,6 +1,6 @@
 import logging
 import time
-from typing import Dict
+from typing import Any, Dict
 
 import torch
 from torch.utils.data import DataLoader
@@ -43,15 +43,24 @@ def benchmark(
     total_inf_time = 0.0
     total_samples = 0
     num_batches = 0
+    conversion_device = None
 
     # Get sample of data from dataloader
     data = get_sample_data(data_loader, device)
 
-    # Get the forward call of the model, which we will benchmark
-    forward_call = select_forward_call_function(model, conversion, data)
+    # Get the forward call of the model, which we will benchmark. We also return the device we will
+    # benchmark on, since some conversions are only supported for certain devices, e.g.
+    # PyTorch native quantized conversions requires CPU
+    forward_call, conversion_device = select_forward_call_function(
+        model, conversion, data
+    )
+    if conversion_device is None:
+        conversion_device = device
+
+    logger.info(f"Benchmarking {conversion} on {conversion_device}")
 
     # Warmup
-    warmup(forward_call, data_loader, device)
+    warmup(forward_call, data_loader, conversion_device)
 
     # Benchmarking loop
     start_time = time.perf_counter()  # Start timing for the entire process
@@ -60,8 +69,8 @@ def benchmark(
             if total_samples >= n_samples:
                 break
 
-            # data = data.to(device, non_blocking=True)
-            data = data.to(device)
+            # data = data.to(conversion_device, non_blocking=True)
+            data = data.to(conversion_device)
             batch_start_time = time.perf_counter()
             _ = forward_call(data)
             batch_end_time = time.perf_counter()
@@ -78,10 +87,12 @@ def benchmark(
 
     total_elapsed_time = end_time - start_time
     throughput = total_samples / total_elapsed_time if total_elapsed_time > 0 else 0
-    result: Dict[str, float] = {
+    result: Dict[str, Any] = {
+        "device": conversion_device,
         "total_elapsed_time": total_elapsed_time,
         "total_inf_time": total_inf_time,
         "total_samples": total_samples,
+        "batch_size": data.shape[0],
         "throughput": throughput,
     }
     if logger.root.level <= logging.DEBUG:

@@ -20,7 +20,7 @@ logger.addHandler(logging.NullHandler())
 
 
 def get_quant_exported_model(
-    model,
+    model: torch.nn.Module,
     data: torch.Tensor,
     int_or_dequant_op: Literal["int", "dequant"],
 ) -> torch.fx.graph_module.GraphModule:
@@ -61,8 +61,9 @@ def get_quant_exported_model(
     ).module()
 
     # TODO: mess around with export_for_inference
-    import ipdb; ipdb.set_trace()
+    import ipdb
 
+    ipdb.set_trace()
     # Step 2. quantization
     # TODO: mess around with affine quantization
     to_quant_model = copy.deepcopy(m_export)

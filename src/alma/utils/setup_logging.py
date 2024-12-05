@@ -3,7 +3,8 @@ from typing import Literal, Union
 
 
 def setup_logging(
-    log_file: Union[str, None] = None, level: Literal[str] = "INFO"
+    log_file: Union[str, None] = None,
+    level: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] = "INFO",
 ) -> None:
     """
     Sets up logging to print to console and optionally to a file.
@@ -15,29 +16,23 @@ def setup_logging(
     Outputs:
     - None
     """
-    # log_format = "%(asctime)s - %(levelname)s - [%(filename)s:%(lineno)d] %(message)s"
-    log_format = "%(message)s"
+    log_format = "%(levelname)s: [%(filename)s:%(lineno)d] %(message)s"
     date_format = "%Y-%m-%d %H:%M:%S"
-    match level:
-        case "DEBUG":
-            log_level = logging.DEBUG
-        case "INFO":
-            log_level = logging.INFO
-        case "WARNING":
-            log_level = logging.WARNING
-        case "ERROR":
-            log_level = logging.ERROR
-        case "CRITICAL":
-            log_level = logging.CRITICAL
-        case _:
-            raise ValueError(f"Invalid log level: {level}")
+    log_level = getattr(logging, level)
 
+    # Clear existing handlers
+    logging.getLogger().handlers.clear()
+
+    # Create handlers first
+    handlers = [logging.StreamHandler()]
+    if log_file:
+        handlers.append(logging.FileHandler(log_file))
+
+    # Configure root logger
     logging.basicConfig(
         level=log_level,
         format=log_format,
         datefmt=date_format,
-        handlers=[
-            logging.StreamHandler(),
-            logging.FileHandler(log_file) if log_file else logging.NullHandler(),
-        ],
+        force=True,
+        handlers=handlers,
     )

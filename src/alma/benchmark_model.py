@@ -1,11 +1,12 @@
 import argparse
 import logging
+import traceback
 from typing import Any, Callable, Dict, List, Union
 
 import torch
 from torch.utils.data import DataLoader
 
-from .benchmark import benchmark, log_results
+from .benchmark import benchmark, log_failure, log_results
 from .conversions.select import MODEL_CONVERSION_OPTIONS
 from .dataloader.checks import check_consistent_batch_size
 from .dataloader.create import create_single_tensor_dataloader
@@ -49,6 +50,9 @@ def benchmark_model(
         The key is the conversion method, and the value is a tuple containing the total elapsed
         time, the total time taken, the total number of samples, and the
     """
+    # Set to eval mode
+    model.eval()
+
     # We determine the device to run the model on
     # NOTE: this will only work for single-device set ups. Benchmarking on multiple devices is not
     # currently supported.
@@ -74,7 +78,7 @@ def benchmark_model(
     if conversions is None:
         conversions = list(MODEL_CONVERSION_OPTIONS.values())
 
-    # The number of samples to benchmark on
+    # The number of samples to benchmark on, batch size, and whether or not to give verbose logging
     n_samples: int = config["n_samples"]
     batch_size: int = config["batch_size"]
 
@@ -93,16 +97,34 @@ def benchmark_model(
     for conversion_method in conversions:
         check_consistent_batch_size(conversion_method, n_samples, batch_size)
 
-        logging.info(f"Benchmarking model using conversion: {conversion_method}")
-        times: Dict[str, float] = benchmark(
-            model, conversion_method, device, data_loader, n_samples
-        )
-        all_results[conversion_method] = times
+        logger.info(f"Benchmarking model using conversion: {conversion_method}")
+        try:
+            result: Dict[str, float] = benchmark(
+                model, conversion_method, device, data_loader, n_samples
+            )
+            result["status"] = "success"
+            all_results[conversion_method] = result
+        except Exception as e:
+            # If there is an error, we log the error. In the returned "results", we include the
+            # full traceback
+            error_msg = (
+                f"Benchmarking conversion {conversion_method} failed. Error: {e}"
+            )
+            logger.error(error_msg)
+            all_results[conversion_method] = {
+                "status": "error",
+                "error": e,
+                "traceback": traceback.format_exc(),
+            }
 
-    logging.info("\n\nAll results:")
+    # Print results across all conversion options
+    print("\n\nAll results:")
     for conversion_method, result in all_results.items():
-        logging.info(f"{conversion_method} results:")
-        log_results(result)
+        print(f"{conversion_method} results:")
+        if result["status"] == "success":
+            log_results(result)
+        elif result["status"] == "error":
+            log_failure(result)
         print("\n")
 
     return all_results

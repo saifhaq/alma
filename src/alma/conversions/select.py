@@ -1,6 +1,7 @@
 import logging
+import tempfile
 from pathlib import Path
-from typing import Any, Callable
+from typing import Any, Callable, Tuple
 
 import torch
 
@@ -11,11 +12,10 @@ from .options.export_aotinductor import (
 )
 from .options.export_compile import get_export_compiled_forward_call
 from .options.export_eager import get_export_eager_forward_call
-from .options.export_quant import (
-    get_quant_exported_forward_call,
-    get_quant_exported_model,
-)
+from .options.export_quant import get_quant_exported_forward_call
+from .options.fake_quant import get_fake_quantized_model_forward_call
 from .options.onnx import get_onnx_dynamo_forward_call, get_onnx_forward_call
+from .options.quant_convert import get_converted_quantized_model_forward_call
 
 # from .options.tensorrt import get_tensorrt_dynamo_forward_call # commented out because it messes up imports if not on CUDA
 
@@ -51,7 +51,7 @@ def select_forward_call_function(
     model: Any,
     conversion: str,
     data: torch.Tensor,
-) -> Callable:
+) -> Tuple[Callable, torch.device]:
     """
     Get the forward call function for the model. The complexity is because there are multiple
     ways to export the model, and the forward call is different for each.
@@ -64,8 +64,9 @@ def select_forward_call_function(
 
     Outputs:
     - forward (Callable): The forward call function for the model.
+    - device (torch.device): The device of the model
     """
-
+    device = data.device
     match conversion:
         ###############
         # WITH EXPORT #
@@ -77,10 +78,13 @@ def select_forward_call_function(
             forward = get_export_compiled_forward_call(model, data, "cudagraphs")
 
         case "EXPORT+COMPILE_ONNXRT":
-            # Make sure all dependencies are installed, see here for a discussion by the ONNX team:
-            # https://github.com/pytorch/pytorch/blob/main/torch/_dynamo/backends/onnxrt.py
-            pass
-            # forward = get_export_compiled_forward_call(model, data, "onnxrt")
+            if not torch.onnx.is_onnxrt_backend_supported():
+                # Make sure all dependencies are installed, see here for a discussion by the ONNX team:
+                # https://github.com/pytorch/pytorch/blob/main/torch/_dynamo/backends/onnxrt.py
+                raise RuntimeError(
+                    "Need to install all dependencies. See here for more details: https://github.com/pytorch/pytorch/blob/main/torch/_dynamo/backends/onnxrt.py"
+                )
+            forward = get_export_compiled_forward_call(model, data, "onnxrt")
 
         case "EXPORT+COMPILE_OPENXLA":
             forward = get_export_compiled_forward_call(model, data, "openxla")
@@ -97,7 +101,7 @@ def select_forward_call_function(
         case "EXPORT+TENSORRT":
             # forward = get_tensorrt_dynamo_forward_call(model, data)
             raise NotImplementedError(
-                "Installing torch_tensorrt is taking forever, have to do"
+                "Installing torch_tensorrt is taking forever, need to install."
             )
 
         case "ONNX+DYNAMO_EXPORT":
@@ -140,20 +144,30 @@ def select_forward_call_function(
             raise NotImplementedError("Installing tensor RT is having some issues, fix")
 
         case "ONNX_CPU":
-            onnx_model_path = Path("model/model.onnx")
-            onnx_backend = "CPUExecutionProvider"
-            forward = get_onnx_forward_call(model, data, onnx_model_path, onnx_backend)
+            # We create temporary file to save the onnx model
+            with tempfile.TemporaryDirectory() as tmpdirname:
+                onnx_model_path = Path(f"{tmpdirname}/model.onnx")
+                onnx_backend = "CPUExecutionProvider"
+                forward = get_onnx_forward_call(
+                    model, data, onnx_model_path, onnx_backend
+                )
 
         case "ONNX_GPU":
-            onnx_model_path = Path("model/model.onnx")
-            onnx_backend = "CUDAExecutionProvider"
-            forward = get_onnx_forward_call(model, data, onnx_model_path, onnx_backend)
+            # We create temporary file to save the onnx model
+            with tempfile.TemporaryDirectory() as tmpdirname:
+                onnx_model_path = Path(f"{tmpdirname}/model.onnx")
+                onnx_backend = "CUDAExecutionProvider"
+                forward = get_onnx_forward_call(
+                    model, data, onnx_model_path, onnx_backend
+                )
 
         case "CONVERT_QUANTIZED":
+            # Also returns device, as PyTorch-natively converted models are only currently for CPU
+            forward, device = get_converted_quantized_model_forward_call(model, data)
             pass
 
         case "FAKE_QUANTIZED":
-            pass
+            forward = get_fake_quantized_model_forward_call(model, data)
 
         case _:
             assert (
@@ -161,4 +175,4 @@ def select_forward_call_function(
             ), f"The option {conversion} is not supported"
             raise NotImplementedError("Option not currently supported")
 
-    return forward
+    return forward, device
