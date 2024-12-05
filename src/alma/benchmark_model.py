@@ -5,7 +5,7 @@ from typing import Any, Dict, List, Union
 import torch
 from torch.utils.data import DataLoader
 
-from .benchmark import benchmark, log_failure, log_results
+from .benchmark import benchmark
 from .conversions.select import MODEL_CONVERSION_OPTIONS
 from .dataloader.create import create_single_tensor_dataloader
 from .utils.times import inference_time_benchmarking  # should we use this?

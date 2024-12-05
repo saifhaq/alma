@@ -3,6 +3,7 @@ import logging
 import time
 from typing import Dict, Tuple, Union
 import numpy as np
+import torch.fx as fx
 
 import torch
 from tqdm import tqdm

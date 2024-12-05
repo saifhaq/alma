@@ -1,7 +1,6 @@
 # alma
 
-A Python library for benchmarking PyTorch model speed and performance for different conversion
-options.
+A Python library for benchmarking PyTorch model speed for different conversion options.
 
 The motivation is to make it easy for people to benchmark their models for different conversion options,
 e.g. eager, tracing, scripting, torch.compile, torch.export, ONNX, Tensort, etc. The library is
@@ -14,13 +13,12 @@ affect model speed and performance.
 
 ## Usage
 
-The core API is the `benchmark_model` API, which is used to benchmark the speed of a model for different
+The core API is `benchmark_model`, which is used to benchmark the speed of a model for different
 conversion options. The usage is as follows:
 
 ```python
 from alma import benchmark_model
 from alma.benchmark.log import display_all_results
-from typing import Any, Dict
 
 device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
 
@@ -40,9 +38,7 @@ config = {
 conversions = ["EAGER", "EXPORT+EAGER"]
 
 # Benchmark the model
-results: Dict[str, Dict[str, Any]] = benchmark_model(
-    model, config, conversions, data_loader=data_loader
-)
+results = benchmark_model(model, config, conversions, data_loader=data_loader)
 
 # Print all results
 display_all_results(results)
@@ -52,14 +48,14 @@ The results will look like this, depending on one's model, dataloader, and hardw
 
 ```bash
 EAGER results:
-Device: cuda:0
+device: cuda:0
 Total elapsed time: 0.4148 seconds
 Total inference time (model only): 0.0436 seconds
 Total samples: 5000
 Throughput: 12054.50 samples/second
 
 EXPORT+EAGER results:
-Device: cuda:0
+device: cuda:0
 Total elapsed time: 0.3906 seconds
 Total inference time (model only): 0.0394 seconds
 Total samples: 5000
@@ -68,19 +64,24 @@ Throughput: 12800.82 samples/second
 
 ### Feeding in a single `data` tensor instead of a dataloader
 We also provide the option to feed in a single `data` tensor instead of a dataloader. This is useful
-for cases where one does not want to set up a dataloader. If a `data` tensor is fed in, `benchmark_model`
+for cases where one does not want to go throuhg the trouble of setting up a dataloader, and is happy
+to just benchmark the model on random data of a given shape.
+If no `data_loader` argument is provided and a `data` tensor is fed in, `benchmark_model`
 will automatically generate a dataloader of random tensors, of the same shape as `data`. The 
-batch size of the dataloader will be equal to the `batch_size` in the `config` dict.
+batch size of the dataloader will be equal to the `batch_size` in the `config` dict. `data` should be
+fed in WITHOUT a batch dimension.
 
 ```python
 from alma import benchmark_model
+from alma.benchmark.log import display_all_results
 
 device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
 
 # Load the model
 model = ...
 
-# Initialise a random tensor to benchmark the model on. It must have batch size 1.
+# Initialise a random tensor to benchmark the model on. It must have batch size of 1 (and squeezed)
+# or no batch dimension.
 data = torch.randn(1, 3, 224, 224).to(device)
 
 # Set the configuration
@@ -94,6 +95,9 @@ conversions = ["EAGER", "EXPORT+EAGER"]
 
 # Benchmark the model
 results = benchmark_model(model, config, conversions, data=data.squeeze())
+
+# Print all results
+display_all_results(results)
 ```
 
 
@@ -102,10 +106,10 @@ results = benchmark_model(model, config, conversions, data=data.squeeze())
 In case where the benchmarking of a given conversion fails, it will return a dict for that conversion
 which contains the error message as well as the full traceback. This is useful for debugging and
 understanding why a given conversion failed, e.g. because of hardware incompatabilities, missing
-dependencies, etc.
+dependencies, etc. 
 
 For example, if the `FAKE_QUANTIZED` conversion fails because it's not currently supported for Apple
-silicon, the results may look like this:
+silicon, the defualt results WITHOUT traceback logging enabled may look like this:
 
 ```bash
 CONVERT_QUANTIZED results:
@@ -117,20 +121,47 @@ Throughput: 6033.89 samples/second
 
 
 FAKE_QUANTIZED results:
-Benchmarking failed, error: The operator 'aten::_fake_quantize_learnable_per_tensor_affine' is not currently implemented for the MPS device. If you want this op to be added in priority during the prototype phase of this feature, please comment on https://github.com/pytorch/pytorch/issues/77764. As a temporary fix, you can set the environment variable `PYTORCH_ENABLE_MPS_FALLBACK=1` to use the CPU as a fallback for this op. WARNING: this will be slower than running natively on MPS.
+Benchmarking failed, error: The operator 'aten::_fake_quantize_learnable_per_tensor_affine' is not 
+currently implemented for the MPS device. If you want this op to be added in priority during the 
+prototype phase of this feature, please comment on 
+https://github.com/pytorch/pytorch/issues/77764. As a temporary fix, you can set the environment 
+variable `PYTORCH_ENABLE_MPS_FALLBACK=1` to use the CPU as a fallback for this op. WARNING: this 
+will be slower than running natively on MPS.
 ```
 
-Printing the traceback for the failed `FAKE_QUANTIZED`, stored in the results dict, will give us
-the full traceback, which can be useful, e.g. `results["FAKE_QUANTIZED"]["traceback"]` gives us:
+The traceback of the error is also stored in the results dict, and can be accessed via 
+`results[CONVERSION_NAME]["traceback"]`.
+
+In this example, `results["FAKE_QUANTIZED"]["traceback"]` gives us:
 
 ```bash
-Benchmarking failed, error: The operator 'aten::_fake_quantize_learnable_per_tensor_affine' is not
-currently implemented for the MPS device. If you want this op to be added in priority during
-the prototype phase of this feature, please comment on
-https://github.com/pytorch/pytorch/issues/77764. As a temporary fix, you can set the
-environment variable `PYTORCH_ENABLE_MPS_FALLBACK=1` to use the CPU as a fallback for this op.
-WARNING: this will be slower than running natively on MPS.
+Traceback (most recent call last):
+  File "/Users/oscarsavolainen/Coding/Mine/Alma-Saif/src/alma/benchmark_model.py", line 88, in benchmark_model
+    result: Dict[str, float] = benchmark(
+                               ^^^^^^^^^^
+  File "/Users/oscarsavolainen/Coding/Mine/Alma-Saif/src/alma/benchmark/benchmark.py", line 63, in benchmark
+    warmup(forward_call, data_loader, conversion_device)
+  File "/Users/oscarsavolainen/Coding/Mine/Alma-Saif/src/alma/benchmark/warmup.py", line 26, in warmup
+    _ = forward_call(data)
+        ^^^^^^^^^^^^^^^^^^
+  File "<eval_with_key>.173", line 5, in forward
+    activation_post_process_0 = self.activation_post_process_0(x);  x = None
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Caskroom/miniconda/base/envs/quantization-tuts/lib/python3.11/site-packages/torch/nn/modules/module.py", line 1553, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Caskroom/miniconda/base/envs/quantization-tuts/lib/python3.11/site-packages/torch/nn/modules/module.py", line 1562, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Caskroom/miniconda/base/envs/quantization-tuts/lib/python3.11/site-packages/torch/ao/quantization/_learnable_fake_quantize.py", line 160, in forward
+    X = torch._fake_quantize_learnable_per_tensor_affine(
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+NotImplementedError: The operator 'aten::_fake_quantize_learnable_per_tensor_affine' is not currently implemented for the MPS device. If you want this op to be added in priority during the prototype phase of this feature, please comment on https://github.com/pytorch/pytorch/issues/77764. As a temporary fix, you can set the environment variable `PYTORCH_ENABLE_MPS_FALLBACK=1` to use the CPU as a fallback for this op. WARNING: this will be slower than running natively on MPS.
 ```
+
+By default `display_all_results` only logs only the error from the conversion, but one can also 
+include the traceback in `display_all_results` via setting its `include_traceback_for_errors` argument to
+`True`.
 
 Incidentally, this Apple-silicon-quantization issue can be solved by setting the environmental variable:
 ```bash
@@ -144,8 +175,9 @@ to help manage the logging level. The `setup_logging` function is provided for c
 can use whatever logging one wishes, or none.
 We also provide a `silence_logging` function to silence the logging of all imported modules.
 
-Furthermore, we provide a `display_all_results` function to print the results in a nice format, and a
-`save_dict_to_json` function to save the results to a JSON file for easy CI integration.
+Furthermore, as we have highlighted prior, we provide a `display_all_results` function to print 
+the results in a nice format.There is also a `save_dict_to_json` function to save the results to a 
+JSON file for easy CI integration.
 
 ### Argparsing
 
