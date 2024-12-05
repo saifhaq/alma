@@ -132,6 +132,11 @@ environment variable `PYTORCH_ENABLE_MPS_FALLBACK=1` to use the CPU as a fallbac
 WARNING: this will be slower than running natively on MPS.
 ```
 
+Incidentally, this Apple-silicon-quantization issue can be solved by setting the environmental variable:
+```bash
+PYTORCH_ENABLE_MPS_FALLBACK=1
+```
+
 ### Logging and CI integration
 
 A lot of the imported modules have verbose logging, and so `alma` provides some logging functions
