@@ -12,6 +12,7 @@ from alma.benchmark_model import benchmark_model
 from alma.utils.ipdb_hook import ipdb_sys_excepthook
 from alma.utils.load_model import load_model
 from alma.utils.setup_logging import setup_logging
+from utils.file_utils import save_dict_to_json 
 
 # One needs to set their quantization backend engine to what is appropriate for their system.
 # torch.backends.quantized.engine = 'x86'
@@ -26,7 +27,7 @@ def main() -> None:
     # Set up logging. DEBUG level will also log the model graphs
     # A `setup_logging` function is provided for convenience, but one can use whatever logging one
     # wishes, or none.
-    setup_logging(log_file=None, level="INFO")
+    setup_logging(log_file=None, level="ERROR")
 
     args, device = parse_benchmark_args()
 
@@ -75,8 +76,8 @@ def main() -> None:
 
     # Benchmark the model using the provided data loader.
     logging.info("Benchmarking model using provided data loader")
-    benchmark_model(model, config, conversions, data_loader=data_loader)
-
+    result = benchmark_model(model, config, conversions, data_loader=data_loader)
+    save_dict_to_json(result, 'result.json')
 
 if __name__ == "__main__":
     main()
