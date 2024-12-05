@@ -175,5 +175,4 @@ examples/mnist/data/mnist_cnn*
 data_for_inference
 mnist_images*
 data_for_inference/
-
-report_dynamo_export.sarif
+results/
