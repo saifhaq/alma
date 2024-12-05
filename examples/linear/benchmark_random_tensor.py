@@ -4,6 +4,7 @@ import torch
 
 from alma.arguments.benchmark_args import parse_benchmark_args
 from alma.benchmark_model import benchmark_model
+from alma.benchmark.log import display_all_results
 from alma.utils.ipdb_hook import ipdb_sys_excepthook
 from alma.utils.setup_logging import setup_logging
 
@@ -51,10 +52,10 @@ def main() -> None:
     # benchmark the model. As verbose logging is provided, it will log the benchmarking
     # at a DEBUG level.
     logging.info("Benchmarking model using random data")
-    results = benchmark_model(model, config, args.conversions, data=data.squeeze())
-    import ipdb
+    results: Dict[str, Dict[str, Any]] = benchmark_model(model, config, args.conversions, data=data.squeeze())
 
-    ipdb.set_trace()
+    # Display the results
+    display_all_results(results, display_function=print, include_traceback_for_errors=True)
 
 
 if __name__ == "__main__":
