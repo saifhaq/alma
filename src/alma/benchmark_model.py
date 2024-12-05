@@ -1,16 +1,15 @@
-import argparse
 import logging
 import traceback
-from typing import Any, Callable, Dict, List, Union
+from typing import Any, Dict, List, Union
 
 import torch
 from torch.utils.data import DataLoader
 
 from .benchmark import benchmark, log_failure, log_results
 from .conversions.select import MODEL_CONVERSION_OPTIONS
-from .dataloader.checks import check_consistent_batch_size
 from .dataloader.create import create_single_tensor_dataloader
 from .utils.times import inference_time_benchmarking  # should we use this?
+from .utils.checks import check_inputs, check_consistent_batch_size
 
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())
@@ -27,10 +26,8 @@ def benchmark_model(
     Benchmark the model on different conversion methods. If provided, the dataloader will be used.
     Else, a random dataloader will be created, in which case the `data` tensor must be provided
     to initialize the dataloader.
-    The model is benchmarked on the given conversion methods, and the results are logged.
-    If no logger is provided, a default logger is created. If the verbose flag is set, the logger
-    level is set to DEBUG. Otherwise the INFO level is used.
-    `config` contains the following:
+    The model is benchmarked on the given conversion methods, and the results are returned.
+    The `config` dict must contain the following:
     - n_samples: int     # The number of samples to benchmark on
     - batch_size: int    # The batch size to use for benchmarking
 
@@ -48,7 +45,9 @@ def benchmark_model(
     Outputs:
     - all_results (Dict[str, Dict[str, Any]]): The results of the benchmarking for each conversion method.
         The key is the conversion method, and the value is a tuple containing the total elapsed
-        time, the total time taken, the total number of samples, and the
+        time, the total time taken, the total number of samples, and the throughput of the model.
+        If the conversion method failed, the value will be a dictionary containing the error and
+        traceback.
     """
     # Set to eval mode
     model.eval()
@@ -58,21 +57,8 @@ def benchmark_model(
     # currently supported.
     device: torch.device = next(model.parameters()).device
 
-    # Check the configuration
-    assert "batch_size" in config, "The batch size must be provided in the config"
-    assert (
-        "n_samples" in config
-    ), "The number of samples (n_samples) to benchmark on must be provided in the config"
-
-    # Either the `data` Tensor must be provided, or a data loader
-    if data is None:
-        assert (
-            data_loader is not None
-        ), "If data is not provided, the data_loader must be provided"
-    if data_loader is None:
-        assert (
-            data is not None
-        ), "If data_loader is not provided, a data tensor must be provided"
+    # Check the inputs
+    check_inputs(model, config, conversions, data, data_loader)
 
     # If the conversions are not provided, we use all available conversions
     if conversions is None:

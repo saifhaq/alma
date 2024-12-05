@@ -21,6 +21,7 @@ which is why we squeeze the data tensor's dimensions prior to feeding it in.
 ```python
 from alma import benchmark_model
 from alma.arguments.benchmark_args import parse_benchmark_args
+from alma.benchmark.log import display_all_results
 from alma.utils.setup_logging import setup_logging
 from typing import Dict
 
@@ -46,6 +47,9 @@ config = {
 results: Dict[str, Dict[str, float]] = benchmark_model(
     model, config, args.conversions, data=torch.randn(1, 3, 28, 28).squeeze()
 )
+
+# Display the results
+display_all_results(results)
 ```
 
 #### Full working example:
@@ -66,12 +70,14 @@ The results will look like this, depending on one's model, dataloader, hardware,
 
 ```bash
 EAGER results:
+device: cuda:0
 Total elapsed time: 0.0565 seconds
 Total inference time (model only): 0.0034 seconds
 Total samples: 5000
 Throughput: 88528.94 samples/second
 
 EXPORT+EAGER results:
+device: cuda:0
 Total elapsed time: 0.0350 seconds
 Total inference time (model only): 0.0026 seconds
 Total samples: 5000
@@ -107,14 +113,3 @@ python benchmark_random_tensor.py  --conversions 2,EAGER
 
 This will run the 2nd conversion option and the EAGER conversion option.
 
-
-## CUDA pathing
-For a number of the conversion options, one needs to provide one's CUDA path as an environmental
-variable. This can be fed in via the command line (as below), or added to a `.env` file. For the 
-laytter, an example `.env.example` has been provided, this can be adjiusted if needed and renamed
-to `.env`.
-
-Example command:
-```bash
-python benchmark_random_tensor.py  --conversion 1,2 --n-samples 5000 --batch-size 100
-```

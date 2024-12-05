@@ -12,7 +12,6 @@ from utils.file_utils import save_dict_to_json
 from alma.arguments.benchmark_args import parse_benchmark_args
 from alma.benchmark.log import display_all_results
 from alma.benchmark_model import benchmark_model
-from alma.utils.ipdb_hook import ipdb_sys_excepthook
 from alma.utils.load_model import load_model
 from alma.utils.setup_logging import setup_logging
 
@@ -22,10 +21,6 @@ torch.backends.quantized.engine = "qnnpack"
 
 
 def main() -> None:
-    # Adds an ipdb hook to the sys.excepthook, which will throw one into an ipdb shell when an
-    # exception is raised. Comment out to have the program crash as normal during an unhandled exception
-    ipdb_sys_excepthook()
-
     # Set up logging. DEBUG level will also log the model graphs
     # A `setup_logging` function is provided for convenience, but one can use whatever logging one
     # wishes, or none.
@@ -65,7 +60,6 @@ def main() -> None:
         results, display_function=print, include_traceback_for_errors=True
     )
     save_dict_to_json(results, "result.json")
-
 
 if __name__ == "__main__":
     main()

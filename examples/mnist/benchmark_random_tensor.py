@@ -3,11 +3,11 @@ from typing import Any, Dict
 
 import torch
 from model.model import Net
+from typing import Any, Dict
 
 from alma.arguments.benchmark_args import parse_benchmark_args
 from alma.benchmark.log import display_all_results
 from alma.benchmark_model import benchmark_model
-from alma.utils.ipdb_hook import ipdb_sys_excepthook
 from alma.utils.setup_logging import setup_logging
 
 # One needs to set their quantization backend engine to what is appropriate for their system.
@@ -19,10 +19,6 @@ def main() -> None:
     # Set up logging. DEBUG level will also log the model graphs
     # setup_logging(log_file=None, level="DEBUG")
     setup_logging(log_file=None, level="INFO")
-
-    # Adds an ipdb hook to the sys.excepthook, which will throw one into an ipdb shell when an
-    # exception is raised. Comment out to have the program crash as normal during an unhandled exception
-    ipdb_sys_excepthook()
 
     # Parse the benchmarking arguments
     args, device = parse_benchmark_args()

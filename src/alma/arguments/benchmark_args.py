@@ -6,6 +6,7 @@ from typing import Tuple, Union
 import torch
 
 from ..conversions.select import MODEL_CONVERSION_OPTIONS
+from ..utils.ipdb_hook import ipdb_sys_excepthook
 
 # Create a module-level logger
 logger = logging.getLogger(__name__)
@@ -76,8 +77,19 @@ def parse_benchmark_args() -> Tuple[argparse.Namespace, torch.device]:
 to different transforms, or their string names. MUltiple options can be selected, e.g. --conversions
 0,2,EAGER . The mapping is this:\n{string_rep_of_conv_options}""",
     )
+    parser.add_argument(
+        "--ipdb",
+        action="store_true",
+        default=False,
+        help="Enable the ipdb system exception hook",
+    )
 
     args = parser.parse_args()
+
+    if args.ipdb:
+        # Add an ipdb hook to the sys.excepthook, which will throw one into an ipdb shell when an
+        # exception is raised.
+        ipdb_sys_excepthook()
 
     if args.model_path is not None:
         args.model_path = Path(args.model_path)
