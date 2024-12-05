@@ -7,7 +7,6 @@ from typing import Any, Dict
 from alma.arguments.benchmark_args import parse_benchmark_args
 from alma.benchmark_model import benchmark_model
 from alma.benchmark.log import display_all_results
-from alma.utils.ipdb_hook import ipdb_sys_excepthook
 from alma.utils.setup_logging import setup_logging
 
 logger = logging.getLogger(__name__)

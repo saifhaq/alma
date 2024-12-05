@@ -190,13 +190,16 @@ One can then run the script from the command line with the following command:
 
 ```bash
 python YOUR_BENCHMARK_SCRIPT.py --conversions EAGER,EXPORT+EAGER --batch-size 10
---n-samples 5000
+--n-samples 5000 --ipdb
 ```
 
 This will run the EXPORT+EAGER conversion option and the EAGER conversion option, benchmarking the
-model speed for each conversion option. The batch size of the data loader is controlled via the
-`batch_size` argument. The number of samples to run the benchmark on is controlled via the `n_samples`
-argument.
+model speed for each conversion option. 
+The batch size of the data loader is controlled via then`batch_size` argument. 
+The number of samples to run the benchmark on is controlled via the `n_samples` argument. 
+The `--ipdb` creates a magic breakpoint that throws one into an ipdb debugging session if and wherever
+an Exception occurs in one's code, makign debugging much easier (see this 
+[blog post](https://medium.com/@oscar-savolainen/my-favourite-python-snippets-794d5653af38)).
 
 All of the command line arguments are optional, subject to one using the `parse_benchmark_args` API.
 The defaults are set in `alma/arguments/benchmark_args.py`. These include standard arguments for

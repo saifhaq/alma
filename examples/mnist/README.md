@@ -91,11 +91,7 @@ python ABOVE_SCRIPT.py --model-path ./model/mnist.pt --conversions EAGER,EXPORT+
 ```
 
 This will run the EXPORT+EAGER conversion option and the EAGER conversion option, benchmarking the
-model speed for each conversion option. The batch size of the data loader is controlled via the
-`batch_size` argument, fed in via the config object. The number of samples to run the benchmark on 
-is controlled via the `n_samples` argument. For convenience, we also provide a `data-dir` 
-argument, so that one can have one's data loader feed in specific data, and a `model-path` 
-argument, so that one can feed in specific model weights.
+model speed for each conversion option. 
 
 The results will look like this, depending on one's model, dataloader, and hardware.
 
@@ -114,6 +110,19 @@ Total inference time (model only): 0.0394 seconds
 Total samples: 5000
 Throughput: 12800.82 samples/second
 ```
+
+#### Argparsing:
+In the above example, the batch size of the data loader is controlled via the `--batch_size` 
+argument, fed in via the config object.
+The number of samples to run the benchmark on  is controlled via the `--n_samples` argument. 
+For convenience, we also provide a `--data-dir` argument, so that one can have one's data loader 
+feed in specific data, and a `--model-path` argument, so that one can feed in specific model weights.
+
+Finally, we also provide an `--ipdb` argument, which throws one into an ipdb debugging session if and 
+wherever an Exception occurs. See this 
+[blog post](https://medium.com/@oscar-savolainen/my-favourite-python-snippets-794d5653af38) for 
+more details on the ipdb sysexception hook.
+
 
 #### Full working example:
 A full working example can be found in `benchmark_with_dataloader.py`.
@@ -210,6 +219,7 @@ controlled via the `batch_size` argument.
 ```python
 from alma import benchmark_model
 from alma.arguments.benchmark_args import parse_benchmark_args
+from alma.benchmark.log import display_all_results
 from alma.utils.setup_logging import setup_logging
 from typing import Dict
 
@@ -236,6 +246,9 @@ config = {
 results: Dict[str, Dict[str, float]] = benchmark_model(
    model, config, args.conversions, data=torch.randn(1, 3, 28, 28).squeeze()
 )
+
+# Display the results
+display_all_results(results)
 ```
 
 One would then run this the same way as before. 

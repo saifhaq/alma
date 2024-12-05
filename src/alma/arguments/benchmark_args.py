@@ -6,6 +6,7 @@ from typing import Tuple, Union
 import torch
 
 from ..conversions.select import MODEL_CONVERSION_OPTIONS
+from ..utils.ipdb_hook import ipdb_sys_excepthook
 
 # Create a module-level logger
 logger = logging.getLogger(__name__)
@@ -88,7 +89,6 @@ to different transforms, or their string names. MUltiple options can be selected
     if args.ipdb:
         # Add an ipdb hook to the sys.excepthook, which will throw one into an ipdb shell when an
         # exception is raised.
-        from alma.utils.ipdb_hook import ipdb_sys_excepthook
         ipdb_sys_excepthook()
 
     if args.model_path is not None:
