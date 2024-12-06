@@ -283,10 +283,11 @@ is the source of truth.
 
 #### Naming conventions
 
-The convention for naming convention options in the match-case statement is to use the names of the conversion
-steps, e.g. `EAGER`, `EXPORT+EAGER`, `EXPORT+TENSORRT`, etc. If multiple "techniques" are used in a
-single conversion option, then the names are separated by a `+` sign. Underscores `_` are used within each
-technique name to seperate the words for readability, e.g. `EXPORT+AOT_INDUCTOR`.
+The naming convention for conversion options is to use short but descriptive names, e.g. `EAGER`, 
+`EXPORT+EAGER`, `EXPORT+TENSORRT`, etc. If multiple "techniques" are used in a
+single conversion option, then the names are separated by a `+` sign in chronological order of operation. 
+Underscores `_` are used within each technique name to seperate the words for readability, 
+e.g. `EXPORT+AOT_INDUCTOR`, where `EXPORT` and `AOT_INDUCTOR` are considered seperate steps.
 
 
 ## Future work:
@@ -305,10 +306,11 @@ you get started with adding a new conversion option/feature!
 ### Conversion Options
 
 All conversion options are set in `src/alma/conversions/`. In that directory, one can find the conversion
-options inside `options/`, where each file contains a single conversion option. At the risk of some code
-duplication, we have chosen to keep the conversion options separate, so that one can easily add new conversion
-options without having to modify the existing ones. It also makes it easier for the user to see what conversion
-options are available, and to understand what each conversion option does.
+option code inside `options/`, where each file contains a conversion option (or sometimes closely related 
+family of options). At the risk of some code duplication, we have chosen to keep the conversion options 
+separate, so that one can easily add new conversion options without having to modify the existing ones. 
+It also makes it easier for the user to see what conversion options are available, and to understand what 
+each conversion option does.
 
 The conversion options are then selected for benchmarking in the `src/alma/conversions/select.py` file.
 This is just a glorified match-case statement that returns the forward calls of each model conversion option,
@@ -318,7 +320,8 @@ If adding any conversion options, follow the naming convention in [Naming Conven
 
 ### Dependencies
 
-Some conversion options may require package dependencies, which should be added to the Docker image.
+Some conversion options may require package dependencies, which should be added to the Docker image and/or
+`requirements.txt` file.
 
 ### Code Standards
 
