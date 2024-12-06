@@ -61,9 +61,7 @@ def get_quant_exported_model(
     ).module()
 
     # TODO: mess around with export_for_inference
-    import ipdb
 
-    ipdb.set_trace()
     # Step 2. quantization
     # TODO: mess around with affine quantization
     to_quant_model = copy.deepcopy(m_export)
@@ -81,6 +79,7 @@ def get_quant_exported_model(
     m_q: torch.fx.graph_module.GraphModule = convert_pt2e(
         m_fq, use_reference_representation=int_op
     )
+    import ipdb; ipdb.set_trace()
 
     logger.debug("Quantized model graph:")
     logger.debug(m_q.graph.print_tabular())
