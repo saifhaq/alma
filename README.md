@@ -67,9 +67,9 @@ We also provide the option to feed in a single `data` tensor instead of a datalo
 for cases where one does not want to go throuhg the trouble of setting up a dataloader, and is happy
 to just benchmark the model on random data of a given shape.
 If no `data_loader` argument is provided and a `data` tensor is fed in, `benchmark_model`
-will automatically generate a dataloader of random tensors, of the same shape as `data`. The 
-batch size of the dataloader will be equal to the `batch_size` in the `config` dict. `data` should be
-fed in WITHOUT a batch dimension.
+will automatically generate a dataloader of random tensors, of the same shape as `data`. 
+`data` should be fed in WITHOUT a batch dimension.
+The batch size of the dataloader will be equal to the `batch_size` in the `config` dict. 
 
 ```python
 from alma import benchmark_model
@@ -109,7 +109,7 @@ understanding why a given conversion failed, e.g. because of hardware incompatab
 dependencies, etc. 
 
 For example, if the `FAKE_QUANTIZED` conversion fails because it's not currently supported for Apple
-silicon, the defualt results WITHOUT traceback logging enabled may look like this:
+silicon, the default results may look like this:
 
 ```bash
 CONVERT_QUANTIZED results:
