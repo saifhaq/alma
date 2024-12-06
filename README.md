@@ -265,7 +265,9 @@ python benchmark_with_dataloader.py --help
 ## Examples:
 
 For extensive examples on how to use `alma`, as well as simple clean examples on how train a model and
-quantize it, see the `examples` directory.
+quantize it, see the [`examples`](./examples/README.md#overview) directory.
+
+
 
 ## Conversion options:
 
