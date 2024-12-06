@@ -12,7 +12,19 @@ so that one can learn about the different conversion options, how to implement t
 affect model speed and performance.
 
 ## Installation
-TODO, copy from examples/
+`alma` is available as a Python package.
+
+One can install the package from python package index by running 
+```bash
+pip install alma
+```
+
+Alternatively, it can be installed from the root of this repository (save level as this README) by 
+running:
+```bash
+pip install -e .
+```
+
 
 ## Usage
 

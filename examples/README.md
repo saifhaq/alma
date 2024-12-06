@@ -1,17 +1,7 @@
 # Examples
 
-## Installation of alma
-To run the examples, one has to install the `alma` package. 
-
-One can install the package from python package index by running 
-```bash
-pip install alma
-```
-
-Alternatively, it can be installed from the root of the repository by running:
-```bash
-pip install -e .
-```
+`alma` will have to be installed for these examples to work.
+[See installation steps](../README.md#installation)
 
 ## Overview
 The examples on how to use `alma` are located here in the `examples` directory. The examples are:
