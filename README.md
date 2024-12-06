@@ -182,7 +182,7 @@ JSON file for easy CI integration.
 ### Argparsing
 
 For convenience, we provide a `parse_benchmark_args` function that parses the command line arguments
-for the user. This is provided for convenience, but one can also just pass in the arguments directly to the
+for the user. One can of course also just pass in non-CLI arguments directly to the
 `benchmark_model` API. The `parse_benchmark_args` function is used as follows:
 
 ```python
