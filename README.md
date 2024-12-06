@@ -132,7 +132,7 @@ will be slower than running natively on MPS.
 The traceback of the error is also stored in the results dict, and can be accessed via 
 `results[CONVERSION_NAME]["traceback"]`.
 
-In this example, `results["FAKE_QUANTIZED"]["traceback"]` gives us:
+In this example, `print(results["FAKE_QUANTIZED"]["traceback"])` gives us:
 
 ```bash
 Traceback (most recent call last):
