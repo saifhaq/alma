@@ -33,17 +33,17 @@ MODEL_CONVERSION_OPTIONS = {
     6: "EXPORT+EAGER",
     7: "EXPORT+TENSORRT",
     8: "ONNX+DYNAMO_EXPORT",
-    9: "EXPORT+INT_QUANTIZED",
-    10: "EXPORT+FLOAT_QUANTIZED",
-    11: "EXPORT+INT-QUANTIZED+AOT_INDUCTOR",
-    12: "EXPORT+FLOAT-QUANTIZED+AOT_INDUCTOR",
+    9: "EXPORT+AI8WI8_STATIC_QUANTIZED",
+    10: "EXPORT+INT8_FLOAT_QUANTIZED",
+    11: "EXPORT+AI8WI8_STATIC_QUANTIZED+AOT_INDUCTOR",
+    12: "EXPORT+INT8_FLOAT_QUANTIZED+AOT_INDUCTOR",
     13: "COMPILE",
     14: "EAGER",
     15: "TENSORRT",
     16: "ONNX_CPU",
     17: "ONNX_GPU",
-    18: "CONVERT_QUANTIZED",
-    19: "FAKE_QUANTIZED",
+    18: "CONVERT_AI8WI8_STATIC_QUANTIZED",
+    19: "AI8WI8_STATIC_FAKE_QUANTIZED",
 }
 
 
@@ -86,12 +86,13 @@ def select_forward_call_function(
                 )
             forward = get_export_compiled_forward_call(model, data, "onnxrt")
 
-
         case "EXPORT+COMPILE_OPENXLA":
             # Check if 'openxla' backend is available
             if "openxla" not in torch._dynamo.list_backends():
-                raise RuntimeError("OpenXLA backend is not available. Please ensure OpenXLA is installed and properly configured.")
-            
+                raise RuntimeError(
+                    "OpenXLA backend is not available. Please ensure OpenXLA is installed and properly configured."
+                )
+
             # Check if torch-xla is installed
             try:
                 import torch_xla
@@ -106,7 +107,9 @@ def select_forward_call_function(
         case "EXPORT+COMPILE_TVM":
             # Check if 'tvm' backend is available
             if "tvm" not in torch._dynamo.list_backends():
-                raise RuntimeError("TVM backend is not available. Please ensure TVM is installed and properly configured.")
+                raise RuntimeError(
+                    "TVM backend is not available. Please ensure TVM is installed and properly configured."
+                )
             forward = get_export_compiled_forward_call(model, data, "tvm")
 
         case "EXPORT+AOT_INDUCTOR":
@@ -124,22 +127,22 @@ def select_forward_call_function(
         case "ONNX+DYNAMO_EXPORT":
             forward = get_onnx_dynamo_forward_call(model, data)
 
-        case "EXPORT+INT_QUANTIZED":
+        case "EXPORT+AI8WI8_STATIC_QUANTIZED":
             forward = get_quant_exported_forward_call(
                 model, data, int_or_dequant_op="int"
             )
 
-        case "EXPORT+FLOAT_QUANTIZED":
+        case "EXPORT+INT8_FLOAT_QUANTIZED":
             forward = get_quant_exported_forward_call(
                 model, data, int_or_dequant_op="dequant"
             )
 
-        case "EXPORT+INT_QUANTIZED+AOT_INDUCTOR":
+        case "EXPORT+AI8WI8_STATIC_QUANTIZED+AOT_INDUCTOR":
             forward = get_quant_export_aot_inductor_forward_call(
                 model, data, int_or_dequant_op="int"
             )
 
-        case "EXPORT+FLOAT_QUANTIZED+AOT_INDUCTOR":
+        case "EXPORT+INT8_FLOAT_QUANTIZED+AOT_INDUCTOR":
             forward = get_quant_export_aot_inductor_forward_call(
                 model, data, int_or_dequant_op="dequant"
             )
@@ -178,12 +181,12 @@ def select_forward_call_function(
                     model, data, onnx_model_path, onnx_backend
                 )
 
-        case "CONVERT_QUANTIZED":
+        case "CONVERT_AI8WI8_STATIC_QUANTIZED":
             # Also returns device, as PyTorch-natively converted models are only currently for CPU
             forward, device = get_converted_quantized_model_forward_call(model, data)
             pass
 
-        case "FAKE_QUANTIZED":
+        case "AI8WI8_STATIC_FAKE_QUANTIZED":
             forward = get_fake_quantized_model_forward_call(model, data)
 
         case _:

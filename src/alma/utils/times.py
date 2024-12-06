@@ -2,9 +2,10 @@ import concurrent.futures
 import logging
 import time
 from typing import Dict, Tuple, Union
-import numpy as np
 
+import numpy as np
 import torch
+import torch.fx as fx
 from tqdm import tqdm
 
 logger = logging.getLogger(__name__)

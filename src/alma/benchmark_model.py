@@ -5,11 +5,11 @@ from typing import Any, Dict, List, Union
 import torch
 from torch.utils.data import DataLoader
 
-from .benchmark import benchmark, log_failure, log_results
+from .benchmark import benchmark
 from .conversions.select import MODEL_CONVERSION_OPTIONS
 from .dataloader.create import create_single_tensor_dataloader
+from .utils.checks import check_consistent_batch_size, check_inputs
 from .utils.times import inference_time_benchmarking  # should we use this?
-from .utils.checks import check_inputs, check_consistent_batch_size
 
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())

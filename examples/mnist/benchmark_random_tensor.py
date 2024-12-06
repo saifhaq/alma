@@ -3,7 +3,6 @@ from typing import Any, Dict
 
 import torch
 from model.model import Net
-from typing import Any, Dict
 
 from alma.arguments.benchmark_args import parse_benchmark_args
 from alma.benchmark.log import display_all_results

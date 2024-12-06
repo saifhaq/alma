@@ -6,10 +6,8 @@ where one can feed in a random tensor to initialise the benchmarking data loader
 
 For an example where we feed in a dataloader into the `benchmark_model` API, see the `mnist` example.
 
-## Benchmark with `alma`:
 
-
-### Benchmark conversion options using a data tensor to intialise a data loader:
+## Benchmark conversion options using a data tensor to intialise a data loader:
 
 One does not need to pass in a data loader to do the benchmarking. If one does not pass in a data loader,
 one has to pass in a `data` input, where `data` is just a tensor with batch size 1.
@@ -52,7 +50,7 @@ results: Dict[str, Dict[str, float]] = benchmark_model(
 display_all_results(results)
 ```
 
-#### Full working example:
+### Full working example:
 A full working example can be found in `examples/mnist/benchmark_random_tensor.py` where a random model is used.
 E.g.
 ```bash

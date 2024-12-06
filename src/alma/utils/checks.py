@@ -1,6 +1,7 @@
+from typing import List, Union
+
 import torch
 from torch.utils.data import DataLoader
-from typing import List, Union
 
 
 def check_inputs(

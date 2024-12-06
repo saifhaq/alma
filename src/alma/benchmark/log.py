@@ -1,5 +1,5 @@
 import logging
-from typing import Any, Dict, Callable
+from typing import Any, Callable, Dict
 
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())
@@ -31,7 +31,9 @@ def display_all_results(
             log_results(result, display_function=display_function)
         elif result["status"] == "error":
             log_failure(
-                result, display_function=display_function, include_traceback=include_traceback_for_errors
+                result,
+                display_function=display_function,
+                include_traceback=include_traceback_for_errors,
             )
         display_function("\n")
 
@@ -68,7 +70,9 @@ def log_results(
 
 
 def log_failure(
-    error_result: Dict[str, str], display_function: Callable = logger.info, include_traceback: bool = True
+    error_result: Dict[str, str],
+    display_function: Callable = logger.info,
+    include_traceback: bool = True,
 ) -> None:
     """
     Log the error message, when logging the results of a conversion benchmark.
@@ -84,4 +88,4 @@ def log_failure(
     """
     display_function(f"Benchmarking failed, error: {error_result['error']}")
     if include_traceback:
-        display_function(error_result['traceback'])
+        display_function(error_result["traceback"])

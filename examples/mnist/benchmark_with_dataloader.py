@@ -61,5 +61,6 @@ def main() -> None:
     )
     save_dict_to_json(results, "result.json")
 
+
 if __name__ == "__main__":
     main()
