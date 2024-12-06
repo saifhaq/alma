@@ -284,8 +284,8 @@ technique name to seperate the words for readability, e.g. `EXPORT+AOT_INDUCTOR`
 
 ## How to contribute:
 
-Contributions are welcome! If you have a new conversion option you would like to add, so the whole community can benefit, or a new feature,
-please open a pull request. We are always looking for new conversion options, and we are happy to help
+Contributions are welcome! If you have a new conversion option or feature you would like to add so that the whole community can benefit,
+please open a pull request! We are always looking for new conversion options, and we are happy to help
 you get started with adding a new conversion option.
 
 ### Conversion Options
