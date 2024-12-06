@@ -127,22 +127,22 @@ def select_forward_call_function(
         case "ONNX+DYNAMO_EXPORT":
             forward = get_onnx_dynamo_forward_call(model, data)
 
-        case "EXPORT+INT_QUANTIZED":
+        case "EXPORT+AI8WI8_STATIC_QUANTIZED":
             forward = get_quant_exported_forward_call(
                 model, data, int_or_dequant_op="int"
             )
 
-        case "EXPORT+FLOAT_QUANTIZED":
+        case "EXPORT+INT8_FLOAT_QUANTIZED":
             forward = get_quant_exported_forward_call(
                 model, data, int_or_dequant_op="dequant"
             )
 
-        case "EXPORT+INT_QUANTIZED+AOT_INDUCTOR":
+        case "EXPORT+AI8WI8_STATIC_QUANTIZED+AOT_INDUCTOR":
             forward = get_quant_export_aot_inductor_forward_call(
                 model, data, int_or_dequant_op="int"
             )
 
-        case "EXPORT+FLOAT_QUANTIZED+AOT_INDUCTOR":
+        case "EXPORT+INT8_FLOAT_QUANTIZED+AOT_INDUCTOR":
             forward = get_quant_export_aot_inductor_forward_call(
                 model, data, int_or_dequant_op="dequant"
             )
@@ -181,12 +181,12 @@ def select_forward_call_function(
                     model, data, onnx_model_path, onnx_backend
                 )
 
-        case "CONVERT_QUANTIZED":
+        case "CONVERT_AI8WI8_STATIC_QUANTIZED":
             # Also returns device, as PyTorch-natively converted models are only currently for CPU
             forward, device = get_converted_quantized_model_forward_call(model, data)
             pass
 
-        case "FAKE_QUANTIZED":
+        case "AI8WI8_STATIC_FAKE_QUANTIZED":
             forward = get_fake_quantized_model_forward_call(model, data)
 
         case _:
