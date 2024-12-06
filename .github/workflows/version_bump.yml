@@ -1,13 +1,16 @@
 name: Version bump
+
 on:
     push:
         branches:
             - main
+
 concurrency:
     group: ${{ github.workflow }}-deployment
     cancel-in-progress: false
+
 permissions:
-  contents: write
+    contents: write
 
 jobs:
     tag:
@@ -40,3 +43,34 @@ jobs:
                   name: ${{ steps.semver.outputs.next }}
                   tag: ${{ steps.semver.outputs.next }}
                   token: ${{ github.token }}
+
+    publish:
+        needs: [tag]
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v4
+              with:
+                  fetch-depth: 1
+
+            - name: Update version in pyproject.toml
+              run: |
+                  sed -i "s/^version = .*/version = \"${{ needs.tag.outputs.next_version }}\"/" pyproject.toml
+
+            - name: Create setup.py
+              run: |
+                  echo "from setuptools import setup; setup()" > setup.py
+
+            - name: Install build tools
+              run: |
+                  pip install --upgrade pip build twine
+
+            - name: Build package
+              run: |
+                  python -m build
+
+            - name: Publish to PyPI
+              env:
+                  TWINE_USERNAME: "__token__"
+                  TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
+              run: |
+                  twine upload dist/*
