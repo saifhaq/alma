@@ -268,10 +268,6 @@ steps, e.g. `EAGER`, `EXPORT+EAGER`, `EXPORT+TENSORRT`, etc. If multiple "techni
 single conversion option, then the names are separated by a `+` sign. Underscores `_` are used within each
 technique name to seperate the words for readability, e.g. `EXPORT+AOT_INDUCTOR`.
 
-## Examples:
-
-For extensive examples on how to use `alma`, as well as simple clean examples on how train a model and
-quantize it, see the `examples` directory.
 
 ## Future work:
 
