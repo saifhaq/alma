@@ -230,13 +230,12 @@ model speed for each conversion option.
 The batch size of the data loader is controlled via then`batch_size` argument. 
 The number of samples to run the benchmark on is controlled via the `n_samples` argument. 
 The `--ipdb` creates a magic breakpoint that throws one into an ipdb debugging session if and wherever
-an Exception occurs in one's code, makign debugging much easier (see this 
+an Exception occurs in one's code, making debugging much easier (see this 
 [blog post](https://medium.com/@oscar-savolainen/my-favourite-python-snippets-794d5653af38)).
 
 All of the command line arguments are optional, subject to one using the `parse_benchmark_args` API.
 The defaults are set in `alma/arguments/benchmark_args.py`. These include standard arguments for
 convenience, e.g. `--model-path` for model weight loading, and `--data-dir` for data loading.
-One can of course feed in one's variables straight into the `benchmark_model` API.
 
 To see all of the arguments, run the following command:
 
