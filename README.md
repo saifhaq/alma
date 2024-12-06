@@ -39,6 +39,7 @@ device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cp
 
 # Load the model
 model = ...
+model = model.to(device)
 
 # Load the dataloader used in benchmarking
 data_loader = ...
@@ -94,6 +95,7 @@ device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cp
 
 # Load the model
 model = ...
+model = model.to(device)
 
 # Initialise a random tensor to benchmark the model on. It must have batch size of 1 (and squeezed)
 # or no batch dimension.
@@ -217,6 +219,7 @@ args, device = parse_benchmark_args()
 
 # Load the model
 model = ...
+model = model.to(device)
 
 # Load the data
 data_loader = ...
