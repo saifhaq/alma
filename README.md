@@ -289,10 +289,7 @@ technique name to seperate the words for readability, e.g. `EXPORT+AOT_INDUCTOR`
 - Add more conversion options. This is a work in progress, and we are always looking for more conversion options.
 - Multi-device benchmarking. Currently `alma` only supports single-device benchmarking, but ideally a model
   could be split across multiple devices.
-- A self-contained web application for benchmarking. This would allow users to spin up a web server
-  and benchmark their models in a more user-friendly way, with `alma` contained in a Docker image.
-  This would also allow for easy deployment on cloud services, and the user wouldn't have to worry about
-  installing dependencies.
+- Integrating conversion options beyond PyTorch, e.g. HuggingFace, JAX, llama.cpp, etc.
 
 ## How to contribute:
 
