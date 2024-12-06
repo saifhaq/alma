@@ -11,6 +11,9 @@ Beyond just benchmarking, `alma` is designed to be a one-stop-shop for all model
 so that one can learn about the different conversion options, how to implement them, and how they
 affect model speed and performance.
 
+## Installation
+TODO, copy from examples/
+
 ## Usage
 
 The core API is `benchmark_model`, which is used to benchmark the speed of a model for different
