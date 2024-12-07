@@ -12,3 +12,4 @@ onnx==1.17.0
 onnxruntime==1.20.1
 onnxruntime-gpu==1.20.1
 torch-xla==2.5.1
+torch-tensorrt==2.5.0

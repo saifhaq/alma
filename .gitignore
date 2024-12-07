@@ -176,3 +176,4 @@ data_for_inference
 mnist_images*
 data_for_inference/
 results/
+html

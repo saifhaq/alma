@@ -16,8 +16,7 @@ from .options.export_quant import get_quant_exported_forward_call
 from .options.fake_quant import get_fake_quantized_model_forward_call
 from .options.onnx import get_onnx_dynamo_forward_call, get_onnx_forward_call
 from .options.quant_convert import get_converted_quantized_model_forward_call
-
-# from .options.tensorrt import get_tensorrt_dynamo_forward_call # commented out because it messes up imports if not on CUDA
+from .options.tensorrt import get_tensorrt_dynamo_forward_call
 
 
 logger = logging.getLogger(__name__)
@@ -119,7 +118,13 @@ def select_forward_call_function(
             forward = get_export_eager_forward_call(model, data)
 
         case "EXPORT+TENSORRT":
-            # forward = get_tensorrt_dynamo_forward_call(model, data)
+            try:
+                import torch_tensorrt
+            except ImportError:
+                raise RuntimeError(
+                    "Torch TensorRT backend is not available. Please ensure it is installed and properly configured."
+                )     
+            forward = get_tensorrt_dynamo_forward_call(model, data)
             raise NotImplementedError(
                 "Installing torch_tensorrt is taking forever, need to install."
             )
