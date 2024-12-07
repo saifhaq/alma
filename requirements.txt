@@ -13,3 +13,4 @@ onnxruntime==1.20.1
 onnxruntime-gpu==1.20.1
 torch-xla==2.5.1
 torch-tensorrt==2.5.0
+nvidia-modelopt[torch,onnx]==0.21.0

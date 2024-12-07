@@ -1,6 +1,6 @@
 docker run -itd \
---name torch \
+--name torch2 \
 --gpus=all \
 -v /home:/home \
 --entrypoint=/bin/bash \
-torch2.4:1
+torch2.5:0
