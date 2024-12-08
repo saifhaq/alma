@@ -43,9 +43,10 @@ def get_compiled_model_forward_call(
     with torch.no_grad():
         _ = model(data)
 
-    # # Print model graph
-    # logger.debug("Model graph:")
-    # logger.debug(model.graph.print_tabular())
+    # Print model graph
+    if logger.root.level <= logging.DEBUG:
+        logger.debug("Model graph:")
+        logger.debug(model.graph.print_tabular())
 
     check_model_type(model, torch._dynamo.eval_frame.OptimizedModule)
 

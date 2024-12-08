@@ -68,6 +68,8 @@ def fx_quantize(
     fx_model = prepare_qat_fx(model, qconfig_mapping, (data,))
 
     # Prints the graph as a table
-    logger.info("\nGraph as a Table:\n")
-    fx_model.graph.print_tabular()
+    if logger.root.level <= logging.DEBUG:
+        logger.debug("\nGraph as a Table:\n")
+        logger.debug(fx_model.graph.print_tabular())
+    
     return fx_model

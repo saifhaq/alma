@@ -33,23 +33,27 @@ MODEL_CONVERSION_OPTIONS = {
     7: "EXPORT+TENSORRT",
     8: "ONNX+DYNAMO_EXPORT",
     9: "EXPORT+AI8WI8_STATIC_QUANTIZED",
-    10: "EXPORT+I8_FLOAT_QUANTIZED",
+    10: "EXPORT+AI8WI8_FLOAT_QUANTIZED",
     11: "EXPORT+AI8WI8_STATIC_QUANTIZED+AOT_INDUCTOR",
-    12: "EXPORT+INT8_FLOAT_QUANTIZED+AOT_INDUCTOR",
-    13: "COMPILE",
-    14: "EAGER",
-    15: "TENSORRT",
-    16: "ONNX_CPU",
-    17: "ONNX_GPU",
-    18: "CONVERT_AI8WI8_STATIC_QUANTIZED",
-    19: "AI8WI8_STATIC_FAKE_QUANTIZED",
+    12: "EXPORT+AI8WI8_FLOAT_QUANTIZED+AOT_INDUCTOR",
+    13: "EXPORT+AI8WI8_STATIC_QUANTIZED+RUN_DECOMPOSITION",
+    14: "EXPORT+AI8WI8_FLOAT_QUANTIZED+RUN_DECOMPOSITION",
+    15: "EXPORT+AI8WI8_STATIC_QUANTIZED+RUN_DECOMPOSITION+AOT_INDUCTOR",
+    16: "EXPORT+AI8WI8_FLOAT_QUANTIZED+RUN_DECOMPOSITION+AOT_INDUCTOR",
+    17: "COMPILE",
+    18: "EAGER",
+    19: "TENSORRT",
+    20: "ONNX_CPU",
+    21: "ONNX_GPU",
+    22: "NATIVE_CONVERT_AI8WI8_STATIC_QUANTIZED",
+    23: "NATIVE_FAKE_QUANTIZED_AI8WI8_STATIC",
 }
-
 
 def select_forward_call_function(
     model: Any,
     conversion: str,
     data: torch.Tensor,
+    device: torch.device,
 ) -> Tuple[Callable, torch.device]:
     """
     Get the forward call function for the model. The complexity is because there are multiple
@@ -63,7 +67,8 @@ def select_forward_call_function(
 
     Outputs:
     - forward (Callable): The forward call function for the model.
-    - device (torch.device): The device of the model
+    - device (torch.device): The device of the model. This can be affected by the conversion options.
+        E.g. some conversion methods are only supported on specific hardware.
     """
     device = data.device
     match conversion:
@@ -112,7 +117,7 @@ def select_forward_call_function(
             forward = get_export_compiled_forward_call(model, data, "tvm")
 
         case "EXPORT+AOT_INDUCTOR":
-            forward = get_export_aot_inductor_forward_call(model, data)
+            forward = get_export_aot_inductor_forward_call(model, data, device)
 
         case "EXPORT+EAGER":
             forward = get_export_eager_forward_call(model, data)
@@ -134,22 +139,45 @@ def select_forward_call_function(
 
         case "EXPORT+AI8WI8_STATIC_QUANTIZED":
             forward = get_quant_exported_forward_call(
-                model, data, int_or_dequant_op="int"
+                model, data, int_or_dequant_op="int", run_decompositions=False
             )
 
-        case "EXPORT+INT8_FLOAT_QUANTIZED":
+        case "EXPORT+AI8WI8_FLOAT_QUANTIZED":
             forward = get_quant_exported_forward_call(
-                model, data, int_or_dequant_op="dequant"
+                model, data, int_or_dequant_op="dequant", run_decompositions=False
             )
 
         case "EXPORT+AI8WI8_STATIC_QUANTIZED+AOT_INDUCTOR":
             forward = get_quant_export_aot_inductor_forward_call(
-                model, data, int_or_dequant_op="int"
+                model, data, device, int_or_dequant_op="int", run_decompositions=False
             )
 
-        case "EXPORT+INT8_FLOAT_QUANTIZED+AOT_INDUCTOR":
+        case "EXPORT+AI8WI8_FLOAT_QUANTIZED+AOT_INDUCTOR":
             forward = get_quant_export_aot_inductor_forward_call(
-                model, data, int_or_dequant_op="dequant"
+                model, data, device, int_or_dequant_op="dequant", run_decompositions=False
+            )
+
+        case "EXPORT+AI8WI8_STATIC_QUANTIZED+RUN_DECOMPOSITION":
+            # The difference with training (i.e. inference=False) is that at the end we re-run 
+            # torch.export and then run `run_decompositions`, with the hope it might shorted the graph
+            # a bit.
+            forward = get_quant_exported_forward_call(
+                model, data, int_or_dequant_op="int", run_decompositions=True
+            )
+
+        case "EXPORT+AI8WI8_FLOAT_QUANTIZED+RUN_DECOMPOSITION":
+            forward = get_quant_exported_forward_call(
+                model, data, int_or_dequant_op="dequant", run_decompositions=True
+            )
+
+        case "EXPORT+AI8WI8_STATIC_QUANTIZED+RUN_DECOMPOSITION+AOT_INDUCTOR":
+            forward = get_quant_export_aot_inductor_forward_call(
+                model, data, device, int_or_dequant_op="int", run_decompositions=True
+            )
+
+        case "EXPORT+AI8WI8_FLOAT_QUANTIZED+RUN_DECOMPOSITION+AOT_INDUCTOR":
+            forward = get_quant_export_aot_inductor_forward_call(
+                model, data, device, int_or_dequant_op="dequant", run_decompositions=True
             )
 
         ##################
@@ -186,12 +214,11 @@ def select_forward_call_function(
                     model, data, onnx_model_path, onnx_backend
                 )
 
-        case "CONVERT_AI8WI8_STATIC_QUANTIZED":
+        case "NATIVE_CONVERT_AI8WI8_STATIC_QUANTIZED":
             # Also returns device, as PyTorch-natively converted models are only currently for CPU
             forward, device = get_converted_quantized_model_forward_call(model, data)
-            pass
 
-        case "AI8WI8_STATIC_FAKE_QUANTIZED":
+        case "NATIVE_FAKE_QUANTIZED_AI8WI8_STATIC":
             forward = get_fake_quantized_model_forward_call(model, data)
 
         case _:

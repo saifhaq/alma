@@ -136,6 +136,6 @@ def _fx_quantize(
 
     # Prints the graph as a table
     if logger.root.level <= logging.DEBUG:
-        logger.info("\nFake quantized model graph:\n")
+        logger.debug("\nFake quantized model graph:\n")
         logger.debug(fx_model.graph.print_tabular())
     return fx_model

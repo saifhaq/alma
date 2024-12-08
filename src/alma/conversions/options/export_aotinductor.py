@@ -16,7 +16,7 @@ logger.addHandler(logging.NullHandler())
 
 
 def get_export_aot_inductor_forward_call(
-    model: ExportedProgram | GraphModule, data: torch.Tensor
+    model: ExportedProgram | GraphModule, data: torch.Tensor, device: torch.device
 ) -> Callable:
     """
     Get the forward call function for the exported model using AOTInductor.
@@ -24,6 +24,7 @@ def get_export_aot_inductor_forward_call(
     Inputs:
     - model (Union[ExportedProram, GraphModule]): The model to get the forward call for.
     - data (torch.Tensor): A sample of data to pass through the model.
+    - device (torch.device): The device we are loading the AOTInductor-lowered model to.
 
     Outputs:
     - forward (Callable): The forward call function for the model.
@@ -32,15 +33,13 @@ def get_export_aot_inductor_forward_call(
     # Export the model
     model = get_exported_model(model, data)
 
-    # NOTE: not sure if this is correct. It may be correct for compile, or for compile+export.
-    # If the latter, move this into the export sub directory.
     check_model_type(model, ExportedProgram)
 
-    return get_AOTInductor_lowered_model_forward_call(model, data)
+    return get_AOTInductor_lowered_model_forward_call(model, data, device)
 
 
 def get_AOTInductor_lowered_model_forward_call(
-    model: ExportedProgram | GraphModule, data: torch.Tensor
+    model: ExportedProgram | GraphModule, data: torch.Tensor, device: torch.device
 ) -> Callable:
     """
     Get the forward call function for the model using AOTInductor.
@@ -48,6 +47,7 @@ def get_AOTInductor_lowered_model_forward_call(
     Inputs:
     - model (Union[ExportedProram, GraphModule]): The model to get the forward call for.
     - data (torch.Tensor): A sample of data to pass through the model.
+    - device (torch.device): The device we are loading the AOTInductor-lowered model to.
 
     Outputs:
     - forward (Callable): The forward call function for the model.
@@ -68,7 +68,7 @@ def get_AOTInductor_lowered_model_forward_call(
     # Load and run the .so file in Python.
     # To load and run it in a C++ environment, see:
     # https://pytorch.org/docs/main/torch.compiler_aot_inductor.html
-    forward = torch._export.aot_load(so_path, device="cuda")
+    forward = torch._export.aot_load(so_path, device=device.type)
 
     return forward
 
@@ -76,7 +76,9 @@ def get_AOTInductor_lowered_model_forward_call(
 def get_quant_export_aot_inductor_forward_call(
     model,
     data: torch.Tensor,
+    device: torch.device,
     int_or_dequant_op: Literal["int", "dequant"],
+    run_decompositions: bool,
 ) -> Callable:
     """
     Get the forward call function for the exported quantized model using AOTInductor.
@@ -85,13 +87,16 @@ def get_quant_export_aot_inductor_forward_call(
     Inputs:
     - model (torch.nn.Module): The model to export
     - data (torch.Tensor): Sample data to feed through the model for tracing.
+    - device (torch.device): The device we are loading the AOTInductor-lowered model to.
     - int_or_dequant_op (Literal["int", "dequant"]): do we use integer arithmetic operations on
             quantized layers, or do we dequantize just prior to the op
+    - run_decompositions (bool): do we, after all of our processing, re-export the model and run
+            `run_decompositions`?
 
     Outputs:
     - forward (Callable): The forward call function for the model.
     """
 
-    model = get_quant_exported_model(model, data, int_or_dequant_op)
-    forward = get_export_aot_inductor_forward_call(model, data, logger)
+    model = get_quant_exported_model(model, data, int_or_dequant_op, run_decompositions)
+    forward = get_export_aot_inductor_forward_call(model, data, device)
     return forward

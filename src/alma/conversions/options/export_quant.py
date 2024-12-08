@@ -23,6 +23,7 @@ def get_quant_exported_model(
     model: torch.nn.Module,
     data: torch.Tensor,
     int_or_dequant_op: Literal["int", "dequant"],
+    run_decompositions: bool,
 ) -> torch.fx.graph_module.GraphModule:
     """
     Export the model using torch.export.export_for_training and convert_pt2e to get a quantized
@@ -33,6 +34,8 @@ def get_quant_exported_model(
     - data (torch.Tensor): Sample data to feed through the model for tracing.
     - int_or_dequant_op (Literal["int", "dequant"]): do we use integer arithmetic operations on
             quantized layers, or do we dequantize just prior to the op
+    - run_decompositions (bool): do we, after all of our processing, re-export the model and run
+            `run_decompositions`?
 
     Outputs:
     model (torch.export.Model): The exported model
@@ -56,7 +59,7 @@ def get_quant_exported_model(
     # This is available for pytorch 2.5+, for more details on lower pytorch versions
     # please check `Export the model with torch.export` section
     # we get a model with aten ops
-    m_export: torch.fx.graph_module.GraphModule = torch.export.export_for_training(
+    m_export: torch.fx.graph_module.graphmodule = torch.export.export_for_training(
         model, (data,)
     ).module()
 
@@ -79,10 +82,24 @@ def get_quant_exported_model(
     m_q: torch.fx.graph_module.GraphModule = convert_pt2e(
         m_fq, use_reference_representation=int_op
     )
-    import ipdb; ipdb.set_trace()
+
+    if run_decompositions:
+        # Run decompositions, which is the same as exporting it for inference (as of torch 2.5.0)
+        # See here: https://github.com/pytorch/pytorch/blob/0ecba5756166f45f547ee1f8bce5c216154cdba3/torch/export/__init__.py#L260
+        # Running decompositions requires an exported model, so we re-export it.
+        m_export_q: torch.fx.graph_module.graphmodule = torch.export.export_for_training(
+            m_q, (data,)
+        )
+
+        # decomp_table = torch.export.exported_program.default_decompositions()
+        
+        m_q = m_export_q.run_decompositions().module()
+        # # m_q = m_export_q.run_decompositions(decomp_table=decomp_table).module()
+
 
     logger.debug("Quantized model graph:")
-    logger.debug(m_q.graph.print_tabular())
+    if logger.root.level <= logging.DEBUG:
+        logger.debug(m_q.graph.print_tabular())
 
     # we have a model with aten ops doing integer computations when possible
     check_model_type(m_q, torch.fx.graph_module.GraphModule)
@@ -94,6 +111,7 @@ def get_quant_exported_forward_call(
     model,
     data: torch.Tensor,
     int_or_dequant_op: Literal["int", "dequant"],
+    run_decompositions: bool,
 ) -> Callable:
     """
     Get the torch export + quantized model forward call.
@@ -103,12 +121,13 @@ def get_quant_exported_forward_call(
     - data (torch.Tensor): Sample data to feed through the model for tracing.
     - int_or_dequant_op (Literal["int", "dequant"]): do we use integer arithmetic operations on
             quantized layers, or do we dequantize just prior to the op
-
+    - run_decompositions (bool): do we, after all of our processing, re-export the model and run
+            `run_decompositions`?
     Outputs:
     - forward (Callable): The forward call function for the model.
     """
 
-    model = get_quant_exported_model(model, data, int_or_dequant_op)
+    model = get_quant_exported_model(model, data, int_or_dequant_op, run_decompositions)
 
     check_model_type(model, expected_type=torch.fx.graph_module.GraphModule)
     forward = model.forward

@@ -3,6 +3,7 @@ import time
 from typing import Any, Dict
 
 import torch
+import torch._dynamo
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 
@@ -52,12 +53,15 @@ def benchmark(
     # benchmark on, since some conversions are only supported for certain devices, e.g.
     # PyTorch native quantized conversions requires CPU
     forward_call, conversion_device = select_forward_call_function(
-        model, conversion, data
+        model, conversion, data, device
     )
     if conversion_device is None:
         conversion_device = device
 
     logger.info(f"Benchmarking {conversion} on {conversion_device}")
+
+    # Clear all caches, etc.
+    torch._dynamo.reset()
 
     # Warmup
     warmup(forward_call, data_loader, conversion_device)
@@ -73,6 +77,8 @@ def benchmark(
             data = data.to(conversion_device)
             batch_start_time = time.perf_counter()
             _ = forward_call(data)
+            # if conversion in ["EXPORT+INFERENCE+AI8WI8_FLOAT_QUANTIZED", "EXPORT+TRAINING+AI8WI8_FLOAT_QUANTIZED"]:
+            #     import ipdb; ipdb.set_trace()
             batch_end_time = time.perf_counter()
 
             batch_size = min(data.size(0), n_samples - total_samples)
