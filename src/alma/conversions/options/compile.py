@@ -4,6 +4,7 @@ from typing import Callable, Union
 import torch
 import torch.fx as fx
 
+from ...utils.setup_logging import suppress_output
 from .utils.check_type import check_model_type
 
 logger = logging.getLogger(__name__)
@@ -38,7 +39,8 @@ def get_compiled_model_forward_call(
         "fullgraph": True,  # Compiles entire program into 1 graph, but comes with restricted Python
     }
 
-    model = torch.compile(model, **compile_settings)
+    with suppress_output(logger.root.level >= logging.DEBUG):
+        model = torch.compile(model, **compile_settings)
 
     with torch.no_grad():
         _ = model(data)

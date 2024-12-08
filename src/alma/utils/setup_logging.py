@@ -1,5 +1,8 @@
 import logging
 from typing import Literal, Union
+import contextlib
+import io
+import sys
 
 
 def setup_logging(
@@ -36,3 +39,35 @@ def setup_logging(
         force=True,
         handlers=handlers,
     )
+
+
+@contextlib.contextmanager
+def suppress_output(active: bool = False):
+    """
+    Context manager to suppress logging of internal programs / imports.
+
+    Inputs:
+    - active (bool): if active, it suppresses the internal outputs/logs of the wrapped
+    program.
+
+    Outputs:
+    None
+    """
+    if active:
+        # Suppress stdout/stderr
+        stdout, stderr = sys.stdout, sys.stderr
+        sys.stdout = sys.stderr = io.StringIO()
+        
+        # Suppress logging
+        logging.disable(logging.CRITICAL)  # Disable all logging calls below CRITICAL
+        
+        try:
+            yield
+        finally:
+            # Restore stdout/stderr
+            sys.stdout, sys.stderr = stdout, stderr
+            
+            # Restore logging
+            logging.disable(logging.NOTSET)  # Re-enable logging
+    else:
+        yield  # We still need to yield even when not active

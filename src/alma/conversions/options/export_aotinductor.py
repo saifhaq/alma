@@ -10,6 +10,7 @@ from torch.fx.graph_module import GraphModule
 from .export_quant import get_quant_exported_model
 from .utils.check_type import check_model_type
 from .utils.export import get_exported_model
+from ...utils.setup_logging import suppress_output
 
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())
@@ -58,17 +59,18 @@ def get_AOTInductor_lowered_model_forward_call(
 
     # Compile the exported program to a `.so` using ``AOTInductor``
     # E.g. this can be run as a C++ file, or called from Python
-    if isinstance(model, ExportedProgram):
-        with torch.no_grad():
-            so_path = torch._inductor.aot_compile(model.module(), (data,))
-    else:
-        with torch.no_grad():
-            so_path = torch._inductor.aot_compile(model, (data,))
+    with suppress_output(logger.root.level >= logging.DEBUG):
+        if isinstance(model, ExportedProgram):
+            with torch.no_grad():
+                so_path = torch._inductor.aot_compile(model.module(), (data,))
+        else:
+            with torch.no_grad():
+                so_path = torch._inductor.aot_compile(model, (data,))
 
-    # Load and run the .so file in Python.
-    # To load and run it in a C++ environment, see:
-    # https://pytorch.org/docs/main/torch.compiler_aot_inductor.html
-    forward = torch._export.aot_load(so_path, device=device.type)
+        # Load and run the .so file in Python.
+        # To load and run it in a C++ environment, see:
+        # https://pytorch.org/docs/main/torch.compiler_aot_inductor.html
+        forward = torch._export.aot_load(so_path, device=device.type)
 
     return forward
 

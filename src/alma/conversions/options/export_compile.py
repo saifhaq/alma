@@ -6,6 +6,7 @@ from torch.export.exported_program import ExportedProgram
 
 from .utils.check_type import check_model_type
 from .utils.export import get_exported_model
+from ...utils.setup_logging import suppress_output
 
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())
@@ -42,10 +43,11 @@ def get_export_compiled_forward_call(
         # logger.debug(model.module().)
 
     # Compile the model, and get the forward call
-    forward = torch.compile(model.module(), **compile_settings).forward
+    with suppress_output(logger.root.level >= logging.DEBUG):
+        forward = torch.compile(model.module(), **compile_settings).forward
 
-    with torch.no_grad():
-        _ = forward(data)
+        with torch.no_grad():
+            _ = forward(data)
 
     return forward
 
