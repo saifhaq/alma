@@ -157,7 +157,7 @@ Traceback (most recent call last):
     result: Dict[str, float] = benchmark(
                                ^^^^^^^^^^
   File "/Users/oscarsavolainen/Coding/Mine/Alma-Saif/src/alma/benchmark/benchmark.py", line 63, in benchmark
-    warmup(forward_call, data_loader, conversion_device)
+    warmup(forward_call, data_loader, device)
   File "/Users/oscarsavolainen/Coding/Mine/Alma-Saif/src/alma/benchmark/warmup.py", line 26, in warmup
     _ = forward_call(data)
         ^^^^^^^^^^^^^^^^^^

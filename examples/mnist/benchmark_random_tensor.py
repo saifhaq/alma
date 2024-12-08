@@ -46,7 +46,7 @@ def main() -> None:
 
     # Display the results
     display_all_results(
-        results, display_function=print, include_traceback_for_errors=False
+        results, display_function=print, include_traceback_for_errors=True
     )
 
 

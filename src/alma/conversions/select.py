@@ -54,7 +54,7 @@ def select_forward_call_function(
     conversion: str,
     data: torch.Tensor,
     device: torch.device,
-) -> Tuple[Callable, torch.device]:
+) -> Callable:
     """
     Get the forward call function for the model. The complexity is because there are multiple
     ways to export the model, and the forward call is different for each.
@@ -67,8 +67,6 @@ def select_forward_call_function(
 
     Outputs:
     - forward (Callable): The forward call function for the model.
-    - device (torch.device): The device of the model. This can be affected by the conversion options.
-        E.g. some conversion methods are only supported on specific hardware.
     """
     device = data.device
     match conversion:
@@ -109,10 +107,20 @@ def select_forward_call_function(
             forward = get_export_compiled_forward_call(model, data, "openxla")
 
         case "EXPORT+COMPILE_TVM":
+            # See here for some discussion of TVM backend: 
+            # https://dev-discuss.pytorch.org/t/torchinductor-a-pytorch-native-compiler-with-define-by-run-ir-and-symbolic-shapes/747/9
+
             # Check if 'tvm' backend is available
             if "tvm" not in torch._dynamo.list_backends():
                 raise RuntimeError(
                     "TVM backend is not available. Please ensure TVM is installed and properly configured."
+                )
+            try:
+                import torch_tvm
+                torch_tvm.enable()
+            except ImportError:
+                raise RuntimeError(
+                    "The torch-tvm package is not available. Please install torch-tvm to use 'tvm' backend.\n"
                 )
             forward = get_export_compiled_forward_call(model, data, "tvm")
 
@@ -215,16 +223,18 @@ def select_forward_call_function(
                 )
 
         case "NATIVE_CONVERT_AI8WI8_STATIC_QUANTIZED":
-            # Also returns device, as PyTorch-natively converted models are only currently for CPU
-            forward, device = get_converted_quantized_model_forward_call(model, data)
+            if device.type != "cpu":
+                logger.warning("PyTorch native quantized model conversion is only supported for CPUs currently")
+            forward = get_converted_quantized_model_forward_call(model, data)
 
         case "NATIVE_FAKE_QUANTIZED_AI8WI8_STATIC":
             forward = get_fake_quantized_model_forward_call(model, data)
 
         case _:
+            error_msg = f"The option {conversion} is not supported"
             assert (
                 conversion in MODEL_CONVERSION_OPTIONS.values()
-            ), f"The option {conversion} is not supported"
-            raise NotImplementedError("Option not currently supported")
+            ), error_msg
+            raise NotImplementedError(error_msg)
 
-    return forward, device
+    return forward

@@ -44,7 +44,6 @@ def benchmark(
     total_inf_time = 0.0
     total_samples = 0
     num_batches = 0
-    conversion_device = None
 
     # Get sample of data from dataloader
     data = get_sample_data(data_loader, device)
@@ -52,19 +51,17 @@ def benchmark(
     # Get the forward call of the model, which we will benchmark. We also return the device we will
     # benchmark on, since some conversions are only supported for certain devices, e.g.
     # PyTorch native quantized conversions requires CPU
-    forward_call, conversion_device = select_forward_call_function(
+    forward_call = select_forward_call_function(
         model, conversion, data, device
     )
-    if conversion_device is None:
-        conversion_device = device
 
-    logger.info(f"Benchmarking {conversion} on {conversion_device}")
+    logger.info(f"Benchmarking {conversion} on {device}")
 
     # Clear all caches, etc.
     torch._dynamo.reset()
 
     # Warmup
-    warmup(forward_call, data_loader, conversion_device)
+    warmup(forward_call, data_loader, device)
 
     # Benchmarking loop
     start_time = time.perf_counter()  # Start timing for the entire process
@@ -73,8 +70,8 @@ def benchmark(
             if total_samples >= n_samples:
                 break
 
-            # data = data.to(conversion_device, non_blocking=True)
-            data = data.to(conversion_device)
+            # data = data.to(device, non_blocking=True)
+            data = data.to(device)
             batch_start_time = time.perf_counter()
             _ = forward_call(data)
             # if conversion in ["EXPORT+INFERENCE+AI8WI8_FLOAT_QUANTIZED", "EXPORT+TRAINING+AI8WI8_FLOAT_QUANTIZED"]:
@@ -94,7 +91,7 @@ def benchmark(
     total_elapsed_time = end_time - start_time
     throughput = total_samples / total_elapsed_time if total_elapsed_time > 0 else 0
     result: Dict[str, Any] = {
-        "device": conversion_device,
+        "device": device,
         "total_elapsed_time": total_elapsed_time,
         "total_inf_time": total_inf_time,
         "total_samples": total_samples,
