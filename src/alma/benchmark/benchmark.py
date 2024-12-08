@@ -51,9 +51,7 @@ def benchmark(
     # Get the forward call of the model, which we will benchmark. We also return the device we will
     # benchmark on, since some conversions are only supported for certain devices, e.g.
     # PyTorch native quantized conversions requires CPU
-    forward_call = select_forward_call_function(
-        model, conversion, data, device
-    )
+    forward_call = select_forward_call_function(model, conversion, data, device)
 
     logger.info(f"Benchmarking {conversion} on {device}")
 

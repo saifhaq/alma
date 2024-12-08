@@ -1,5 +1,5 @@
 import logging
-from typing import Callable, Union, Literal, Dict
+from typing import Callable, Dict, Literal, Union
 
 import torch
 import torch.fx as fx

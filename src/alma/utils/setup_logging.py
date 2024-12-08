@@ -1,8 +1,8 @@
-import logging
-from typing import Literal, Union
 import contextlib
 import io
+import logging
 import sys
+from typing import Literal, Union
 
 
 def setup_logging(
@@ -57,16 +57,16 @@ def suppress_output(active: bool = False):
         # Suppress stdout/stderr
         stdout, stderr = sys.stdout, sys.stderr
         sys.stdout = sys.stderr = io.StringIO()
-        
+
         # Suppress logging
         logging.disable(logging.CRITICAL)  # Disable all logging calls below CRITICAL
-        
+
         try:
             yield
         finally:
             # Restore stdout/stderr
             sys.stdout, sys.stderr = stdout, stderr
-            
+
             # Restore logging
             logging.disable(logging.NOTSET)  # Re-enable logging
     else:

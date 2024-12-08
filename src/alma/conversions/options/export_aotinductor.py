@@ -7,10 +7,10 @@ import torch._inductor
 from torch.export.exported_program import ExportedProgram
 from torch.fx.graph_module import GraphModule
 
+from ...utils.setup_logging import suppress_output
 from .export_quant import get_quant_exported_model
 from .utils.checks.type import check_model_type
 from .utils.export import get_exported_model
-from ...utils.setup_logging import suppress_output
 
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())

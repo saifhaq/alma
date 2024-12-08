@@ -4,9 +4,9 @@ from typing import Callable, Dict, Literal
 import torch
 from torch.export.exported_program import ExportedProgram
 
+from .compile import get_compiled_model
 from .utils.checks.type import check_model_type
 from .utils.export import get_exported_model
-from .compile import get_compiled_model
 
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())
@@ -37,5 +37,3 @@ def get_export_compiled_forward_call(
     model = get_compiled_model(model, data, backend)
 
     return model.forward
-
-
