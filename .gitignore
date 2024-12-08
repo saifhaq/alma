@@ -177,3 +177,4 @@ mnist_images*
 data_for_inference/
 results/
 html
+report_dynamo_export.sarif
