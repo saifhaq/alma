@@ -196,6 +196,11 @@ Furthermore, as we have highlighted prior, we provide a `display_all_results` fu
 the results in a nice format.There is also a `save_dict_to_json` function to save the results to a 
 JSON file for easy CI integration.
 
+If one is debugging, it is highly recommended that one use the `setup_logging` function and set one's
+level to DEBUG. This will, among other things, log any torch.compile warnings and errors thrown by
+torch.inductor that can point to isses in triton kernels, and print the model graphs where 
+appropriate.
+
 ### Argparsing
 
 For convenience, we provide a `parse_benchmark_args` function that parses the command line arguments
