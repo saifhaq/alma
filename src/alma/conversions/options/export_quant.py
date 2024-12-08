@@ -11,7 +11,7 @@ from torch.ao.quantization.quantizer.xnnpack_quantizer import (
 )
 from torch.export.exported_program import ExportedProgram
 
-from .utils.check_type import check_model_type
+from .utils.checks.type import check_model_type
 
 # Create a module-level logger
 logger = logging.getLogger(__name__)
@@ -63,8 +63,6 @@ def get_quant_exported_model(
         model, (data,)
     ).module()
 
-    # TODO: mess around with export_for_inference
-
     # Step 2. quantization
     # TODO: mess around with affine quantization
     to_quant_model = copy.deepcopy(m_export)
@@ -73,7 +71,11 @@ def get_quant_exported_model(
     # PTQ step
     m_fq: torch.fx.graph_module.GraphModule = prepare_pt2e(to_quant_model, quantizer)
 
-    # TODO: calibration omitted for quantization
+    # Feed some data throuhg the model, if only to intialise the observers and supress the warnings
+    with torch.no_grad():
+        _ = m_fq(data)
+        import ipdb; ipdb.set_trace()
+
 
     # Lower the quantized model
     # use_reference_optimization=True means that one uses integer arithmetic, False means that one

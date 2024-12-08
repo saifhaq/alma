@@ -7,7 +7,7 @@ import torch.quantization as tq
 from torch.ao.quantization.qconfig_mapping import QConfigMapping
 from torch.ao.quantization.quantize_fx import prepare_qat_fx
 
-from .utils.check_type import check_model_type
+from .utils.checks.type import check_model_type
 from .utils.qconfigs import fake_quant_act, fixed_0255, learnable_act, learnable_weights
 
 # One needs to set their quantization backend engine to what is appropriate for their system.

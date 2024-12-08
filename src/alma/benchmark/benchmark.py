@@ -66,7 +66,7 @@ def benchmark(
     # Benchmarking loop
     start_time = time.perf_counter()  # Start timing for the entire process
     with torch.no_grad():
-        for data, _ in tqdm(data_loader, desc="Benchmarking"):
+        for data, _ in tqdm(data_loader, desc=f"Benchmarking {conversion} on {device}"):
             if total_samples >= n_samples:
                 break
 
