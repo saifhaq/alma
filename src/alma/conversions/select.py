@@ -5,12 +5,18 @@ from typing import Any, Callable, Tuple
 
 import torch
 
-from .options.compile import get_compiled_model_forward_call
+from .options.compile import (
+    get_compiled_forward_call_eager_fallback,
+    get_compiled_model_forward_call,
+)
 from .options.export_aotinductor import (
     get_export_aot_inductor_forward_call,
     get_quant_export_aot_inductor_forward_call,
 )
-from .options.export_compile import get_export_compiled_forward_call
+from .options.export_compile import (
+    get_export_compiled_forward_call,
+    get_export_compiled_forward_call_eager_fallback,
+)
 from .options.export_eager import get_export_eager_forward_call
 from .options.export_quant import get_quant_exported_forward_call
 from .options.fake_quant import get_fake_quantized_model_forward_call
@@ -33,28 +39,30 @@ MODEL_CONVERSION_OPTIONS = {
     2: "EXPORT+COMPILE_ONNXRT",
     3: "EXPORT+COMPILE_OPENXLA",
     4: "EXPORT+COMPILE_TVM",
-    5: "EXPORT+AOT_INDUCTOR",
-    6: "EXPORT+EAGER",
-    7: "EXPORT+AI8WI8_STATIC_QUANTIZED",
-    8: "EXPORT+AI8WI8_FLOAT_QUANTIZED",
-    9: "EXPORT+AI8WI8_STATIC_QUANTIZED+AOT_INDUCTOR",
-    10: "EXPORT+AI8WI8_FLOAT_QUANTIZED+AOT_INDUCTOR",
-    11: "EXPORT+AI8WI8_STATIC_QUANTIZED+RUN_DECOMPOSITION",
-    12: "EXPORT+AI8WI8_FLOAT_QUANTIZED+RUN_DECOMPOSITION",
-    13: "EXPORT+AI8WI8_STATIC_QUANTIZED+RUN_DECOMPOSITION+AOT_INDUCTOR",
-    14: "EXPORT+AI8WI8_FLOAT_QUANTIZED+RUN_DECOMPOSITION+AOT_INDUCTOR",
-    15: "COMPILE_INDUCTOR",
-    16: "COMPILE_CUDAGRAPH",
-    17: "COMPILE_ONNXRT",
-    18: "COMPILE_OPENXLA",
-    19: "COMPILE_TVM",
-    20: "EAGER",
-    21: "TENSORRT",
-    22: "ONNX_CPU",
-    23: "ONNX_GPU",
-    24: "ONNX+DYNAMO_EXPORT",
-    25: "NATIVE_CONVERT_AI8WI8_STATIC_QUANTIZED",
-    26: "NATIVE_FAKE_QUANTIZED_AI8WI8_STATIC",
+    5: "EXPORT+COMPILE_INDUCTOR_EAGER_FALLBACK",
+    6: "EXPORT+AOT_INDUCTOR",
+    7: "EXPORT+EAGER",
+    8: "EXPORT+AI8WI8_STATIC_QUANTIZED",
+    9: "EXPORT+AI8WI8_FLOAT_QUANTIZED",
+    10: "EXPORT+AI8WI8_STATIC_QUANTIZED+AOT_INDUCTOR",
+    11: "EXPORT+AI8WI8_FLOAT_QUANTIZED+AOT_INDUCTOR",
+    12: "EXPORT+AI8WI8_STATIC_QUANTIZED+RUN_DECOMPOSITION",
+    13: "EXPORT+AI8WI8_FLOAT_QUANTIZED+RUN_DECOMPOSITION",
+    14: "EXPORT+AI8WI8_STATIC_QUANTIZED+RUN_DECOMPOSITION+AOT_INDUCTOR",
+    15: "EXPORT+AI8WI8_FLOAT_QUANTIZED+RUN_DECOMPOSITION+AOT_INDUCTOR",
+    16: "COMPILE_INDUCTOR",
+    17: "COMPILE_CUDAGRAPH",
+    18: "COMPILE_ONNXRT",
+    19: "COMPILE_OPENXLA",
+    20: "COMPILE_TVM",
+    21: "COMPILE_INDUCTOR_EAGER_FALLBACK",
+    22: "EAGER",
+    23: "TENSORRT",
+    24: "ONNX_CPU",
+    25: "ONNX_GPU",
+    26: "ONNX+DYNAMO_EXPORT",
+    27: "NATIVE_CONVERT_AI8WI8_STATIC_QUANTIZED",
+    28: "NATIVE_FAKE_QUANTIZED_AI8WI8_STATIC",
 }
 
 
@@ -73,6 +81,7 @@ def select_forward_call_function(
     - conversion (str): The conversion method to use for the model.
     - data (torch.Tensor): A sample of data to pass through the model, which may be needed for
     some of the export methods.
+    - device (torch.device): The device to run the benchmarking on.
 
     Outputs:
     - forward (Callable): The forward call function for the model.
@@ -83,23 +92,32 @@ def select_forward_call_function(
         # WITH EXPORT #
         ###############
         case "EXPORT+COMPILE_INDUCTOR":
-            forward = get_export_compiled_forward_call(model, data, "inductor")
+            forward = get_export_compiled_forward_call(model, data, backend="inductor")
 
         case "EXPORT+COMPILE_CUDAGRAPH":
-            forward = get_export_compiled_forward_call(model, data, "cudagraphs")
+            forward = get_export_compiled_forward_call(
+                model, data, backend="cudagraphs"
+            )
 
         case "EXPORT+COMPILE_ONNXRT":
             check_onnxrt()
-            forward = get_export_compiled_forward_call(model, data, "onnxrt")
+            forward = get_export_compiled_forward_call(model, data, backend="onnxrt")
 
         case "EXPORT+COMPILE_OPENXLA":
             # Check if torch-xla is installed
             check_openxla()
-            forward = get_export_compiled_forward_call(model, data, "openxla")
+            forward = get_export_compiled_forward_call(model, data, backend="openxla")
 
         case "EXPORT+COMPILE_TVM":
             check_tvm()
-            forward = get_export_compiled_forward_call(model, data, "tvm")
+            forward = get_export_compiled_forward_call(model, data, backend="tvm")
+
+        case "EXPORT+COMPILE_INDUCTOR_EAGER_FALLBACK":
+            forward = get_export_compiled_forward_call_eager_fallback(
+                model,
+                data,
+                backend="inductor",
+            )
 
         case "EXPORT+AOT_INDUCTOR":
             forward = get_export_aot_inductor_forward_call(model, data, device)
@@ -181,6 +199,11 @@ def select_forward_call_function(
         case "COMPILE_TVM":
             check_tvm()
             forward = get_compiled_model_forward_call(model, data, backend="tvm")
+
+        case "EXPORT+COMPILE_INDUCTOR_EAGER_FALLBACK":
+            forward = get_compiled_forward_call_eager_fallback(
+                model, data, backend="inductor"
+            )
 
         case "EAGER":
             # Regular eager model forward call

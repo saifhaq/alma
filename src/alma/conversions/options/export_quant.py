@@ -73,15 +73,18 @@ def get_quant_exported_model(
 
     # Feed some data throuhg the model, if only to intialise the observers and supress the warnings
     with torch.no_grad():
+        for module in m_fq.modules():
+            if hasattr(m_fq, "observer_enabled") or hasattr(m_fq, "static_enabled"):
+                m_fq.enable_observer()
+                m_fq.enable_fake_quant()
         _ = m_fq(data)
-        import ipdb
-
-        ipdb.set_trace()
+        for module in m_fq.modules():
+            if hasattr(m_fq, "observer_enabled") or hasattr(m_fq, "static_enabled"):
+                m_fq.disable_observer()
 
     # Lower the quantized model
     # use_reference_optimization=True means that one uses integer arithmetic, False means that one
     # does operations in floating point and dequantizes prior.
-
     m_q: torch.fx.graph_module.GraphModule = convert_pt2e(
         m_fq, use_reference_representation=int_op
     )

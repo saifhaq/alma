@@ -1,7 +1,9 @@
 import logging
+from contextlib import contextmanager
 from typing import Callable, Dict, Literal, Union
 
 import torch
+import torch._dynamo
 import torch.fx as fx
 from torch.export.exported_program import ExportedProgram
 
@@ -32,7 +34,9 @@ def get_compile_settings(backend: Literal[str]) -> Dict[str, str]:
                 # Good for small models
                 # 'mode': "reduce-overhead",
                 # Slow to compile, but should find the "best" option
-                "mode": "max-autotune",
+                # "mode": "max-autotune",
+                # More stable than max-autotune
+                "mode": "reduce-overhead",
                 # Compiles entire program into 1 graph, but only works with a restricted subset of Python
                 # (e.g. no data dependent control flow)
                 "fullgraph": True,
@@ -66,7 +70,7 @@ def get_compiled_model(
     Outputs:
     model (torch._dynamo.eval_frame.OptimizedModule): The compiled model
     """
-    logger.info("Running torch.compile on the model")
+    logger.info(f"Running torch.compile [{backend} backend] on the model")
     check_model_type(model, (torch.nn.Module, fx.GraphModule, ExportedProgram))
 
     torch._dynamo.reset()
@@ -112,3 +116,42 @@ def get_compiled_model_forward_call(
 
     model = get_compiled_model(model, data, backend)
     return model.forward
+
+
+def get_compiled_forward_call_eager_fallback(
+    model: Union[torch.nn.Module, fx.GraphModule, ExportedProgram],
+    data: torch.Tensor,
+    backend: Literal[str],
+) -> Callable:
+    """
+    Run torch.compile in the model, and get its forward call. If dynamo errors occur, we fallback
+    on eager mode by wrapping it with a context manager.
+
+    Inputs:
+    - model (torch.nn.Module): The model to export
+    - data (torch.Tensor): A sample of data to feed through the model
+    - backend (Literal['cudagraphs', 'inductor', 'onnxrt', 'openxla', 'tvm']): the backend for
+        torch.compile to use.
+
+    Outputs:
+    forward (Callable): the forward call of the compiled model.
+    """
+    with suppress_dynamo_errors():
+        return get_compiled_model_forward_call(model, data, backend)
+
+
+@contextmanager
+def suppress_dynamo_errors():
+    """
+    Context manager to temporarily suppress torch._dynamo errors.
+    This will have the execution fall back to eager mode.
+    """
+    # Store the original setting
+    original_setting = torch._dynamo.config.suppress_errors
+    try:
+        # Set suppress_errors to True
+        torch._dynamo.config.suppress_errors = True
+        yield
+    finally:
+        # Restore the original setting
+        torch._dynamo.config.suppress_errors = original_setting
