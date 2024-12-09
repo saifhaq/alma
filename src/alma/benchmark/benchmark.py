@@ -51,20 +51,9 @@ def benchmark(
     # Get the forward call of the model, which we will benchmark. We also return the device we will
     # benchmark on, since some conversions are only supported for certain devices, e.g.
     # PyTorch native quantized conversions requires CPU
-<<<<<<< HEAD
     forward_call = select_forward_call_function(model, conversion, data, device)
-=======
-    forward_call, conversion_device = select_forward_call_function(
-        model, conversion, data, device
-    )
-    if conversion_device is None:
-        conversion_device = device
->>>>>>> 043f1d3 (added some options: run decompositions after export on quantized models, see if that speeds it up)
 
     logger.info(f"Benchmarking {conversion} on {device}")
-
-    # Clear all caches, etc.
-    torch._dynamo.reset()
 
     # Clear all caches, etc.
     torch._dynamo.reset()

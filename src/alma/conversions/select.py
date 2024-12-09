@@ -224,9 +224,7 @@ def select_forward_call_function(
 
         case "NATIVE_CONVERT_AI8WI8_STATIC_QUANTIZED":
             if device.type != "cpu":
-                logger.warning(
-                    "PyTorch native quantized model conversion is only supported for CPUs currently"
-                )
+                logger.warning("PyTorch native quantized model conversion is only supported for CPUs currently")
             forward = get_converted_quantized_model_forward_call(model, data)
 
         case "NATIVE_FAKE_QUANTIZED_AI8WI8_STATIC":

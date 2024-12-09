@@ -71,9 +71,4 @@ def fx_quantize(
     if logger.root.level <= logging.DEBUG:
         logger.debug("\nGraph as a Table:\n")
         logger.debug(fx_model.graph.print_tabular())
-<<<<<<< HEAD
-
-=======
-    
->>>>>>> 043f1d3 (added some options: run decompositions after export on quantized models, see if that speeds it up)
     return fx_model
