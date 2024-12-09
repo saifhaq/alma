@@ -65,7 +65,6 @@ MODEL_CONVERSION_OPTIONS = {
     28: "NATIVE_FAKE_QUANTIZED_AI8WI8_STATIC",
 }
 
-
 def select_forward_call_function(
     model: Any,
     conversion: str,
@@ -145,15 +144,11 @@ def select_forward_call_function(
 
         case "EXPORT+AI8WI8_FLOAT_QUANTIZED+AOT_INDUCTOR":
             forward = get_quant_export_aot_inductor_forward_call(
-                model,
-                data,
-                device,
-                int_or_dequant_op="dequant",
-                run_decompositions=False,
+                model, data, device, int_or_dequant_op="dequant", run_decompositions=False
             )
 
         case "EXPORT+AI8WI8_STATIC_QUANTIZED+RUN_DECOMPOSITION":
-            # The difference with training (i.e. inference=False) is that at the end we re-run
+            # The difference with training (i.e. inference=False) is that at the end we re-run 
             # torch.export and then run `run_decompositions`, with the hope it might shorted the graph
             # a bit.
             forward = get_quant_exported_forward_call(
@@ -172,11 +167,7 @@ def select_forward_call_function(
 
         case "EXPORT+AI8WI8_FLOAT_QUANTIZED+RUN_DECOMPOSITION+AOT_INDUCTOR":
             forward = get_quant_export_aot_inductor_forward_call(
-                model,
-                data,
-                device,
-                int_or_dequant_op="dequant",
-                run_decompositions=True,
+                model, data, device, int_or_dequant_op="dequant", run_decompositions=True
             )
 
         ##################
