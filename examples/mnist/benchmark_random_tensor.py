@@ -17,7 +17,7 @@ torch.backends.quantized.engine = "qnnpack"
 def main() -> None:
     # Set up logging. DEBUG level will also log the model graphs
     # setup_logging(log_file=None, level="DEBUG")
-    setup_logging(log_file=None, level="ERROR")
+    setup_logging(log_file=None, level="INFO")
 
     # Parse the benchmarking arguments
     args, device = parse_benchmark_args()
@@ -46,11 +46,8 @@ def main() -> None:
 
     # Display the results
     display_all_results(
-        results, display_function=print, include_traceback_for_errors=True
+        results, display_function=print, include_traceback_for_errors=False
     )
-    import ipdb
-
-    ipdb.set_trace()
 
 
 if __name__ == "__main__":

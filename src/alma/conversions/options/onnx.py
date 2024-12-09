@@ -60,7 +60,7 @@ def save_onnx_model(
             do_constant_folding=True,  # whether to execute constant folding for optimization
             input_names=input_names,  # the model's input names
             output_names=output_names,  # the model's output names
-            verbose=logger.root.level <= logging.DEBUG,
+            verbose = logger.root.level <= logging.DEBUG,
             # dynamic_axes={'input' : {0 : 'batch_size'},    # variable length axes
             #             'output' : {0 : 'batch_size'}}
         )
