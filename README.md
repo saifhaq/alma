@@ -290,8 +290,7 @@ The currently supported conversion options are:
 
 ```bash
 
-| Conversion                                    | MNIST model            |
-|                                               | Throughput (samples/s) |
+| Conversion | MNIST model throughput (samples/s) |
 | --------------------------------------------- | ---------------------- |
 | EXPORT+COMPILE_INDUCTOR_DEFAULT               | 195928.87              |
 | EXPORT+COMPILE_INDUCTOR_REDUCE_OVERHEAD       | 410710.63              |
