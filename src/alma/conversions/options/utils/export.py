@@ -5,8 +5,6 @@ from torch.export.exported_program import ExportedProgram
 
 from ....utils.setup_logging import suppress_output
 
-from ....utils.setup_logging import suppress_output
-
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())
 

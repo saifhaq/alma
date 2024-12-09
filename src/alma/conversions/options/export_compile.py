@@ -16,7 +16,9 @@ logger.addHandler(logging.NullHandler())
 
 
 def get_export_compiled_forward_call(
-    model: torch.nn.Module, data: torch.Tensor, backend: Literal[str] = "inductor-default"
+    model: torch.nn.Module,
+    data: torch.Tensor,
+    backend: Literal[str] = "inductor-default",
 ) -> Callable:
     """
     Get the forward call function for the exported model using torch.compile.

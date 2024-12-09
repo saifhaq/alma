@@ -95,9 +95,7 @@ def get_quant_exported_model(
         # Run decompositions, which is the same as exporting it for inference (as of torch 2.5.0)
         # See here: https://github.com/pytorch/pytorch/blob/0ecba5756166f45f547ee1f8bce5c216154cdba3/torch/export/__init__.py#L260
         # Running decompositions requires an exported model, so we re-export it.
-        m_export_q: ExportedProgram = torch.export.export_for_training(
-            m_q, (data,)
-        )
+        m_export_q: ExportedProgram = torch.export.export_for_training(m_q, (data,))
 
         # The below should be available in torch 2.6.0
         # decomp_table = torch.export.exported_program.default_decompositions()

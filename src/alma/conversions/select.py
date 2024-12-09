@@ -43,7 +43,7 @@ MODEL_CONVERSION_OPTIONS = {
     6: "EXPORT+COMPILE_TVM",
     7: "EXPORT+COMPILE_INDUCTOR_DEFAULT_EAGER_FALLBACK",
     8: "EXPORT+AOT_INDUCTOR",
-    9:  "EXPORT+EAGER",
+    9: "EXPORT+EAGER",
     10: "EXPORT+AI8WI8_STATIC_QUANTIZED",
     11: "EXPORT+AI8WI8_FLOAT_QUANTIZED",
     12: "EXPORT+AI8WI8_STATIC_QUANTIZED+AOT_INDUCTOR",
@@ -68,6 +68,7 @@ MODEL_CONVERSION_OPTIONS = {
     31: "NATIVE_CONVERT_AI8WI8_STATIC_QUANTIZED",
     32: "NATIVE_FAKE_QUANTIZED_AI8WI8_STATIC",
 }
+
 
 def select_forward_call_function(
     model: Any,
@@ -95,13 +96,19 @@ def select_forward_call_function(
         # WITH EXPORT #
         ###############
         case "EXPORT+COMPILE_INDUCTOR_DEFAULT":
-            forward = get_export_compiled_forward_call(model, data, backend="inductor-default")
+            forward = get_export_compiled_forward_call(
+                model, data, backend="inductor-default"
+            )
 
         case "EXPORT+COMPILE_INDUCTOR_REDUCE_OVERHEAD":
-            forward = get_export_compiled_forward_call(model, data, backend="inductor-reduce-overhead")
+            forward = get_export_compiled_forward_call(
+                model, data, backend="inductor-reduce-overhead"
+            )
 
         case "EXPORT+COMPILE_INDUCTOR_MAX_AUTOTUNE":
-            forward = get_export_compiled_forward_call(model, data, backend="inductor-max-autotune")
+            forward = get_export_compiled_forward_call(
+                model, data, backend="inductor-max-autotune"
+            )
 
         case "EXPORT+COMPILE_CUDAGRAPH":
             forward = get_export_compiled_forward_call(
@@ -193,13 +200,19 @@ def select_forward_call_function(
         # WITHOUT EXPORT #
         ##################
         case "COMPILE_INDUCTOR_DEFAULT":
-            forward = get_compiled_model_forward_call(model, data, backend="inductor-default")
+            forward = get_compiled_model_forward_call(
+                model, data, backend="inductor-default"
+            )
 
         case "COMPILE_INDUCTOR_REDUCE_OVERHEAD":
-            forward = get_compiled_model_forward_call(model, data, backend="inductor-reduce-overhead")
+            forward = get_compiled_model_forward_call(
+                model, data, backend="inductor-reduce-overhead"
+            )
 
         case "COMPILE_INDUCTOR_MAX_AUTOTUNE":
-            forward = get_compiled_model_forward_call(model, data, backend="inductor-max-autotune")
+            forward = get_compiled_model_forward_call(
+                model, data, backend="inductor-max-autotune"
+            )
 
         case "COMPILE_CUDAGRAPH":
             forward = get_compiled_model_forward_call(model, data, backend="cudagraphs")
