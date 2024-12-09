@@ -45,12 +45,13 @@ def check_tvm():
             "TVM backend is not available. Please ensure TVM is installed and properly configured."
         )
     try:
-        import torch_tvm
+        import tvm
 
-        torch_tvm.enable()
+        # torch_tvm.enable()
     except ImportError:
         raise RuntimeError(
-            "The torch-tvm package is not available. Please install torch-tvm to use 'tvm' backend.\n"
+            "The tvm package is not available. Please install tvm to use 'tvm' backend.\n"
+            "https://tvm.apache.org/docs/how_to/compile_models/from_pytorch.html"
         )
 
 

@@ -12,6 +12,7 @@ from utils.file_utils import save_dict_to_json
 from alma.arguments.benchmark_args import parse_benchmark_args
 from alma.benchmark.log import display_all_results
 from alma.benchmark_model import benchmark_model
+from alma.utils.device import get_default_device
 from alma.utils.load_model import load_model
 from alma.utils.setup_logging import setup_logging
 
@@ -51,8 +52,13 @@ def main() -> None:
     # Benchmark the model using the provided data loader.
     logging.info("Benchmarking model using provided data loader")
 
+    # You can use the default device, unless your desired conversion option requires a specific device (eg. ONNX_CPU)
+    device = get_default_device()
+    # device = torch.device("cpu")
+
+    # device = torch.device("cpu")
     results: Dict[str, Dict[str, Any]] = benchmark_model(
-        model, config, args.conversions, data_loader=data_loader
+        model, config, args.conversions, data_loader=data_loader, device=device
     )
 
     # Display the results

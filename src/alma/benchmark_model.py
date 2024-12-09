@@ -9,6 +9,7 @@ from .benchmark import benchmark
 from .conversions.select import MODEL_CONVERSION_OPTIONS
 from .dataloader.create import create_single_tensor_dataloader
 from .utils.checks import check_consistent_batch_size, check_inputs
+from .utils.device import get_default_device
 from .utils.times import inference_time_benchmarking  # should we use this?
 
 logger = logging.getLogger(__name__)
@@ -21,6 +22,7 @@ def benchmark_model(
     conversions: Union[List[str], None] = None,
     data: Union[torch.Tensor, None] = None,
     data_loader: Union[DataLoader, None] = None,
+    device: torch.device = None,
 ) -> Dict[str, Dict[str, Any]]:
     """
     Benchmark the model on different conversion methods. If provided, the dataloader will be used.
@@ -52,10 +54,10 @@ def benchmark_model(
     # Set to eval mode
     model.eval()
 
-    # We determine the device to run the model on
-    # NOTE: this will only work for single-device set ups. Benchmarking on multiple devices is not
-    # currently supported.
-    device: torch.device = next(model.parameters()).device
+    if not device:
+        device = get_default_device()
+
+    data = data.to(device)
 
     # Check the inputs
     check_inputs(model, config, conversions, data, data_loader)

@@ -7,6 +7,7 @@ from model.model import Net
 from alma.arguments.benchmark_args import parse_benchmark_args
 from alma.benchmark.log import display_all_results
 from alma.benchmark_model import benchmark_model
+from alma.utils.device import get_default_device
 from alma.utils.setup_logging import setup_logging
 
 # One needs to set their quantization backend engine to what is appropriate for their system.
@@ -40,8 +41,13 @@ def main() -> None:
     # benchmark the model.
     # NOTE: one needs to squeeze the data tensor to remove the batch dimension
     logging.info("Benchmarking model using random data")
+
+    # You can use the default device, unless your desired conversion option requires a specific device (eg. ONNX_CPU)
+    device = get_default_device()
+    # device = torch.device("cpu")
+
     results: Dict[str, Dict[str, Any]] = benchmark_model(
-        model, config, args.conversions, data=data.squeeze()
+        model, config, args.conversions, data=data.squeeze(), device=device
     )
 
     # Display the results

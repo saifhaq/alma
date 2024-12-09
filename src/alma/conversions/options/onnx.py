@@ -19,6 +19,7 @@ def save_onnx_model(
     model,
     data: torch.Tensor,
     onnx_model_path: str = "model/model.onnx",
+    onnx_provider: str = None,
 ):
     """
     Export the model to ONNX using torch.onnx. Saves the model to `onnx_model_path`.
@@ -47,6 +48,9 @@ def save_onnx_model(
 
     # torch.onnx.export(model, data, "model.onnx", verbose=True, input_names=input_names, output_names=output_names)
     model.eval()
+
+    if onnx_provider == "CPUExecutionProvider":
+        model.to(torch.device("cpu"))
 
     # Export the model
     logger.info(f"Saving the torch.onnx model to {onnx_model_path}")
@@ -123,7 +127,7 @@ def get_onnx_forward_call(
     - onnx_forward (Callable): The forward call function for the model.
     """
     # We first save the ONNX model
-    save_onnx_model(model, data, onnx_model_path)
+    save_onnx_model(model, data, onnx_model_path, onnx_provider)
 
     # Get onnx forward call
     onnx_forward: Callable = _get_onnx_forward_call(onnx_model_path, onnx_provider)
