@@ -1,4 +1,4 @@
 docker build \
 -f ./Dockerfile \
 --network=host \
--t torch2.4:1 ./
+-t torch2.5:0 ./
