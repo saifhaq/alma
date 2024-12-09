@@ -253,3 +253,13 @@ If you want to manually run all hooks on all files, you can do:
 git stage .
 pre-commit run --all-files
 ```
+
+## Citation
+```bibtex
+@Misc{alma,
+  title =        {Alma: One-stop-shop for PyTorch model speed benchmarking for all conversion types.},
+  author =       {Oscar Savolainen and Saif Haq},
+  howpublished = {\url{https://github.com/saifhaq/alma}},
+  year =         {2024}
+}
+```
