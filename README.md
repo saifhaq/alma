@@ -1,7 +1,15 @@
 # alma
-
-A Python library for benchmarking PyTorch model speed for different conversion options.
-
+<p align="center">
+  <i align="center">A Python library for benchmarking PyTorch model speed for different conversion options 🚀</i>
+</p>
+<h2 align="center">
+  <a href="https://opensource.org/licenses/MIT">
+    <img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="license" style="height: 20px;">
+  </a>
+  <a href="https://discord.gg/RASFKzqgfZ">
+    <img src="https://img.shields.io/badge/discord-7289da.svg?style=flat-square&logo=discord" alt="discord" style="height: 20px;">
+  </a>
+</h2>
 The motivation is to make it easy for people to benchmark their models for different conversion options,
 e.g. eager, tracing, scripting, torch.compile, torch.export, ONNX, Tensort, etc. The library is
 designed to be simple to use, with benchmarking provided via a single API call, and to be easily
@@ -11,7 +19,27 @@ Beyond just benchmarking, `alma` is designed to be a one-stop-shop for all model
 so that one can learn about the different conversion options, how to implement them, and how they
 affect model speed and performance.
 
-## Installation
+
+## Table of Contents
+
+- [Getting Started](#getting-started)
+  - [Installation](#installation)
+  - [Docker](#docker)
+- [Usage](#usage)
+  - [Basic Usage](#basic-usage)
+  - [Single Tensor Input](#feeding-in-a-single-data-tensor-instead-of-a-dataloader)
+  - [Error Handling](#error-handling)
+- [Logging and CI Integration](#logging-and-ci-integration)
+- [Argparsing](#argparsing)
+- [Examples](#examples)
+- [Conversion Options](#conversion-options)
+- [Future Work](#future-work)
+- [How to Contribute](#how-to-contribute)
+
+
+## Getting Started
+
+### Installation
 `alma` is available as a Python package.
 
 One can install the package from python package index by running 
@@ -25,9 +53,37 @@ running:
 pip install -e .
 ```
 
+### Docker
+We recommend that you build the provided Dockerfile to ensure an easy installation of all of the system dependencies and the alma pip packages. 
+
+1. **Build the Docker Image**  
+   Build the Docker image:  
+   ```bash
+   bash scripts/build_docker.sh
+   ```
+
+2. **Run the Docker Container**  
+   Create and start a container named `alma`:  
+   ```bash
+   bash scripts/run_docker.sh
+   ```
+
+3. **Access the Running Container**  
+   Enter the container's shell:  
+   ```bash
+   docker exec -it alma bash
+   ```
+
+4. **Mount Your Repository**  
+   By default, the script mounts your `/home` directory to `/home` inside the container.  
+   If your `alma` repository is in a different location, update the bind mount, for example:  
+   ```bash
+   -v /Users/myuser/alma:/home/alma
+   ```
 
 ## Usage
 
+### Basic usage
 The core API is `benchmark_model`, which is used to benchmark the speed of a model for different
 conversion options. The usage is as follows:
 
@@ -273,8 +329,6 @@ For extensive examples on how to use `alma`, as well as simple clean examples on
 quantize it, see the [`examples`](./examples/README.md#overview) directory.
 
 
-## Conversion options:
-
 ### Naming conventions
 
 The naming convention for conversion options is to use short but descriptive names, e.g. `EAGER`, 
@@ -283,49 +337,55 @@ single conversion option, then the names are separated by a `+` sign in chronolo
 Underscores `_` are used within each technique name to seperate the words for readability, 
 e.g. `EXPORT+AOT_INDUCTOR`, where `EXPORT` and `AOT_INDUCTOR` are considered seperate steps.
 
+### Conversion Options
 
-### Current options:
+All conversion options are located in the `src/alma/conversions/` directory. Within this directory:
 
-The currently supported conversion options are:
+- The `options/` subdirectory contains one Python file per conversion option (or a closely related family of options).  
+- The main selection logic for these options is found in `select.py`.
 
-```bash
-EXPORT+COMPILE_INDUCTOR_DEFAULT
-EXPORT+COMPILE_INDUCTOR_REDUCE_OVERHEAD
-EXPORT+COMPILE_INDUCTOR_MAX_AUTOTUNE
-EXPORT+COMPILE_CUDAGRAPH
-EXPORT+COMPILE_ONNXRT
-EXPORT+COMPILE_OPENXLA
-EXPORT+COMPILE_TVM
-EXPORT+COMPILE_INDUCTOR_DEFAULT_EAGER_FALLBACK
-EXPORT+AOT_INDUCTOR
-EXPORT+EAGER
-EXPORT+AI8WI8_STATIC_QUANTIZED
-EXPORT+AI8WI8_FLOAT_QUANTIZED
-EXPORT+AI8WI8_STATIC_QUANTIZED+AOT_INDUCTOR
-EXPORT+AI8WI8_FLOAT_QUANTIZED+AOT_INDUCTOR
-EXPORT+AI8WI8_STATIC_QUANTIZED+RUN_DECOMPOSITION
-EXPORT+AI8WI8_FLOAT_QUANTIZED+RUN_DECOMPOSITION
-EXPORT+AI8WI8_STATIC_QUANTIZED+RUN_DECOMPOSITION+AOT_INDUCTOR
-EXPORT+AI8WI8_FLOAT_QUANTIZED+RUN_DECOMPOSITION+AOT_INDUCTOR
-COMPILE_INDUCTOR_DEFAULT
-COMPILE_INDUCTOR_REDUCE_OVERHEAD
-COMPILE_INDUCTOR_MAX_AUTOTUNE
-COMPILE_CUDAGRAPH
-COMPILE_ONNXRT
-COMPILE_OPENXLA
-COMPILE_TVM
-COMPILE_INDUCTOR_DEFAULT_EAGER_FALLBACK
-EAGER
-TENSORRT
-ONNX_CPU
-ONNX_GPU
-ONNX+DYNAMO_EXPORT
-NATIVE_CONVERT_AI8WI8_STATIC_QUANTIZED
-NATIVE_FAKE_QUANTIZED_AI8WI8_STATIC
-```
+This organization allows for easier maintenance and extension. When you add new conversion options, you can do so by creating a new file in `options/` without modifying existing ones. This keeps the codebase modular and more understandable. Users can easily see all available conversion options and understand each one's purpose by reviewing the `options/` directory.
 
-These conversion options are also all hard-coded in the `alma/conversions/select.py` file, which
-is the source of truth.
+The `select.py` file is a simple utility that uses a `match-case` style structure to return the appropriate conversion option based on a provided integer or key. This logic is "the source of truth" for which options are available and how they are selected.
+
+If adding new conversion options, please follow the naming conventions outlined in the [Naming Conventions](#naming-conventions) section.
+
+Below is a table summarizing the currently supported conversion options and their identifiers:
+
+  | ID  | Conversion Option                                             |
+  |-----|---------------------------------------------------------------|
+  | 0   | EXPORT+COMPILE_INDUCTOR                                       |
+  | 1   | EXPORT+COMPILE_CUDAGRAPH                                      |
+  | 2   | EXPORT+COMPILE_ONNXRT                                         |
+  | 3   | EXPORT+COMPILE_OPENXLA                                        |
+  | 4   | EXPORT+COMPILE_TVM                                            |
+  | 5   | EXPORT+COMPILE_INDUCTOR_EAGER_FALLBACK                        |
+  | 6   | EXPORT+AOT_INDUCTOR                                           |
+  | 7   | EXPORT+EAGER                                                  |
+  | 8   | EXPORT+AI8WI8_STATIC_QUANTIZED                                |
+  | 9   | EXPORT+AI8WI8_FLOAT_QUANTIZED                                 |
+  | 10  | EXPORT+AI8WI8_STATIC_QUANTIZED+AOT_INDUCTOR                   |
+  | 11  | EXPORT+AI8WI8_FLOAT_QUANTIZED+AOT_INDUCTOR                    |
+  | 12  | EXPORT+AI8WI8_STATIC_QUANTIZED+RUN_DECOMPOSITION              |
+  | 13  | EXPORT+AI8WI8_FLOAT_QUANTIZED+RUN_DECOMPOSITION               |
+  | 14  | EXPORT+AI8WI8_STATIC_QUANTIZED+RUN_DECOMPOSITION+AOT_INDUCTOR |
+  | 15  | EXPORT+AI8WI8_FLOAT_QUANTIZED+RUN_DECOMPOSITION+AOT_INDUCTOR  |
+  | 16  | COMPILE_INDUCTOR_DEFAULT                                              |
+  | 17  | COMPILE_CUDAGRAPH                                             |
+  | 18  | COMPILE_ONNXRT                                                |
+  | 19  | COMPILE_OPENXLA                                               |
+  | 20  | COMPILE_TVM                                                   |
+  | 21  | COMPILE_INDUCTOR_EAGER_FALLBACK                                |
+  | 22  | EAGER                                                         |
+  | 23  | TENSORRT                                                      |
+  | 24  | ONNX_CPU                                                      |
+  | 25  | ONNX_GPU                                                      |
+  | 26  | ONNX+DYNAMO_EXPORT                                            |
+  | 27  | NATIVE_CONVERT_AI8WI8_STATIC_QUANTIZED                         |
+  | 28  | NATIVE_FAKE_QUANTIZED_AI8WI8_STATIC                            |
+
+
+These conversion options are also all hard-coded in the `alma/conversions/select.py` file, which is the source of truth.
 
 ## Future work:
 
@@ -340,27 +400,7 @@ Contributions are welcome! If you have a new conversion option or feature you wo
 please open a pull request! We are always looking for new conversion options, and we are happy to help
 you get started with adding a new conversion option/feature!
 
-### Conversion Options
-
-All conversion options are set in `src/alma/conversions/`. In that directory, one can find the conversion
-option code inside `options/`, where each file contains a conversion option (or sometimes closely related 
-family of options). At the risk of some code duplication, we have chosen to keep the conversion options 
-separate, so that one can easily add new conversion options without having to modify the existing ones. 
-It also makes it easier for the user to see what conversion options are available, and to understand what 
-each conversion option does.
-
-The conversion options are then selected for benchmarking in the `src/alma/conversions/select.py` file.
-This is just a glorified match-case statement that returns the forward calls of each model conversion option,
-which is returned to the benchmarking loop. It is that simple!
-
-If adding any conversion options, follow the naming convention in [Naming Conventions](#naming-conventions).
-
-### Dependencies
-
-Some conversion options may require package dependencies, which should be added to the Docker image and/or
-`requirements.txt` file.
-
-### Code Standards
+## Code Standards
 
 - **Black**: Ensures consistency following a strict subset of PEP 8.
 - **isort**: Organizes Python imports systematically.
