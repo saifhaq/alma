@@ -87,7 +87,7 @@ def benchmark(
     end_time = time.perf_counter()  # End timing for the entire process
 
     total_elapsed_time = end_time - start_time
-    throughput = total_samples / total_elapsed_time if total_elapsed_time > 0 else 0
+    throughput = total_samples / total_inf_time if total_elapsed_time > 0 else 0
     result: Dict[str, Any] = {
         "device": device,
         "total_elapsed_time": total_elapsed_time,

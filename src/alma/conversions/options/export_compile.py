@@ -16,7 +16,7 @@ logger.addHandler(logging.NullHandler())
 
 
 def get_export_compiled_forward_call(
-    model: torch.nn.Module, data: torch.Tensor, backend: Literal[str] = "inductor"
+    model: torch.nn.Module, data: torch.Tensor, backend: Literal[str] = "inductor-default"
 ) -> Callable:
     """
     Get the forward call function for the exported model using torch.compile.
@@ -27,6 +27,9 @@ def get_export_compiled_forward_call(
     - backend (Literal[str]): The backend to use for torch.compile. Currently supported options in
         PyTorch are given by torch._dynamo.list_backends():
         ['cudagraphs', 'inductor', 'onnxrt', 'openxla', 'tvm']
+        However, we have also split 'inductor' into 'inductor-default', 'inductor-max-autotune', and
+        'inductor-reduce-overhead'. See here for an explanation of each:
+        https://pytorch.org/get-started/pytorch-2.0/#user-experience
 
     Outputs:
     - forward (Callable): The forward call function for the model.
