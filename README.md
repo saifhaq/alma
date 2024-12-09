@@ -1,6 +1,19 @@
 # alma
 
-A Python library for benchmarking PyTorch model speed for different conversion options.
+<p align="center">
+  <i align="center">A Python library for benchmarking PyTorch model speed for different conversion options 🚀</i>
+</p>
+
+<h4 align="center">
+  <a href="https://opensource.org/licenses/MIT">
+    <img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="license" style="height: 20px;">
+  </a>
+  <br>
+  <a href="https://amplication.com/discord">
+    <img src="https://img.shields.io/badge/discord-7289da.svg?style=flat-square&logo=discord" alt="discord" style="height: 20px;">
+  </a>
+</h4>
+
 
 The motivation is to make it easy for people to benchmark their models for different conversion options,
 e.g. eager, tracing, scripting, torch.compile, torch.export, ONNX, Tensort, etc. The library is
