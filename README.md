@@ -27,10 +27,6 @@ affect model speed and performance.
   - [Docker](#docker)
 - [Usage](#usage)
   - [Basic Usage](#basic-usage)
-  - [Single Tensor Input](#feeding-in-a-single-data-tensor-instead-of-a-dataloader)
-  - [Error Handling](#error-handling)
-- [Logging and CI Integration](#logging-and-ci-integration)
-- [Argparsing](#argparsing)
 - [Examples](#examples)
 - [Conversion Options](#conversion-options)
 - [Future Work](#future-work)
@@ -54,7 +50,8 @@ pip install -e .
 ```
 
 ### Docker
-We recommend that you build the provided Dockerfile to ensure an easy installation of all of the system dependencies and the alma pip packages. 
+We recommend that you build the provided Dockerfile to ensure an easy installation of all of the 
+system dependencies and the alma pip packages. 
 
 1. **Build the Docker Image**  
    ```bash
@@ -133,17 +130,22 @@ Total samples: 5000
 Throughput: 12800.82 samples/second
 ```
 
-### More advanced use cases
-For more advanced usages (e.g. using a single tensor to initialise an intenral dataloader, using
-an argparser for easy control and experimentation, and how to deal with error handling, [see
-the MNIST example](./examples/mnist/README.md#benchmarking-with-alma)).
-
 
 ## Examples:
 
 For extensive examples on how to use `alma`, as well as simple clean examples on how train a model and
-quantize it, see the [`examples`](./examples/README.md#overview) directory.
+quantize it, see the [`examples`](./examples/README.md#overview) directory. These more advanced use cases
+include:
+- Feeding in a single tensor rather than a dataloader, and having the data tensor implicitly 
+initialise an internal data loader.
+- Using argparser for easy control and experimentation, including selecting conversion methods with
+numerical indices.
+- Dealing with error handling. If any conversion method fails, `alma` will fail gracefully for that method
+and one can access tht error message and traceback from the returned object.
 
+
+
+## Conversion Options
 
 ### Naming conventions
 
@@ -152,20 +154,26 @@ The naming convention for conversion options is to use short but descriptive nam
 single conversion option, then the names are separated by a `+` sign in chronological order of operation. 
 Underscores `_` are used within each technique name to seperate the words for readability, 
 e.g. `EXPORT+AOT_INDUCTOR`, where `EXPORT` and `AOT_INDUCTOR` are considered seperate steps.
-
-### Conversion Options
-
 All conversion options are located in the `src/alma/conversions/` directory. Within this directory:
 
-- The `options/` subdirectory contains one Python file per conversion option (or a closely related family of options).  
-- The main selection logic for these options is found in `select.py`.
 
-This organization allows for easier maintenance and extension. When you add new conversion options, you can do so by creating a new file in `options/` without modifying existing ones. This keeps the codebase modular and more understandable. Users can easily see all available conversion options and understand each one's purpose by reviewing the `options/` directory.
+### Code
 
-The `select.py` file is a simple utility that uses a `match-case` style structure to return the appropriate conversion option based on a provided integer or key. This logic is "the source of truth" for which options are available and how they are selected.
+All conversion options are located in the `src/alma/conversions/` directory. In this directory:
 
-If adding new conversion options, please follow the naming conventions outlined in the [Naming Conventions](#naming-conventions) section.
+- The `options/` subdirectory contains one Python file per conversion option (or a closely related 
+family of options, e.g. torch.compile backends).  
+- The main selection logic for these options is found in `select.py`. This is just a glorified 
+match-case statement that returns the forward calls of each model conversion option, which is 
+returned to the benchmarking loop. It is that simple!
 
+At the risk of some code duplication, we have chosen to keep the conversion options separate, so 
+that one can easily add new conversion options without having to modify the existing ones. It also 
+makes it easier for the user to see what conversion options are available, and to understand what 
+each conversion option does.
+
+
+### Options Summary
 Below is a table summarizing the currently supported conversion options and their identifiers:
 
   | ID  | Conversion Option                                             |
@@ -201,7 +209,8 @@ Below is a table summarizing the currently supported conversion options and thei
   | 28  | NATIVE_FAKE_QUANTIZED_AI8WI8_STATIC                            |
 
 
-These conversion options are also all hard-coded in the `alma/conversions/select.py` file, which is the source of truth.
+These conversion options are also all hard-coded in the `alma/conversions/select.py` file, which 
+is the source of truth.
 
 ## Future work:
 
@@ -212,11 +221,16 @@ These conversion options are also all hard-coded in the `alma/conversions/select
 
 ## How to contribute:
 
-Contributions are welcome! If you have a new conversion option or feature you would like to add, so that the whole community can benefit,
-please open a pull request! We are always looking for new conversion options, and we are happy to help
-you get started with adding a new conversion option/feature!
+Contributions are welcome! If you have a new conversion option or feature you would like to add, 
+so that the whole community can benefit, please open a pull request! We are always looking for new 
+conversion options, and we are happy to help you get started with adding a new conversion 
+option/feature!
 
-## Code Standards
+If adding new conversion options, please follow the naming conventions outlined in the [Naming 
+Conventions](#naming-conventions) section.
+
+
+### Code Standards
 
 - **Black**: Ensures consistency following a strict subset of PEP 8.
 - **isort**: Organizes Python imports systematically.
