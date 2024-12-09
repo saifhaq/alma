@@ -288,13 +288,14 @@ e.g. `EXPORT+AOT_INDUCTOR`, where `EXPORT` and `AOT_INDUCTOR` are considered sep
 
 The currently supported conversion options are:
 
-```bash
+```
 
 | Conversion | MNIST model throughput (samples/s) |
-| --------------------------------------------- | ---------------------- |
-| EXPORT+COMPILE_INDUCTOR_DEFAULT               | 195928.87              |
-| EXPORT+COMPILE_INDUCTOR_REDUCE_OVERHEAD       | 410710.63              |
-| EXPORT+COMPILE_INDUCTOR_MAX_AUTOTUNE          | 416791.76              |
+| --- | --- |
+| EXPORT+COMPILE_INDUCTOR_DEFAULT | 195928.87 |
+| EXPORT+COMPILE_INDUCTOR_REDUCE_OVERHEAD | 410710.63 |
+| EXPORT+COMPILE_INDUCTOR_MAX_AUTOTUNE | 416791.76 |
+
 ```
 
 These conversion options are also all hard-coded in the `alma/conversions/select.py` file, which
