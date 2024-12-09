@@ -136,7 +136,7 @@ Throughput: 12800.82 samples/second
 ### More advanced use cases
 For more advanced usages (e.g. using a single tensor to initialise an intenral dataloader, using
 an argparser for easy control and experimentation, and how to deal with error handling, [see
-the MNIST example](./examples/mnist/README.md#benchmarking-with-alma))
+the MNIST example](./examples/mnist/README.md#benchmarking-with-alma)).
 
 
 ## Examples:

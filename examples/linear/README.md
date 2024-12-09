@@ -99,6 +99,6 @@ python benchmark_random_tensor.py --help
 ### More advanced use cases
 For more advanced usages (e.g. using a single tensor to initialise an intenral dataloader, using
 an argparser for easy control and experimentation, and how to deal with error handling, [see
-the MNIST example](../mnist/README.md#benchmarking-with-alma))
+the MNIST example](../mnist/README.md#benchmarking-with-alma)).
 
 
