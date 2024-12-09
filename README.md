@@ -57,7 +57,6 @@ pip install -e .
 We recommend that you build the provided Dockerfile to ensure an easy installation of all of the system dependencies and the alma pip packages. 
 
 1. **Build the Docker Image**  
-   Build the Docker image:  
    ```bash
    bash scripts/build_docker.sh
    ```
@@ -75,7 +74,7 @@ We recommend that you build the provided Dockerfile to ensure an easy installati
    ```
 
 4. **Mount Your Repository**  
-   By default, the script mounts your `/home` directory to `/home` inside the container.  
+   By default, the `run_docker.sh` script mounts your `/home` directory to `/home` inside the container.  
    If your `alma` repository is in a different location, update the bind mount, for example:  
    ```bash
    -v /Users/myuser/alma:/home/alma
