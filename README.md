@@ -298,6 +298,13 @@ The currently supported conversion options are:
 
 ```
 
+```
+| Command | Description |
+| --- | --- |
+| git status | List all new or modified files |
+| git diff | Show file differences that haven't been staged |
+```
+
 These conversion options are also all hard-coded in the `alma/conversions/select.py` file, which
 is the source of truth.
 
