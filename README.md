@@ -157,7 +157,7 @@ Traceback (most recent call last):
     result: Dict[str, float] = benchmark(
                                ^^^^^^^^^^
   File "/Users/oscarsavolainen/Coding/Mine/Alma-Saif/src/alma/benchmark/benchmark.py", line 63, in benchmark
-    warmup(forward_call, data_loader, conversion_device)
+    warmup(forward_call, data_loader, device)
   File "/Users/oscarsavolainen/Coding/Mine/Alma-Saif/src/alma/benchmark/warmup.py", line 26, in warmup
     _ = forward_call(data)
         ^^^^^^^^^^^^^^^^^^
@@ -195,6 +195,11 @@ We also provide a `silence_logging` function to silence the logging of all impor
 Furthermore, as we have highlighted prior, we provide a `display_all_results` function to print 
 the results in a nice format.There is also a `save_dict_to_json` function to save the results to a 
 JSON file for easy CI integration.
+
+If one is debugging, it is highly recommended that one use the `setup_logging` function and set one's
+level to DEBUG. This will, among other things, log any torch.compile warnings and errors thrown by
+torch.inductor that can point to isses in triton kernels, and print the model graphs where 
+appropriate.
 
 ### Argparsing
 

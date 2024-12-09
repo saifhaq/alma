@@ -48,6 +48,9 @@ def main() -> None:
     display_all_results(
         results, display_function=print, include_traceback_for_errors=False
     )
+    import ipdb
+
+    ipdb.set_trace()
 
 
 if __name__ == "__main__":

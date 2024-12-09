@@ -6,7 +6,8 @@ import onnx
 import onnxruntime
 import torch
 
-from .utils.check_type import check_model_type
+from ...utils.setup_logging import suppress_output
+from .utils.checks.type import check_model_type
 
 # Create a module-level logger
 logger = logging.getLogger(__name__)
@@ -49,27 +50,29 @@ def save_onnx_model(
 
     # Export the model
     logger.info(f"Saving the torch.onnx model to {onnx_model_path}")
-    torch.onnx.export(
-        model,  # model being run
-        data,  # model input (or a tuple for multiple inputs)
-        onnx_model_path,  # where to save the model (can be a file or file-like object)
-        verbose=True,
-        export_params=True,  # store the trained parameter weights inside the model file
-        # opset_version=10,          # the ONNX version to export the model to
-        do_constant_folding=True,  # whether to execute constant folding for optimization
-        input_names=input_names,  # the model's input names
-        output_names=output_names,  # the model's output names
-        # dynamic_axes={'input' : {0 : 'batch_size'},    # variable length axes
-        #             'output' : {0 : 'batch_size'}}
-    )
+    with suppress_output(logger.root.level >= logging.DEBUG):
+        torch.onnx.export(
+            model,  # model being run
+            data,  # model input (or a tuple for multiple inputs)
+            onnx_model_path,  # where to save the model (can be a file or file-like object)
+            export_params=True,  # store the trained parameter weights inside the model file
+            # opset_version=10,          # the ONNX version to export the model to
+            do_constant_folding=True,  # whether to execute constant folding for optimization
+            input_names=input_names,  # the model's input names
+            output_names=output_names,  # the model's output names
+            verbose=logger.root.level <= logging.DEBUG,
+            # dynamic_axes={'input' : {0 : 'batch_size'},    # variable length axes
+            #             'output' : {0 : 'batch_size'}}
+        )
 
-    # Check the model is well formed
-    loaded_model = onnx.load(onnx_model_path)
-    onnx.checker.check_model(loaded_model)
+        # Check the model is well formed
+        loaded_model = onnx.load(onnx_model_path)
+        onnx.checker.check_model(loaded_model)
 
     # Print a human readable representation of the graph
-    logger.debug("ONNX model graph:")
-    logger.debug(onnx.helper.printable_graph(loaded_model.graph))
+    if logger.root.level <= logging.DEBUG:
+        logger.debug("ONNX model graph:")
+        logger.debug(onnx.helper.printable_graph(loaded_model.graph))
 
 
 def _get_onnx_forward_call(
@@ -146,7 +149,8 @@ def get_onnx_dynamo_forward_call(
     """
 
     logger.info("Running torch.onnx.dynamo_export (beta) on the model")
-    onnx_program = torch.onnx.dynamo_export(model, data)
+    with suppress_output(logger.root.level >= logging.DEBUG):
+        onnx_program = torch.onnx.dynamo_export(model, data)
 
     check_model_type(onnx_program, torch.onnx.ONNXProgram)
 

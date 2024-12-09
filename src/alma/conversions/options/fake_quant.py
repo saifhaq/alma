@@ -7,7 +7,7 @@ import torch.quantization as tq
 from torch.ao.quantization.qconfig_mapping import QConfigMapping
 from torch.ao.quantization.quantize_fx import prepare_qat_fx
 
-from .utils.check_type import check_model_type
+from .utils.checks.type import check_model_type
 from .utils.qconfigs import fake_quant_act, fixed_0255, learnable_act, learnable_weights
 
 # One needs to set their quantization backend engine to what is appropriate for their system.
@@ -136,6 +136,6 @@ def _fx_quantize(
 
     # Prints the graph as a table
     if logger.root.level <= logging.DEBUG:
-        logger.info("\nFake quantized model graph:\n")
+        logger.debug("\nFake quantized model graph:\n")
         logger.debug(fx_model.graph.print_tabular())
     return fx_model

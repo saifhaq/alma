@@ -30,9 +30,9 @@ def get_converted_quantized_model_forward_call(
     # FX graph mode fake-quantization
     fx_model: fx.GraphModule = fx_quantize(model, data)
 
-    # Send the model to CPU: PyTorch native conversion is currently CPU-only
-    fx_model = fx_model.to("cpu")
-    device = torch.device("cpu")
+    # # Send the model to CPU: PyTorch native conversion is currently CPU-only
+    # fx_model = fx_model.to("cpu")
+    # device = torch.device("cpu")
 
     # Convert the model
     model_quantized = convert_fx(fx_model)
