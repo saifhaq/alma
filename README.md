@@ -10,6 +10,7 @@
     <img src="https://img.shields.io/badge/discord-7289da.svg?style=flat-square&logo=discord" alt="discord" style="height: 20px;">
   </a>
 </h2>
+
 The motivation of `alma` is to make it easy for people to benchmark their models for different conversion options,
 e.g. eager, tracing, scripting, torch.compile, torch.export, ONNX, Tensort, etc. The library is
 designed to be simple to use, with benchmarking provided via a single API call, and to be easily
