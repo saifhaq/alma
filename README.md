@@ -10,7 +10,7 @@
     <img src="https://img.shields.io/badge/discord-7289da.svg?style=flat-square&logo=discord" alt="discord" style="height: 20px;">
   </a>
 </h2>
-The motivation is to make it easy for people to benchmark their models for different conversion options,
+The motivation of `alma` is to make it easy for people to benchmark their models for different conversion options,
 e.g. eager, tracing, scripting, torch.compile, torch.export, ONNX, Tensort, etc. The library is
 designed to be simple to use, with benchmarking provided via a single API call, and to be easily
 extensible for adding new conversion options.
@@ -40,7 +40,7 @@ affect model speed and performance.
 
 One can install the package from python package index by running 
 ```bash
-pip install alma
+pip install alma-torch
 ```
 
 Alternatively, it can be installed from the root of this repository (save level as this README) by 
@@ -134,7 +134,7 @@ Throughput: 12800.82 samples/second
 ## Examples:
 
 For extensive examples on how to use `alma`, as well as simple clean examples on how train a model and
-quantize it, see the [`examples`](./examples/README.md#overview) directory. These more advanced use cases
+quantize it, see the [`MNIST example`](./examples/mnist/README.md#overview) directory. These more advanced use cases
 include:
 - Feeding in a single tensor rather than a dataloader, and having the data tensor implicitly 
 initialise an internal data loader.
@@ -142,7 +142,9 @@ initialise an internal data loader.
 numerical indices.
 - Dealing with error handling. If any conversion method fails, `alma` will fail gracefully for that method
 and one can access tht error message and traceback from the returned object.
-
+- Debugging and logging. A lot of the conversion methods have very verbose logging. We have opted to
+mostly silence those logs. However, if one wants access to those logs, one should use the `setup_logging`
+function and set the debugging level to `DEBUG`.
 
 
 ## Conversion Options
