@@ -26,8 +26,7 @@ affect model speed and performance.
 - [Getting Started](#getting-started)
   - [Installation](#installation)
   - [Docker](#docker)
-- [Usage](#usage)
-  - [Basic Usage](#basic-usage)
+- [Basic Usage](#basic-usage)
 - [Examples](#examples)
 - [Conversion Options](#conversion-options)
 - [Future Work](#future-work)
@@ -78,9 +77,8 @@ system dependencies and the alma pip packages.
    -v /Users/myuser/alma:/home/alma
    ```
 
-## Usage
 
-### Basic usage
+## Basic usage
 The core API is `benchmark_model`, which is used to benchmark the speed of a model for different
 conversion options. The usage is as follows:
 
@@ -138,7 +136,7 @@ For extensive examples on how to use `alma`, as well as simple clean examples on
 quantize it, see the [`MNIST example`](./examples/mnist/README.md#overview) directory. These more advanced use cases
 include:
 - Feeding in a single tensor rather than a dataloader, and having the data tensor implicitly 
-initialise an internal data loader.
+initialise an internal data loader inside of `benchmark_model`.
 - Using argparser for easy control and experimentation, including selecting conversion methods with
 numerical indices.
 - Dealing with error handling. If any conversion method fails, `alma` will fail gracefully for that method
@@ -147,6 +145,7 @@ and one can access tht error message and traceback from the returned object.
 mostly silence those logs. However, if one wants access to those logs, one should use the `setup_logging`
 function and set the debugging level to `DEBUG`.
 
+For a short working example on a simple Linear+ReLU, see the [`linear example`](./examples/linear/README.md#overview).
 
 ## Conversion Options
 
