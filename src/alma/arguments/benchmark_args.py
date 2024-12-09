@@ -46,14 +46,14 @@ def parse_benchmark_args() -> Tuple[argparse.Namespace, torch.device]:
     parser.add_argument(
         "--batch-size",
         type=int,
-        default=50,
+        default=64,
         metavar="N",
         help="input batch size for benchmarking (default: 30)",
     )
     parser.add_argument(
         "--n-samples",
         type=int,
-        default=5000,
+        default=32768,
         help="Total number of samples to process (default: 300)",
     )
     parser.add_argument(

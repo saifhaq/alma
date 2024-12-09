@@ -71,5 +71,4 @@ def fx_quantize(
     if logger.root.level <= logging.DEBUG:
         logger.debug("\nGraph as a Table:\n")
         logger.debug(fx_model.graph.print_tabular())
-
     return fx_model

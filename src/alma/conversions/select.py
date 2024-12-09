@@ -34,35 +34,39 @@ logger = logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())
 
 MODEL_CONVERSION_OPTIONS = {
-    0: "EXPORT+COMPILE_INDUCTOR",
-    1: "EXPORT+COMPILE_CUDAGRAPH",
-    2: "EXPORT+COMPILE_ONNXRT",
-    3: "EXPORT+COMPILE_OPENXLA",
-    4: "EXPORT+COMPILE_TVM",
-    5: "EXPORT+COMPILE_INDUCTOR_EAGER_FALLBACK",
-    6: "EXPORT+AOT_INDUCTOR",
-    7: "EXPORT+EAGER",
-    8: "EXPORT+AI8WI8_STATIC_QUANTIZED",
-    9: "EXPORT+AI8WI8_FLOAT_QUANTIZED",
-    10: "EXPORT+AI8WI8_STATIC_QUANTIZED+AOT_INDUCTOR",
-    11: "EXPORT+AI8WI8_FLOAT_QUANTIZED+AOT_INDUCTOR",
-    12: "EXPORT+AI8WI8_STATIC_QUANTIZED+RUN_DECOMPOSITION",
-    13: "EXPORT+AI8WI8_FLOAT_QUANTIZED+RUN_DECOMPOSITION",
-    14: "EXPORT+AI8WI8_STATIC_QUANTIZED+RUN_DECOMPOSITION+AOT_INDUCTOR",
-    15: "EXPORT+AI8WI8_FLOAT_QUANTIZED+RUN_DECOMPOSITION+AOT_INDUCTOR",
-    16: "COMPILE_INDUCTOR",
-    17: "COMPILE_CUDAGRAPH",
-    18: "COMPILE_ONNXRT",
-    19: "COMPILE_OPENXLA",
-    20: "COMPILE_TVM",
-    21: "COMPILE_INDUCTOR_EAGER_FALLBACK",
-    22: "EAGER",
-    23: "TENSORRT",
-    24: "ONNX_CPU",
-    25: "ONNX_GPU",
-    26: "ONNX+DYNAMO_EXPORT",
-    27: "NATIVE_CONVERT_AI8WI8_STATIC_QUANTIZED",
-    28: "NATIVE_FAKE_QUANTIZED_AI8WI8_STATIC",
+    0: "EXPORT+COMPILE_INDUCTOR_DEFAULT",
+    1: "EXPORT+COMPILE_INDUCTOR_REDUCE_OVERHEAD",
+    2: "EXPORT+COMPILE_INDUCTOR_MAX_AUTOTUNE",
+    3: "EXPORT+COMPILE_CUDAGRAPH",
+    4: "EXPORT+COMPILE_ONNXRT",
+    5: "EXPORT+COMPILE_OPENXLA",
+    6: "EXPORT+COMPILE_TVM",
+    7: "EXPORT+COMPILE_INDUCTOR_DEFAULT_EAGER_FALLBACK",
+    8: "EXPORT+AOT_INDUCTOR",
+    9: "EXPORT+EAGER",
+    10: "EXPORT+AI8WI8_STATIC_QUANTIZED",
+    11: "EXPORT+AI8WI8_FLOAT_QUANTIZED",
+    12: "EXPORT+AI8WI8_STATIC_QUANTIZED+AOT_INDUCTOR",
+    13: "EXPORT+AI8WI8_FLOAT_QUANTIZED+AOT_INDUCTOR",
+    14: "EXPORT+AI8WI8_STATIC_QUANTIZED+RUN_DECOMPOSITION",
+    15: "EXPORT+AI8WI8_FLOAT_QUANTIZED+RUN_DECOMPOSITION",
+    16: "EXPORT+AI8WI8_STATIC_QUANTIZED+RUN_DECOMPOSITION+AOT_INDUCTOR",
+    17: "EXPORT+AI8WI8_FLOAT_QUANTIZED+RUN_DECOMPOSITION+AOT_INDUCTOR",
+    18: "COMPILE_INDUCTOR_DEFAULT",
+    19: "COMPILE_INDUCTOR_REDUCE_OVERHEAD",
+    20: "COMPILE_INDUCTOR_MAX_AUTOTUNE",
+    21: "COMPILE_CUDAGRAPH",
+    22: "COMPILE_ONNXRT",
+    23: "COMPILE_OPENXLA",
+    24: "COMPILE_TVM",
+    25: "COMPILE_INDUCTOR_DEFAULT_EAGER_FALLBACK",
+    26: "EAGER",
+    27: "TENSORRT",
+    28: "ONNX_CPU",
+    29: "ONNX_GPU",
+    30: "ONNX+DYNAMO_EXPORT",
+    31: "NATIVE_CONVERT_AI8WI8_STATIC_QUANTIZED",
+    32: "NATIVE_FAKE_QUANTIZED_AI8WI8_STATIC",
 }
 
 
@@ -91,8 +95,20 @@ def select_forward_call_function(
         ###############
         # WITH EXPORT #
         ###############
-        case "EXPORT+COMPILE_INDUCTOR":
-            forward = get_export_compiled_forward_call(model, data, backend="inductor")
+        case "EXPORT+COMPILE_INDUCTOR_DEFAULT":
+            forward = get_export_compiled_forward_call(
+                model, data, backend="inductor-default"
+            )
+
+        case "EXPORT+COMPILE_INDUCTOR_REDUCE_OVERHEAD":
+            forward = get_export_compiled_forward_call(
+                model, data, backend="inductor-reduce-overhead"
+            )
+
+        case "EXPORT+COMPILE_INDUCTOR_MAX_AUTOTUNE":
+            forward = get_export_compiled_forward_call(
+                model, data, backend="inductor-max-autotune"
+            )
 
         case "EXPORT+COMPILE_CUDAGRAPH":
             forward = get_export_compiled_forward_call(
@@ -100,6 +116,7 @@ def select_forward_call_function(
             )
 
         case "EXPORT+COMPILE_ONNXRT":
+            # Very much an evolving API, not guaranteed to work.
             check_onnxrt()
             forward = get_export_compiled_forward_call(model, data, backend="onnxrt")
 
@@ -112,11 +129,11 @@ def select_forward_call_function(
             check_tvm()
             forward = get_export_compiled_forward_call(model, data, backend="tvm")
 
-        case "EXPORT+COMPILE_INDUCTOR_EAGER_FALLBACK":
+        case "EXPORT+COMPILE_INDUCTOR_DEFAULT_EAGER_FALLBACK":
             forward = get_export_compiled_forward_call_eager_fallback(
                 model,
                 data,
-                backend="inductor",
+                backend="inductor-default",
             )
 
         case "EXPORT+AOT_INDUCTOR":
@@ -182,13 +199,26 @@ def select_forward_call_function(
         ##################
         # WITHOUT EXPORT #
         ##################
-        case "COMPILE_INDUCTOR":
-            forward = get_compiled_model_forward_call(model, data, backend="inductor")
+        case "COMPILE_INDUCTOR_DEFAULT":
+            forward = get_compiled_model_forward_call(
+                model, data, backend="inductor-default"
+            )
+
+        case "COMPILE_INDUCTOR_REDUCE_OVERHEAD":
+            forward = get_compiled_model_forward_call(
+                model, data, backend="inductor-reduce-overhead"
+            )
+
+        case "COMPILE_INDUCTOR_MAX_AUTOTUNE":
+            forward = get_compiled_model_forward_call(
+                model, data, backend="inductor-max-autotune"
+            )
 
         case "COMPILE_CUDAGRAPH":
-            forward = get_compiled_model_forward_call(model, data, backend="cudagraph")
+            forward = get_compiled_model_forward_call(model, data, backend="cudagraphs")
 
         case "COMPILE_ONNXRT":
+            # Very much an evolving API, not guaranteed to work.
             check_onnxrt()
             forward = get_compiled_model_forward_call(model, data, backend="onnxrt")
 
@@ -200,9 +230,9 @@ def select_forward_call_function(
             check_tvm()
             forward = get_compiled_model_forward_call(model, data, backend="tvm")
 
-        case "EXPORT+COMPILE_INDUCTOR_EAGER_FALLBACK":
+        case "COMPILE_INDUCTOR_DEFAULT_EAGER_FALLBACK":
             forward = get_compiled_forward_call_eager_fallback(
-                model, data, backend="inductor"
+                model, data, backend="inductor-default"
             )
 
         case "EAGER":
