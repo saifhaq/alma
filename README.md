@@ -80,7 +80,7 @@ Throughput: 12800.82 samples/second
 
 ### Feeding in a single `data` tensor instead of a dataloader
 We also provide the option to feed in a single `data` tensor instead of a dataloader. This is useful
-for cases where one does not want to go throuhg the trouble of setting up a dataloader, and is happy
+for cases where one does not want to go through the trouble of setting up a dataloader, and is happy
 to just benchmark the model on random data of a given shape.
 If no `data_loader` argument is provided and a `data` tensor is fed in, `benchmark_model`
 will automatically generate a dataloader of random tensors, of the same shape as `data`. 
@@ -273,20 +273,9 @@ For extensive examples on how to use `alma`, as well as simple clean examples on
 quantize it, see the [`examples`](./examples/README.md#overview) directory.
 
 
-
 ## Conversion options:
 
-The currently supported conversion options are:
-
-```bash
-XXX
-YYY
-```
-
-These conversion options are also all hard-coded in the `alma/conversions/select.py` file, which
-is the source of truth.
-
-#### Naming conventions
+### Naming conventions
 
 The naming convention for conversion options is to use short but descriptive names, e.g. `EAGER`, 
 `EXPORT+EAGER`, `EXPORT+TENSORRT`, etc. If multiple "techniques" are used in a
@@ -294,6 +283,49 @@ single conversion option, then the names are separated by a `+` sign in chronolo
 Underscores `_` are used within each technique name to seperate the words for readability, 
 e.g. `EXPORT+AOT_INDUCTOR`, where `EXPORT` and `AOT_INDUCTOR` are considered seperate steps.
 
+
+### Current options:
+
+The currently supported conversion options are:
+
+```bash
+EXPORT+COMPILE_INDUCTOR_DEFAULT
+EXPORT+COMPILE_INDUCTOR_REDUCE_OVERHEAD
+EXPORT+COMPILE_INDUCTOR_MAX_AUTOTUNE
+EXPORT+COMPILE_CUDAGRAPH
+EXPORT+COMPILE_ONNXRT
+EXPORT+COMPILE_OPENXLA
+EXPORT+COMPILE_TVM
+EXPORT+COMPILE_INDUCTOR_DEFAULT_EAGER_FALLBACK
+EXPORT+AOT_INDUCTOR
+EXPORT+EAGER
+EXPORT+AI8WI8_STATIC_QUANTIZED
+EXPORT+AI8WI8_FLOAT_QUANTIZED
+EXPORT+AI8WI8_STATIC_QUANTIZED+AOT_INDUCTOR
+EXPORT+AI8WI8_FLOAT_QUANTIZED+AOT_INDUCTOR
+EXPORT+AI8WI8_STATIC_QUANTIZED+RUN_DECOMPOSITION
+EXPORT+AI8WI8_FLOAT_QUANTIZED+RUN_DECOMPOSITION
+EXPORT+AI8WI8_STATIC_QUANTIZED+RUN_DECOMPOSITION+AOT_INDUCTOR
+EXPORT+AI8WI8_FLOAT_QUANTIZED+RUN_DECOMPOSITION+AOT_INDUCTOR
+COMPILE_INDUCTOR_DEFAULT
+COMPILE_INDUCTOR_REDUCE_OVERHEAD
+COMPILE_INDUCTOR_MAX_AUTOTUNE
+COMPILE_CUDAGRAPH
+COMPILE_ONNXRT
+COMPILE_OPENXLA
+COMPILE_TVM
+COMPILE_INDUCTOR_DEFAULT_EAGER_FALLBACK
+EAGER
+TENSORRT
+ONNX_CPU
+ONNX_GPU
+ONNX+DYNAMO_EXPORT
+NATIVE_CONVERT_AI8WI8_STATIC_QUANTIZED
+NATIVE_FAKE_QUANTIZED_AI8WI8_STATIC
+```
+
+These conversion options are also all hard-coded in the `alma/conversions/select.py` file, which
+is the source of truth.
 
 ## Future work:
 
