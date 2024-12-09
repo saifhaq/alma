@@ -96,18 +96,9 @@ python benchmark_random_tensor.py --help
 ```
 
 
-### Benchmarking specific conversion options:
-The conversion options can be selected as either an integer or a string. The integer corresponds to the
-index of the conversion option in the list of all conversion options. The string corresponds to the name
-of the conversion option. These can be mixed and matched.
+### More advanced use cases
+For more advanced usages (e.g. using a single tensor to initialise an intenral dataloader, using
+an argparser for easy control and experimentation, and how to deal with error handling, [see
+the MNIST example](../mnist/README.md#benchmarking-with-alma))
 
-To feed in multiple conversion options, separate the conversion options with a comma. For example, one
-can run:
-
-```bash
-cd examples/mnist
-python benchmark_random_tensor.py  --conversions 2,EAGER
-```
-
-This will run the 2nd conversion option and the EAGER conversion option.
 
