@@ -11,7 +11,6 @@ from ...utils.setup_logging import suppress_output
 from .export_quant import get_quant_exported_model
 from .utils.checks.type import check_model_type
 from .utils.export import get_exported_model
-from ...utils.setup_logging import suppress_output
 
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())

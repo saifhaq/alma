@@ -10,7 +10,6 @@ from .compile import (
 )
 from .utils.checks.type import check_model_type
 from .utils.export import get_exported_model
-from .compile import get_compiled_model
 
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())

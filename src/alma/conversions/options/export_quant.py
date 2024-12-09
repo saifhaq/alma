@@ -98,7 +98,7 @@ def get_quant_exported_model(
         )
 
         # decomp_table = torch.export.exported_program.default_decompositions()
-        
+
         m_q = m_export_q.run_decompositions().module()
         # # m_q = m_export_q.run_decompositions(decomp_table=decomp_table).module()
 

@@ -3,9 +3,6 @@ import io
 import logging
 import sys
 from typing import Literal, Union
-import contextlib
-import io
-import sys
 
 
 def setup_logging(
