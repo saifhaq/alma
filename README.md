@@ -1,6 +1,6 @@
 # alma
 <p align="center">
-  <i align="center">A Python library for benchmarking PyTorch model speed for different conversion options 🚀</i>
+  A Python library for benchmarking PyTorch model speed for different conversion options 🚀
 </p>
 <h2 align="center">
   <a href="https://opensource.org/licenses/MIT">
@@ -10,7 +10,8 @@
     <img src="https://img.shields.io/badge/discord-7289da.svg?style=flat-square&logo=discord" alt="discord" style="height: 20px;">
   </a>
 </h2>
-The motivation is to make it easy for people to benchmark their models for different conversion options,
+
+The motivation of `alma` is to make it easy for people to benchmark their models for different conversion options,
 e.g. eager, tracing, scripting, torch.compile, torch.export, ONNX, Tensort, etc. The library is
 designed to be simple to use, with benchmarking provided via a single API call, and to be easily
 extensible for adding new conversion options.
@@ -25,12 +26,7 @@ affect model speed and performance.
 - [Getting Started](#getting-started)
   - [Installation](#installation)
   - [Docker](#docker)
-- [Usage](#usage)
-  - [Basic Usage](#basic-usage)
-  - [Single Tensor Input](#feeding-in-a-single-data-tensor-instead-of-a-dataloader)
-  - [Error Handling](#error-handling)
-- [Logging and CI Integration](#logging-and-ci-integration)
-- [Argparsing](#argparsing)
+- [Basic Usage](#basic-usage)
 - [Examples](#examples)
 - [Conversion Options](#conversion-options)
 - [Future Work](#future-work)
@@ -44,7 +40,7 @@ affect model speed and performance.
 
 One can install the package from python package index by running 
 ```bash
-pip install alma
+pip install alma-torch
 ```
 
 Alternatively, it can be installed from the root of this repository (save level as this README) by 
@@ -54,7 +50,8 @@ pip install -e .
 ```
 
 ### Docker
-We recommend that you build the provided Dockerfile to ensure an easy installation of all of the system dependencies and the alma pip packages. 
+We recommend that you build the provided Dockerfile to ensure an easy installation of all of the 
+system dependencies and the alma pip packages. 
 
 1. **Build the Docker Image**  
    ```bash
@@ -80,9 +77,8 @@ We recommend that you build the provided Dockerfile to ensure an easy installati
    -v /Users/myuser/alma:/home/alma
    ```
 
-## Usage
 
-### Basic usage
+## Basic usage
 The core API is `benchmark_model`, which is used to benchmark the speed of a model for different
 conversion options. The usage is as follows:
 
@@ -133,200 +129,25 @@ Total samples: 5000
 Throughput: 12800.82 samples/second
 ```
 
-### Feeding in a single `data` tensor instead of a dataloader
-We also provide the option to feed in a single `data` tensor instead of a dataloader. This is useful
-for cases where one does not want to go through the trouble of setting up a dataloader, and is happy
-to just benchmark the model on random data of a given shape.
-If no `data_loader` argument is provided and a `data` tensor is fed in, `benchmark_model`
-will automatically generate a dataloader of random tensors, of the same shape as `data`. 
-`data` should be fed in WITHOUT a batch dimension.
-The batch size of the dataloader will be equal to the `batch_size` in the `config` dict. 
-
-```python
-from alma import benchmark_model
-from alma.benchmark.log import display_all_results
-
-device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
-
-# Load the model
-model = ...
-model = model.to(device)
-
-# Initialise a random tensor to benchmark the model on. It must have batch size of 1 (and squeezed)
-# or no batch dimension.
-data = torch.randn(1, 3, 224, 224).to(device)
-
-# Set the configuration
-config = {
-    "batch_size": 128,
-    "n_samples": 4096,
-}
-
-# Choose with conversions to benchmark:
-conversions = ["EAGER", "EXPORT+EAGER"]
-
-# Benchmark the model
-results = benchmark_model(model, config, conversions, data=data.squeeze())
-
-# Print all results
-display_all_results(results)
-```
-
-
-### Error handling
-
-In case where the benchmarking of a given conversion fails, it will return a dict for that conversion
-which contains the error message as well as the full traceback. This is useful for debugging and
-understanding why a given conversion failed, e.g. because of hardware incompatabilities, missing
-dependencies, etc. 
-
-For example, if the `FAKE_QUANTIZED` conversion fails because it's not currently supported for Apple
-silicon, the default results may look like this:
-
-```bash
-CONVERT_QUANTIZED results:
-Device: cpu
-Total elapsed time: 0.8287 seconds
-Total inference time (model only): 0.4822 seconds
-Total samples: 5000 - Batch size: 50
-Throughput: 6033.89 samples/second
-
-
-FAKE_QUANTIZED results:
-Benchmarking failed, error: The operator 'aten::_fake_quantize_learnable_per_tensor_affine' is not 
-currently implemented for the MPS device. If you want this op to be added in priority during the 
-prototype phase of this feature, please comment on 
-https://github.com/pytorch/pytorch/issues/77764. As a temporary fix, you can set the environment 
-variable `PYTORCH_ENABLE_MPS_FALLBACK=1` to use the CPU as a fallback for this op. WARNING: this 
-will be slower than running natively on MPS.
-```
-
-The traceback of the error is also stored in the results dict, and can be accessed via 
-`results[CONVERSION_NAME]["traceback"]`.
-
-In this example, `print(results["FAKE_QUANTIZED"]["traceback"])` gives us:
-
-```bash
-Traceback (most recent call last):
-  File "/Users/oscarsavolainen/Coding/Mine/Alma-Saif/src/alma/benchmark_model.py", line 88, in benchmark_model
-    result: Dict[str, float] = benchmark(
-                               ^^^^^^^^^^
-  File "/Users/oscarsavolainen/Coding/Mine/Alma-Saif/src/alma/benchmark/benchmark.py", line 63, in benchmark
-    warmup(forward_call, data_loader, device)
-  File "/Users/oscarsavolainen/Coding/Mine/Alma-Saif/src/alma/benchmark/warmup.py", line 26, in warmup
-    _ = forward_call(data)
-        ^^^^^^^^^^^^^^^^^^
-  File "<eval_with_key>.173", line 5, in forward
-    activation_post_process_0 = self.activation_post_process_0(x);  x = None
-                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/opt/homebrew/Caskroom/miniconda/base/envs/quantization-tuts/lib/python3.11/site-packages/torch/nn/modules/module.py", line 1553, in _wrapped_call_impl
-    return self._call_impl(*args, **kwargs)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/opt/homebrew/Caskroom/miniconda/base/envs/quantization-tuts/lib/python3.11/site-packages/torch/nn/modules/module.py", line 1562, in _call_impl
-    return forward_call(*args, **kwargs)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/opt/homebrew/Caskroom/miniconda/base/envs/quantization-tuts/lib/python3.11/site-packages/torch/ao/quantization/_learnable_fake_quantize.py", line 160, in forward
-    X = torch._fake_quantize_learnable_per_tensor_affine(
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-NotImplementedError: The operator 'aten::_fake_quantize_learnable_per_tensor_affine' is not currently implemented for the MPS device. If you want this op to be added in priority during the prototype phase of this feature, please comment on https://github.com/pytorch/pytorch/issues/77764. As a temporary fix, you can set the environment variable `PYTORCH_ENABLE_MPS_FALLBACK=1` to use the CPU as a fallback for this op. WARNING: this will be slower than running natively on MPS.
-```
-
-By default `display_all_results` only logs the error from the conversion, but one can also 
-include the traceback in `display_all_results` via the `include_traceback_for_errors` argument
-E.g. `display_all_results(results, include_traceback_for_errors=True)`.
-
-Incidentally, this Apple-silicon-quantization issue can be solved by setting the environmental variable:
-```bash
-PYTORCH_ENABLE_MPS_FALLBACK=1
-```
-
-### Logging and CI integration
-
-A lot of the imported modules have verbose logging, and so `alma` provides some logging functions
-to help manage the logging level. The `setup_logging` function is provided for convenience, but one
-can use whatever logging one wishes, or none.
-We also provide a `silence_logging` function to silence the logging of all imported modules.
-
-Furthermore, as we have highlighted prior, we provide a `display_all_results` function to print 
-the results in a nice format.There is also a `save_dict_to_json` function to save the results to a 
-JSON file for easy CI integration.
-
-If one is debugging, it is highly recommended that one use the `setup_logging` function and set one's
-level to DEBUG. This will, among other things, log any torch.compile warnings and errors thrown by
-torch.inductor that can point to isses in triton kernels, and print the model graphs where 
-appropriate.
-
-### Argparsing
-
-For convenience, we provide a `parse_benchmark_args` function that parses the command line arguments
-for the user. One can of course also just pass in non-CLI arguments directly to the
-`benchmark_model` API. The `parse_benchmark_args` function is used as follows:
-
-```python
-from alma import benchmark_model
-from alma.arguments.benchmark_args import parse_benchmark_args
-from alma.utils.setup_logging import setup_logging
-from typing import Dict
-
-# A `setup_logging` function is provided for convenience, but one can use whatever logging one
-# wishes, or none. DEBUG level will also log the model graphs.
-setup_logging(level="INFO")
-
-# Parse the arguments, e.g. the model path, device, and conversion options
-# This is provided for convenience, but one can also just pass in the arguments directly to the
-# `benchmark_model` API.
-args, device = parse_benchmark_args()
-
-# Load the model
-model = ...
-model = model.to(device)
-
-# Load the data
-data_loader = ...
-
-# Set the configuration
-config = {
-    "batch_size": args.batch_size,
-    "n_samples": args.n_samples,
-}
-
-# Benchmark the model
-results: Dict[str, Dict[str, float]] = benchmark_model(
-    model, config, args.conversions, data_loader=data_loader
-)
-```
-
-One can then run the script from the command line with the following command:
-
-```bash
-python YOUR_BENCHMARK_SCRIPT.py --conversions EAGER,EXPORT+EAGER --batch-size 10
---n-samples 5000 --ipdb
-```
-
-This will run the EXPORT+EAGER conversion option and the EAGER conversion option, benchmarking the
-model speed for each conversion option. 
-The batch size of the data loader is controlled via then`batch_size` argument. 
-The number of samples to run the benchmark on is controlled via the `n_samples` argument. 
-The `--ipdb` creates a magic breakpoint that throws one into an ipdb debugging session if and wherever
-an Exception occurs in one's code, making debugging much easier (see this 
-[blog post](https://medium.com/@oscar-savolainen/my-favourite-python-snippets-794d5653af38)).
-
-All of the command line arguments are optional, subject to one using the `parse_benchmark_args` API.
-The defaults are set in `alma/arguments/benchmark_args.py`. These include standard arguments for
-convenience, e.g. `--model-path` for model weight loading, and `--data-dir` for data loading.
-
-To see all of the arguments, run the following command:
-
-```bash
-cd examples/mnist
-python benchmark_with_dataloader.py --help
-```
 
 ## Examples:
 
 For extensive examples on how to use `alma`, as well as simple clean examples on how train a model and
-quantize it, see the [`examples`](./examples/README.md#overview) directory.
+quantize it, see the [`MNIST example`](./examples/mnist/README.md#overview) directory. These more advanced use cases
+include:
+- Feeding in a single tensor rather than a dataloader, and having the data tensor implicitly 
+initialise an internal data loader inside of `benchmark_model`.
+- Using argparser for easy control and experimentation, including selecting conversion methods with
+numerical indices.
+- Dealing with error handling. If any conversion method fails, `alma` will fail gracefully for that method
+and one can access tht error message and traceback from the returned object.
+- Debugging and logging. A lot of the conversion methods have very verbose logging. We have opted to
+mostly silence those logs. However, if one wants access to those logs, one should use the `setup_logging`
+function and set the debugging level to `DEBUG`.
 
+For a short working example on a simple Linear+ReLU, see the [`linear example`](./examples/linear/README.md#overview).
+
+## Conversion Options
 
 ### Naming conventions
 
@@ -335,20 +156,26 @@ The naming convention for conversion options is to use short but descriptive nam
 single conversion option, then the names are separated by a `+` sign in chronological order of operation. 
 Underscores `_` are used within each technique name to seperate the words for readability, 
 e.g. `EXPORT+AOT_INDUCTOR`, where `EXPORT` and `AOT_INDUCTOR` are considered seperate steps.
-
-### Conversion Options
-
 All conversion options are located in the `src/alma/conversions/` directory. Within this directory:
 
-- The `options/` subdirectory contains one Python file per conversion option (or a closely related family of options).  
-- The main selection logic for these options is found in `select.py`.
 
-This organization allows for easier maintenance and extension. When you add new conversion options, you can do so by creating a new file in `options/` without modifying existing ones. This keeps the codebase modular and more understandable. Users can easily see all available conversion options and understand each one's purpose by reviewing the `options/` directory.
+### Code
 
-The `select.py` file is a simple utility that uses a `match-case` style structure to return the appropriate conversion option based on a provided integer or key. This logic is "the source of truth" for which options are available and how they are selected.
+All conversion options are located in the `src/alma/conversions/` directory. In this directory:
 
-If adding new conversion options, please follow the naming conventions outlined in the [Naming Conventions](#naming-conventions) section.
+- The `options/` subdirectory contains one Python file per conversion option (or a closely related 
+family of options, e.g. torch.compile backends).  
+- The main selection logic for these options is found in `select.py`. This is just a glorified 
+match-case statement that returns the forward calls of each model conversion option, which is 
+returned to the benchmarking loop. It is that simple!
 
+At the risk of some code duplication, we have chosen to keep the conversion options separate, so 
+that one can easily add new conversion options without having to modify the existing ones. It also 
+makes it easier for the user to see what conversion options are available, and to understand what 
+each conversion option does.
+
+
+### Options Summary
 Below is a table summarizing the currently supported conversion options and their identifiers:
 
   | ID  | Conversion Option                                             |
@@ -384,7 +211,8 @@ Below is a table summarizing the currently supported conversion options and thei
   | 28  | NATIVE_FAKE_QUANTIZED_AI8WI8_STATIC                            |
 
 
-These conversion options are also all hard-coded in the `alma/conversions/select.py` file, which is the source of truth.
+These conversion options are also all hard-coded in the `alma/conversions/select.py` file, which 
+is the source of truth.
 
 ## Future work:
 
@@ -395,11 +223,16 @@ These conversion options are also all hard-coded in the `alma/conversions/select
 
 ## How to contribute:
 
-Contributions are welcome! If you have a new conversion option or feature you would like to add, so that the whole community can benefit,
-please open a pull request! We are always looking for new conversion options, and we are happy to help
-you get started with adding a new conversion option/feature!
+Contributions are welcome! If you have a new conversion option or feature you would like to add, 
+so that the whole community can benefit, please open a pull request! We are always looking for new 
+conversion options, and we are happy to help you get started with adding a new conversion 
+option/feature!
 
-## Code Standards
+If adding new conversion options, please follow the naming conventions outlined in the [Naming 
+Conventions](#naming-conventions) section.
+
+
+### Code Standards
 
 - **Black**: Ensures consistency following a strict subset of PEP 8.
 - **isort**: Organizes Python imports systematically.
