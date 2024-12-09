@@ -1,6 +1,6 @@
 # alma
 <p align="center">
-  <i align="center">A Python library for benchmarking PyTorch model speed for different conversion options 🚀</i>
+  A Python library for benchmarking PyTorch model speed for different conversion options 🚀
 </p>
 <h2 align="center">
   <a href="https://opensource.org/licenses/MIT">
