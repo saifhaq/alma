@@ -388,40 +388,6 @@ Below is a table summarizing the currently supported conversion options and thei
   | 32  |  TENSORRT                                                     |
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 These conversion options are also all hard-coded in the `alma/conversions/select.py` file, which is the source of truth.
 
 ## Future work:
