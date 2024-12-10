@@ -22,7 +22,6 @@ from .options.export_quant import get_quant_exported_forward_call
 from .options.fake_quant import get_fake_quantized_model_forward_call
 from .options.onnx import get_onnx_dynamo_forward_call, get_onnx_forward_call
 from .options.quant_convert import get_converted_quantized_model_forward_call
-from .options.tensorrt import get_tensorrt_dynamo_forward_call
 from .options.utils.checks.imports import (
     check_onnxrt,
     check_openxla,
@@ -67,6 +66,7 @@ MODEL_CONVERSION_OPTIONS = {
     30: "NATIVE_CONVERT_AI8WI8_STATIC_QUANTIZED",
     31: "NATIVE_FAKE_QUANTIZED_AI8WI8_STATIC",
     32: "COMPILE_TENSORRT",
+    33: "EXPORT+COMPILE_TENSORRT",
 }
 
 
@@ -127,6 +127,10 @@ def select_forward_call_function(
         case "EXPORT+COMPILE_TVM":
             check_tvm()
             forward = get_export_compiled_forward_call(model, data, backend="tvm")
+
+        case "EXPORT+COMPILE_TENSORRT":
+            check_tensort()
+            forward = get_export_compiled_forward_call(model, data, backend="tensorrt")
 
         case "EXPORT+COMPILE_INDUCTOR_DEFAULT_EAGER_FALLBACK":
             forward = get_export_compiled_forward_call_eager_fallback(
