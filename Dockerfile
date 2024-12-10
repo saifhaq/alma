@@ -6,7 +6,7 @@ FROM nvidia/cuda:12.2.2-cudnn8-devel-ubuntu22.04
 
 ENV TORCH_CUDA_ARCH_LIST="5.2 6.0 6.1 7.0 7.2 7.5 8.0 8.6 8.7 9.0+PTX" 
 ARG INSTALL_TVM=true
-ARG INSTALL_TENSORRT=false 
+ARG INSTALL_TENSORRT=true 
 
 ARG TENSORRT_URL=https://developer.nvidia.com/downloads/compute/machine-learning/tensorrt/10.4.0/tars/TensorRT-10.4.0.26.Linux.x86_64-gnu.cuda-12.6.tar.gz
 
@@ -121,10 +121,11 @@ RUN if [ "$INSTALL_TVM" = "true" ]; then \
     cmake ./ && \
     cd /build/tvm && \
     cmake --build . --parallel 16 && \
-    ln -s /build/tvm/build/libtvm.so /usr/lib/libtvm.so && \
-    ln -s /build/tvm/build/libtvm_runtime.so /usr/lib/libtvm_runtime.so && \
-    ln -s /build/tvm/build/libtvm_allvisible.so /usr/lib/libtvm_allvisible.so && \
-    pip install -e ./python; \
+    ln -s /build/tvm/libtvm.so /usr/bin/libtvm.so && \
+    ln -s /build/tvm/libtvm_runtime.so /usr/bin/libtvm_runtime.so && \
+    ln -s /build/tvm/libtvm_allvisible.so /usr/bin/libtvm_allvisible.so && \
+    cd /build/tvm && \
+    pip install -e python; \
 fi
 
 # Install TensorRT dev environment
