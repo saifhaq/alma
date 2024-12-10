@@ -29,6 +29,9 @@ from .options.utils.checks.imports import (
     check_tensort,
     check_tvm,
 )
+from .options.jit_trace import get_jit_traced_model_forward_call
+from .options.torchscript import get_torch_scripted_model_forward_call
+
 
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())
@@ -67,6 +70,8 @@ MODEL_CONVERSION_OPTIONS = {
     30: "NATIVE_CONVERT_AI8WI8_STATIC_QUANTIZED",
     31: "NATIVE_FAKE_QUANTIZED_AI8WI8_STATIC",
     32: "TENSORRT",
+    33: "JIT_TRACE",
+    34: "TORCH_SCRIPT",
 }
 
 
@@ -269,6 +274,12 @@ def select_forward_call_function(
 
         case "NATIVE_FAKE_QUANTIZED_AI8WI8_STATIC":
             forward = get_fake_quantized_model_forward_call(model, data)
+
+        case "JIT_TRACE":
+            forward = get_jit_traced_model_forward_call(model, data)
+
+        case "TORCH_SCRIPT":
+            forward = get_torch_scripted_model_forward_call(model)
 
         case _:
             error_msg = f"The option {conversion} is not supported"
