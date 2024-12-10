@@ -13,7 +13,7 @@ def get_torch_scripted_model_forward_call(
     """
     Jit scripts the model, and returns a callable to the scripted model. Not all models
     are scriptable, as it requires that the model be statictically compilable, e.g. no
-    graoh breaks, data-dependent control flows, branching, etc.
+    graph breaks, data-dependent control flows, branching, etc.
 
     Inputs:
     - model (torch.nn.Module): The model to script.
