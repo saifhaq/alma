@@ -1,7 +1,7 @@
 import logging
 import tempfile
 from pathlib import Path
-from typing import Any, Callable, Tuple
+from typing import Any, Callable
 
 import torch
 
@@ -77,20 +77,19 @@ def select_forward_call_function(
     device: torch.device,
 ) -> Callable:
     """
-    Get the forward call function for the model. The complexity is because there are multiple
-    ways to export the model, and the forward call is different for each.
+    Get the forward call function for the model, given a conversion type.
 
     Inputs:
     - model (Any): The model to get the forward call for.
     - conversion (str): The conversion method to use for the model.
     - data (torch.Tensor): A sample of data to pass through the model, which may be needed for
     some of the export methods.
-    - device (torch.device): The device to run the benchmarking on.
+    - device (torch.device): The device to run the benchmarking on. This is sometimes required
+    for a conversion method.
 
     Outputs:
     - forward (Callable): The forward call function for the model.
     """
-    device = data.device
     match conversion:
         ###############
         # WITH EXPORT #
