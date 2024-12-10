@@ -101,7 +101,8 @@ config = {
     "n_samples": 4096,
 }
 
-# Choose with conversions to benchmark:
+# Choose with conversions to benchmark. If no options are provided, (i.e. conversions = None | []),
+# then all conversion methods will be benchmarked.
 conversions = ["EAGER", "EXPORT+EAGER"]
 
 # Benchmark the model

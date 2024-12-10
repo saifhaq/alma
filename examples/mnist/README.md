@@ -144,7 +144,7 @@ cd examples/mnist/data
 ```
 
 
-### Selecting conversion options:
+### Selecting conversion options with argparser:
 
 To see all of the conversion options, run the following command:
 
@@ -153,7 +153,7 @@ cd examples/mnist
 python benchmark_with_dataloader.py --help
 ```
 
-The conversion options can be selected as either an integer or a string. The integer corresponds to the
+The conversion options can be selected as either an `integer` or a `string`. The integer corresponds to the
 index of the conversion option in the list of all conversion options. The string corresponds to the name
 of the conversion option. These can be mixed and matched.
 
@@ -174,6 +174,24 @@ run:
 ```bash
 cd examples/mnist
 python benchmark_with_dataloader.py --model-path ./model/mnist.pt --data-dir data/data_for_inference
+```
+
+### Feeding in conversion options manually
+Like with all CLI arguments, one can just feed in arguments manually in a script. For conversions,
+this is as simple as feeding in a list of strings corresponding to the names, e.g.
+```python
+
+...
+
+# Choose with conversions to benchmark. If no options are provided, (i.e. conversions = None | []),
+# then all conversion methods will be benchmarked.
+conversions = ["EAGER", "EXPORT+EAGER"]
+
+# Benchmark the model
+results = benchmark_model(
+   model, config, conversions, data_loader=data_loader
+)
+
 ```
 
 ### Benchmark conversion options using a data tensor to intialise a data loader:
