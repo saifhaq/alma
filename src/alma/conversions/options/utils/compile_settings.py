@@ -1,4 +1,4 @@
-from typing import Literal, Dict
+from typing import Dict, Literal
 
 
 def get_compile_settings(backend: Literal[str] = "inductor-default") -> Dict[str, str]:

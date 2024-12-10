@@ -101,6 +101,7 @@ def get_compiled_forward_call_eager_fallback(
     with suppress_dynamo_errors():
         return get_compiled_model_forward_call(model, data, backend)
 
+
 @contextmanager
 def suppress_dynamo_errors():
     """
