@@ -1,10 +1,14 @@
 FROM nvidia/cuda:12.2.2-cudnn8-devel-ubuntu22.04
 
+# INSTALL_TVM also enables / disables LLVM installation
+# INSTALL_LLVM also enables / disables model-opt installation
+# For TORCH_CUDA_ARCH_LIST see https://en.wikipedia.org/wiki/CUDA#GPUs_supported (You only need to specify the compute capability of the GPU / CUDA version you are using)
 
-# ARG INSTALL_TVM=false
+ENV TORCH_CUDA_ARCH_LIST="5.2 6.0 6.1 7.0 7.2 7.5 8.0 8.6 8.7 9.0+PTX" 
+ARG INSTALL_TVM=true
+ARG INSTALL_TENSORRT=false 
 
-# # this also enables / disables model-opt installation
-# ARG INSTALL_TENSORRT=false 
+ARG TENSORRT_URL=https://developer.nvidia.com/downloads/compute/machine-learning/tensorrt/10.4.0/tars/TensorRT-10.4.0.26.Linux.x86_64-gnu.cuda-12.6.tar.gz
 
 WORKDIR /build
 
@@ -82,28 +86,9 @@ RUN pip install --upgrade pip
 RUN pip install uv
 
 
-# # Add the LLVM official GPG key and repository
-# RUN wget -qO - https://apt.llvm.org/llvm-snapshot.gpg.key | gpg --dearmor -o /usr/share/keyrings/llvm-archive-keyring.gpg && \
-#     echo "deb [signed-by=/usr/share/keyrings/llvm-archive-keyring.gpg] http://apt.llvm.org/jammy/ llvm-toolchain-jammy-16 main" | tee /etc/apt/sources.list.d/llvm.list
 
-# # Install LLVM
-# RUN apt-get update && apt-get install -y --no-install-recommends \
-#     llvm-16 \
-#     clang-16 \
-#     lld-16 \
-#     && rm -rf /var/lib/apt/lists/*
-
-# # Update alternatives to make llvm and clang-16 the default
-# RUN update-alternatives --install /usr/bin/clang clang /usr/bin/clang-16 100 \
-#     && update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-16 100 \
-#     && update-alternatives --install /usr/bin/llvm-config llvm-config /usr/bin/llvm-config-16 100
-
-# # Verify installation
-# RUN clang --version && llvm-config --version
-
-
-
-RUN apt-get update && \
+RUN if [ "$INSTALL_TVM" = "true" ]; then \
+    apt-get update && \
     apt-get install -y --no-install-recommends \
     libzstd-dev && \
     wget https://apt.llvm.org/llvm.sh -O /tmp/llvm.sh && \
@@ -114,20 +99,13 @@ RUN apt-get update && \
     llvm-18 llvm-18-dev llvm-18-tools libpolly-18-dev && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* && \
-    ln -s /usr/bin/llvm-config-18 /usr/bin/llvm-config
-
-
-# Verify LLVM installation
-# RUN llvm-config --version
-# ENV LLVM_DIR=/usr/lib/llvm-18
-# ENV PATH=$LLVM_DIR/bin:$PATH
-# ENV LD_LIBRARY_PATH=$LLVM_DIR/lib:$LD_LIBRARY_PATH
-# ENV CMAKE_PREFIX_PATH=$LLVM_DIR:$CMAKE_PREFIX_PATH
+    ln -s /usr/bin/llvm-config-18 /usr/bin/llvm-config; \
+fi
 
 # apache-tvm
 # https://tvm.apache.org/docs/install/from_source.html#step-1-install-dependencies 
-
-RUN mkdir -p /build/tvm && \
+RUN if [ "$INSTALL_TVM" = "true" ]; then \
+    mkdir -p /build/tvm && \
     git clone --recursive https://github.com/apache/tvm && \
     cd tvm && \
     echo "set(CMAKE_BUILD_TYPE RelWithDebInfo)" >> config.cmake && \
@@ -140,41 +118,61 @@ RUN mkdir -p /build/tvm && \
     echo "set(USE_CUBLAS ON)" >> config.cmake && \
     echo "set(USE_CUDNN  ON)" >> config.cmake && \
     echo "set(USE_CUTLASS OFF)" >> config.cmake && \
-    cmake ./ 
-
-
-    # && \
-RUN cd /build/tvm && \
+    cmake ./ && \
+    cd /build/tvm && \
     cmake --build . --parallel 16 && \
     ln -s /build/tvm/build/libtvm.so /usr/lib/libtvm.so && \
     ln -s /build/tvm/build/libtvm_runtime.so /usr/lib/libtvm_runtime.so && \
     ln -s /build/tvm/build/libtvm_allvisible.so /usr/lib/libtvm_allvisible.so && \
-    cd /build/tvm && \
-    pip install -e ./python
+    pip install -e ./python; \
+fi
+
+# Install TensorRT dev environment
+# https://github.com/NVIDIA/TensorRT-Model-Optimizer/blob/main/docker/Dockerfile
+RUN if [ "$INSTALL_TENSORRT" = "true" ]; then \
+    mkdir -p /build/tensorrt && \
+    cd /build/tensorrt && \
+    wget -q -O tensorrt.tar.gz $TENSORRT_URL && \
+    tar -xf tensorrt.tar.gz && \
+    cp TensorRT-*/bin/trtexec /usr/local/bin && \
+    cp TensorRT-*/include/* /usr/include/x86_64-linux-gnu && \
+    python -m pip install TensorRT-*/python/tensorrt-*-cp310-none-linux_x86_64.whl && \
+    mkdir -p /usr/local/lib/python3.10/dist-packages/tensorrt_libs && \
+    cp -a TensorRT-*/targets/x86_64-linux-gnu/lib/* /usr/local/lib/python3.10/dist-packages/tensorrt_libs && \
+    rm -rf TensorRT-*.Linux.x86_64-gnu.cuda-*.tar.gz TensorRT-* tensorrt.tar.gz; \
+fi
+
+ENV TRT_LIB_PATH=/usr/local/lib/python3.10/dist-packages/tensorrt_libs
+ENV LD_LIBRARY_PATH=$TRT_LIB_PATH:$LD_LIBRARY_PATH
+
+RUN if [ "$INSTALL_TENSORRT" = "true" ]; then \
+uv pip install --system "nvidia-modelopt[torch,onnx]" -U && \
+    python -c "import modelopt.torch.quantization.extensions as ext; ext.precompile()"; \
+fi
 
 
+RUN mkdir -p /build/tensorrt && \
+    cd /build/tensorrt && \ 
+    wget -q -O tensorrt.tar.gz $TENSORRT_URL && \
+    tar -xf tensorrt.tar.gz && \
+    cp TensorRT-*/bin/trtexec /usr/local/bin && \
+    cp TensorRT-*/include/* /usr/include/x86_64-linux-gnu && \
+    python -m pip install TensorRT-*/python/tensorrt-*-cp310-none-linux_x86_64.whl && \ 
+    cd /build/tensorrt && \
+    mkdir -p /usr/local/lib/python3.10/dist-packages/tensorrt_libs && \
+    cp -a TensorRT-*/targets/x86_64-linux-gnu/lib/* /usr/local/lib/python3.10/dist-packages/tensorrt_libs && \
+    rm -rf TensorRT-*.Linux.x86_64-gnu.cuda-*.tar.gz TensorRT-* tensorrt.tar.gz
+ENV TRT_LIB_PATH=/usr/local/lib/python3.10/dist-packages/tensorrt_libs
+ENV LD_LIBRARY_PATH=$TRT_LIB_PATH:$LD_LIBRARY_PATH
 
-# # Install TensorRT dev environment
-# # https://github.com/NVIDIA/TensorRT-Model-Optimizer/blob/main/docker/Dockerfile
-# ARG TENSORRT_URL=https://developer.nvidia.com/downloads/compute/machine-learning/tensorrt/10.4.0/tars/TensorRT-10.4.0.26.Linux.x86_64-gnu.cuda-12.6.tar.gz
-# RUN mkdir -p /build/tensorrt && \
-#     cd /build/tensorrt && \ 
-#     wget -q -O tensorrt.tar.gz $TENSORRT_URL && \
-#     tar -xf tensorrt.tar.gz && \
-#     cp TensorRT-*/bin/trtexec /usr/local/bin && \
-#     cp TensorRT-*/include/* /usr/include/x86_64-linux-gnu && \
-#     python -m pip install TensorRT-*/python/tensorrt-*-cp310-none-linux_x86_64.whl && \ 
-#     cd /build/tensorrt && \
-#     mkdir -p /usr/local/lib/python3.10/dist-packages/tensorrt_libs && \
-#     cp -a TensorRT-*/targets/x86_64-linux-gnu/lib/* /usr/local/lib/python3.10/dist-packages/tensorrt_libs && \
-#     rm -rf TensorRT-*.Linux.x86_64-gnu.cuda-*.tar.gz TensorRT-* tensorrt.tar.gz
-# ENV TRT_LIB_PATH=/usr/local/lib/python3.10/dist-packages/tensorrt_libs
-# ENV LD_LIBRARY_PATH=$TRT_LIB_PATH:$LD_LIBRARY_PATH
+ADD requirements.txt /build/requirements.txt
 
-# # # Install modelopt with all optional dependencies and pre-compile CUDA extensions otherwise they take several minutes on every docker run
-# RUN uv pip install --system "nvidia-modelopt[torch,onnx]" -U
-# ENV TORCH_CUDA_ARCH_LIST="5.2 6.0 6.1 7.0 7.2 7.5 8.0 8.6 8.7 9.0+PTX"
-# RUN python -c "import modelopt.torch.quantization.extensions as ext; ext.precompile()"
+RUN cp /build/requirements.txt /build/requirements.modified.txt && \
+    if [ "$INSTALL_TORCH_TENSORRT" != "true" ]; then \
+        sed -i '/torch-tensorrt/d' /build/requirements.modified.txt; \
+    fi && \
+    if [ "$INSTALL_APACHE_TVM" != "true" ]; then \
+        sed -i '/apache-tvm/d' /build/requirements.modified.txt; \
+    fi
 
-# ADD requirements.txt /build/requirements.txt
-# RUN uv pip install --system -r /build/requirements.txt
+RUN uv pip install --system -r /build/requirements.modified.txt
