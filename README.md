@@ -353,35 +353,73 @@ Below is a table summarizing the currently supported conversion options and thei
 
   | ID  | Conversion Option                                             |
   |-----|---------------------------------------------------------------|
-  | 0   | EXPORT+COMPILE_INDUCTOR                                       |
-  | 1   | EXPORT+COMPILE_CUDAGRAPH                                      |
-  | 2   | EXPORT+COMPILE_ONNXRT                                         |
-  | 3   | EXPORT+COMPILE_OPENXLA                                        |
-  | 4   | EXPORT+COMPILE_TVM                                            |
-  | 5   | EXPORT+COMPILE_INDUCTOR_EAGER_FALLBACK                        |
-  | 6   | EXPORT+AOT_INDUCTOR                                           |
-  | 7   | EXPORT+EAGER                                                  |
-  | 8   | EXPORT+AI8WI8_STATIC_QUANTIZED                                |
-  | 9   | EXPORT+AI8WI8_FLOAT_QUANTIZED                                 |
-  | 10  | EXPORT+AI8WI8_STATIC_QUANTIZED+AOT_INDUCTOR                   |
-  | 11  | EXPORT+AI8WI8_FLOAT_QUANTIZED+AOT_INDUCTOR                    |
-  | 12  | EXPORT+AI8WI8_STATIC_QUANTIZED+RUN_DECOMPOSITION              |
-  | 13  | EXPORT+AI8WI8_FLOAT_QUANTIZED+RUN_DECOMPOSITION               |
-  | 14  | EXPORT+AI8WI8_STATIC_QUANTIZED+RUN_DECOMPOSITION+AOT_INDUCTOR |
-  | 15  | EXPORT+AI8WI8_FLOAT_QUANTIZED+RUN_DECOMPOSITION+AOT_INDUCTOR  |
-  | 16  | COMPILE_INDUCTOR_DEFAULT                                              |
-  | 17  | COMPILE_CUDAGRAPH                                             |
-  | 18  | COMPILE_ONNXRT                                                |
-  | 19  | COMPILE_OPENXLA                                               |
-  | 20  | COMPILE_TVM                                                   |
-  | 21  | COMPILE_INDUCTOR_EAGER_FALLBACK                                |
-  | 22  | EAGER                                                         |
-  | 23  | TENSORRT                                                      |
-  | 24  | ONNX_CPU                                                      |
-  | 25  | ONNX_GPU                                                      |
-  | 26  | ONNX+DYNAMO_EXPORT                                            |
-  | 27  | NATIVE_CONVERT_AI8WI8_STATIC_QUANTIZED                         |
-  | 28  | NATIVE_FAKE_QUANTIZED_AI8WI8_STATIC                            |
+  | 0   |  EAGER                                                        |
+  | 1   |  EXPORT+EAGER                                                 |
+  | 2   |  ONNX_CPU                                                     |
+  | 3   |  ONNX_GPU                                                     |
+  | 4   |  ONNX+DYNAMO_EXPORT                                           |
+  | 5   |  COMPILE_CUDAGRAPH                                            |
+  | 6   |  COMPILE_INDUCTOR_DEFAULT                                     |
+  | 7   |  COMPILE_INDUCTOR_REDUCE_OVERHEAD                             |
+  | 8   |  COMPILE_INDUCTOR_MAX_AUTOTUNE                                |
+  | 9   |  COMPILE_INDUCTOR_EAGER_FALLBACK                              |
+  | 10  |  COMPILE_ONNXRT                                               |
+  | 11  |  COMPILE_OPENXLA                                              |
+  | 12  |  COMPILE_TVM                                                  |
+  | 13  |  EXPORT+AI8WI8_FLOAT_QUANTIZED                                |
+  | 14  |  EXPORT+AI8WI8_FLOAT_QUANTIZED+AOT_INDUCTOR                   |
+  | 15  |  EXPORT+AI8WI8_FLOAT_QUANTIZED+RUN_DECOMPOSITION              |
+  | 16  |  EXPORT+AI8WI8_FLOAT_QUANTIZED+RUN_DECOMPOSITION+AOT_INDUCTOR |
+  | 17  |  EXPORT+AI8WI8_STATIC_QUANTIZED                               |
+  | 18  |  EXPORT+AI8WI8_STATIC_QUANTIZED+AOT_INDUCTOR                  |
+  | 19  |  EXPORT+AI8WI8_STATIC_QUANTIZED+RUN_DECOMPOSITION             |
+  | 20  |  EXPORT+AI8WI8_STATIC_QUANTIZED+RUN_DECOMPOSITION+AOT_INDUCTOR|
+  | 21  |  EXPORT+AOT_INDUCTOR                                          |
+  | 22  |  EXPORT+COMPILE_CUDAGRAPH                                     |
+  | 23  |  EXPORT+COMPILE_INDUCTOR_DEFAULT                              |
+  | 24  |  EXPORT+COMPILE_INDUCTOR_REDUCE_OVERHE                        |
+  | 25  |  EXPORT+COMPILE_INDUCTOR_MAX_AUTOTUNE                         |
+  | 26  |  EXPORT+COMPILE_INDUCTOR_EAGER_FALLBACK                       |
+  | 27  |  EXPORT+COMPILE_ONNXRT                                        | 
+  | 28  |  EXPORT+COMPILE_OPENXLA                                       |
+  | 29  |  EXPORT+COMPILE_TVM                                           |
+  | 30  |  NATIVE_CONVERT_AI8WI8_STATIC_QUANTIZED                       |
+  | 31  |  NATIVE_FAKE_QUANTIZED_AI8WI8_STATIC                          |
+  | 32  |  TENSORRT                                                     |
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 These conversion options are also all hard-coded in the `alma/conversions/select.py` file, which is the source of truth.
