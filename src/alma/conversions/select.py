@@ -66,7 +66,7 @@ MODEL_CONVERSION_OPTIONS = {
     29: "EXPORT+COMPILE_TVM",
     30: "NATIVE_CONVERT_AI8WI8_STATIC_QUANTIZED",
     31: "NATIVE_FAKE_QUANTIZED_AI8WI8_STATIC",
-    32: "TENSORRT",
+    32: "COMPILE_TENSORRT",
 }
 
 
@@ -229,6 +229,10 @@ def select_forward_call_function(
             check_tvm()
             forward = get_compiled_model_forward_call(model, data, backend="tvm")
 
+        case "COMPILE_TENSORRT":
+            check_tensort()
+            forward = get_compiled_model_forward_call(model, data, backend="tensorrt")
+
         case "COMPILE_INDUCTOR_DEFAULT_EAGER_FALLBACK":
             forward = get_compiled_forward_call_eager_fallback(
                 model, data, backend="inductor-default"
@@ -237,10 +241,6 @@ def select_forward_call_function(
         case "EAGER":
             # Regular eager model forward call
             forward = model.forward
-
-        case "TENSORRT":
-            check_tensort()
-            forward = get_tensorrt_dynamo_forward_call(model, data)
 
         case "ONNX_CPU":
             # We create temporary file to save the onnx model
