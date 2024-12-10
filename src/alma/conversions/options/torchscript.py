@@ -1,7 +1,7 @@
-import torch
 import logging
-
 from typing import Callable
+
+import torch
 
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())
