@@ -1,9 +1,9 @@
 import logging
 from pathlib import Path
-from typing import Any, Callable, Union, List
+from typing import Any, Callable, List, Union
 
-import onnx
 import numpy as np
+import onnx
 import onnxruntime
 import torch
 
@@ -95,7 +95,9 @@ def _get_onnx_forward_call(
     - onnx_forward (Callable): The forward call function for the model.
     """
     # Create ONNX runtime session for ONNX model
-    ort_session = onnxruntime.InferenceSession(model, providers=onnx_providers, provider_options=None)
+    ort_session = onnxruntime.InferenceSession(
+        model, providers=onnx_providers, provider_options=None
+    )
     logger.info(f"Loaded ONNX model, using {onnx_providers}")
     # NOTE: see here for a list of Execution providers: https://onnxruntime.ai/docs/execution-providers/
 

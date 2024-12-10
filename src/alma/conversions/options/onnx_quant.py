@@ -1,7 +1,9 @@
-import torch
-from onnxruntime.quantization import quantize_static, quantize_dynamic, QuantFormat
-from .onnx import _get_onnx_forward_call, save_onnx_model
 from typing import Callable, List
+
+import torch
+from onnxruntime.quantization import QuantFormat, quantize_dynamic, quantize_static
+
+from .onnx import _get_onnx_forward_call, save_onnx_model
 
 
 def get_onnx_static_quant_forward_call(
@@ -30,15 +32,20 @@ def get_onnx_static_quant_forward_call(
 
     assert quant_format in [QuantFormat.QOperator, QuantFormat.DQO]
 
-
     # We first save the unquantized ONNX model
     save_onnx_model(model, data, onnx_model_path)
 
     # Save the quantized model
-    quantize_static(onnx_model_path, quant_onnx_model_path, per_channel=True, quant_format=quant_format)
+    quantize_static(
+        onnx_model_path,
+        quant_onnx_model_path,
+        per_channel=True,
+        quant_format=quant_format,
+    )
 
     # Get onnx forward call
-    onnx_forward: Callable = _get_onnx_forward_call(quant_onnx_model_path, onnx_provider)
+    onnx_forward: Callable = _get_onnx_forward_call(
+        quant_onnx_model_path, onnx_provider
+    )
 
     return onnx_forward
-
