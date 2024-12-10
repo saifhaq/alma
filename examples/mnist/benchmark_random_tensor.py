@@ -15,9 +15,9 @@ torch.backends.quantized.engine = "qnnpack"
 
 
 def main() -> None:
-    # Set up logging. DEBUG level will also log the model graphs
-    # setup_logging(log_file=None, level="DEBUG")
-    # setup_logging(log_file=None, level="WARNING")
+    # Set up logging. DEBUG level will also log the internal conversion logs (where available), as well
+    # as the model graphs. A `setup_logging` function is provided for convenience, but one can use 
+    # whatever logging one wishes, or none.
     setup_logging(log_file=None, level="INFO")
 
     # Parse the benchmarking arguments
