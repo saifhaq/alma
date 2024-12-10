@@ -5,6 +5,8 @@ from typing import Tuple, Union
 
 import torch
 
+from alma.utils.device import get_default_device
+
 from ..conversions.select import MODEL_CONVERSION_OPTIONS
 from ..utils.ipdb_hook import ipdb_sys_excepthook
 
@@ -94,9 +96,6 @@ to different transforms, or their string names. MUltiple options can be selected
     if args.model_path is not None:
         args.model_path = Path(args.model_path)
 
-    use_cuda = not args.no_cuda and torch.cuda.is_available()
-    use_mps = not args.no_mps and torch.backends.mps.is_available()
-
     # If no conversion options are provided, we use all available options
     if not args.conversions:
         conversions = valid_conversion_options
@@ -140,11 +139,10 @@ to different transforms, or their string names. MUltiple options can be selected
 
     args.conversions = selected_conversions
 
-    if use_cuda:
+    device = get_default_device()
+    if not args.no_cuda and torch.cuda.is_available():
         device = torch.device("cuda")
-    elif use_mps:
+    elif not args.no_mps and torch.backends.mps.is_available():
         device = torch.device("mps")
-    else:
-        device = torch.device("cpu")
 
     return args, device

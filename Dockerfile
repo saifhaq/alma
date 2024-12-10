@@ -49,7 +49,9 @@ RUN apt-get update && \
     openmpi-bin \
     libopenmpi-dev \
     git-lfs \
-    jq
+    jq \
+    gnupg \
+    lsb-release
 
 RUN wget -nv --show-progress --progress=bar:force:noscroll https://www.python.org/ftp/python/3.10.14/Python-3.10.14.tar.xz  && \
     tar -xvf Python-3.10.14.tar.xz && \
@@ -79,12 +81,55 @@ RUN pip install --upgrade pip
 
 RUN pip install uv
 
+
+# # Add the LLVM official GPG key and repository
+# RUN wget -qO - https://apt.llvm.org/llvm-snapshot.gpg.key | gpg --dearmor -o /usr/share/keyrings/llvm-archive-keyring.gpg && \
+#     echo "deb [signed-by=/usr/share/keyrings/llvm-archive-keyring.gpg] http://apt.llvm.org/jammy/ llvm-toolchain-jammy-16 main" | tee /etc/apt/sources.list.d/llvm.list
+
+# # Install LLVM
+# RUN apt-get update && apt-get install -y --no-install-recommends \
+#     llvm-16 \
+#     clang-16 \
+#     lld-16 \
+#     && rm -rf /var/lib/apt/lists/*
+
+# # Update alternatives to make llvm and clang-16 the default
+# RUN update-alternatives --install /usr/bin/clang clang /usr/bin/clang-16 100 \
+#     && update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-16 100 \
+#     && update-alternatives --install /usr/bin/llvm-config llvm-config /usr/bin/llvm-config-16 100
+
+# # Verify installation
+# RUN clang --version && llvm-config --version
+
+
+
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+    libzstd-dev && \
+    wget https://apt.llvm.org/llvm.sh -O /tmp/llvm.sh && \
+    chmod +x /tmp/llvm.sh && \
+    /tmp/llvm.sh 18 && \
+    rm -rf /tmp/llvm.sh && \
+    apt-get install -y --no-install-recommends \
+    llvm-18 llvm-18-dev llvm-18-tools libpolly-18-dev && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/* && \
+    ln -s /usr/bin/llvm-config-18 /usr/bin/llvm-config
+
+
+# Verify LLVM installation
+# RUN llvm-config --version
+# ENV LLVM_DIR=/usr/lib/llvm-18
+# ENV PATH=$LLVM_DIR/bin:$PATH
+# ENV LD_LIBRARY_PATH=$LLVM_DIR/lib:$LD_LIBRARY_PATH
+# ENV CMAKE_PREFIX_PATH=$LLVM_DIR:$CMAKE_PREFIX_PATH
+
 # apache-tvm
 # https://tvm.apache.org/docs/install/from_source.html#step-1-install-dependencies 
 
 RUN mkdir -p /build/tvm && \
-    cd /build/tvm && \
-    git clone --recursive https://github.com/apache/tvm tvm && \
+    git clone --recursive https://github.com/apache/tvm && \
+    cd tvm && \
     echo "set(CMAKE_BUILD_TYPE RelWithDebInfo)" >> config.cmake && \
     echo "set(USE_LLVM \"llvm-config --ignore-libllvm --link-static\")" >> config.cmake && \
     echo "set(HIDE_PRIVATE_SYMBOLS ON)" >> config.cmake && \
@@ -94,9 +139,18 @@ RUN mkdir -p /build/tvm && \
     echo "set(USE_OPENCL OFF)" >> config.cmake && \
     echo "set(USE_CUBLAS ON)" >> config.cmake && \
     echo "set(USE_CUDNN  ON)" >> config.cmake && \
-    echo "set(USE_CUTLASS ON)" >> config.cmake && \
-    cmake .. && cmake --build . --parallel 16 && \
-    pip install -e /build/tvm/python
+    echo "set(USE_CUTLASS OFF)" >> config.cmake && \
+    cmake ./ 
+
+
+    # && \
+RUN cd /build/tvm && \
+    cmake --build . --parallel 16 && \
+    ln -s /build/tvm/build/libtvm.so /usr/lib/libtvm.so && \
+    ln -s /build/tvm/build/libtvm_runtime.so /usr/lib/libtvm_runtime.so && \
+    ln -s /build/tvm/build/libtvm_allvisible.so /usr/lib/libtvm_allvisible.so && \
+    cd /build/tvm && \
+    pip install -e ./python
 
 
 
@@ -122,5 +176,5 @@ RUN mkdir -p /build/tvm && \
 # ENV TORCH_CUDA_ARCH_LIST="5.2 6.0 6.1 7.0 7.2 7.5 8.0 8.6 8.7 9.0+PTX"
 # RUN python -c "import modelopt.torch.quantization.extensions as ext; ext.precompile()"
 
-ADD requirements.txt /build/requirements.txt
-RUN uv pip install --system -r /build/requirements.txt
+# ADD requirements.txt /build/requirements.txt
+# RUN uv pip install --system -r /build/requirements.txt
