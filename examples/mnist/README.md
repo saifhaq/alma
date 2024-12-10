@@ -192,8 +192,9 @@ from alma.benchmark.log import display_all_results
 from alma.utils.setup_logging import setup_logging
 from typing import Dict
 
-# A `setup_logging` function is provided for convenience, but one can use whatever logging one 
-# wishes, or none. DEBUG level will also log the model graphs.
+# Set up logging. DEBUG level will also log the internal conversion logs (where available), as well
+# as the model graphs. A `setup_logging` function is provided for convenience, but one can use 
+# whatever logging one wishes, or none.
 setup_logging(log_file=None, level="INFO")
 
 # Parse the arguments, e.g. the model path, device, and conversion options

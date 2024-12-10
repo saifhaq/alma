@@ -41,16 +41,16 @@ def inference_time_benchmarking(
     times: Dict[str, float],
 ) -> Tuple[Dict[int, int], Dict[str, float]]:
     """
-    perform inference on the given model using the given data loader.
-    this will return the counts of each digit in the dataset.
+    Perform inference on the given model using the given data loader.
+    This will return the counts of each digit in the dataset.
 
-    inputs:
+    Inputs:
     - data_loader (Dataloader): the dataloader to get the data from.
     - model (torch.nn.Module): the model to perform inference with.
     - device (torch.device): the device to run the model on.
     - times (Dict[str, float]): the dictionary to store the times in.
 
-    returns:
+    Returns:
     - digit_counts (Dict[int, int]): the counts of each digit in the dataset.
     - times (Dict[str, float]): the updated dictionary of times.
     """

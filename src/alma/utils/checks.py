@@ -18,7 +18,7 @@ def check_inputs(
     - model (torch.nn.Module): The model to benchmark.
     - config (dict): The configuration for the benchmarking.
     - conversions (list): The list of conversion methods to benchmark.
-    - data (torch.Tensor): The data to use for benchmarking.
+    - data (torch.Tensor): The data to use for benchmarking (initialising the dataloader).
     - data_loader (DataLoader): The DataLoader to get samples of data from.
 
     Outputs:

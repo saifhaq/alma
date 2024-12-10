@@ -53,7 +53,7 @@ def parse_benchmark_args() -> Tuple[argparse.Namespace, torch.device]:
     parser.add_argument(
         "--n-samples",
         type=int,
-        default=32768,
+        default=2048,
         help="Total number of samples to process (default: 300)",
     )
     parser.add_argument(
