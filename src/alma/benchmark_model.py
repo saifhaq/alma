@@ -84,23 +84,23 @@ def benchmark_model(
         check_consistent_batch_size(conversion_method, n_samples, batch_size)
 
         logger.info(f"Benchmarking model using conversion: {conversion_method}")
-        # try:
-        result: Dict[str, float] = benchmark(
-            model, conversion_method, device, data_loader, n_samples
-        )
-        result["status"] = "success"
-        all_results[conversion_method] = result
-        # except Exception as e:
-        #     # If there is an error, we log the error. In the returned "results", we include the
-        #     # full traceback
-        #     error_msg = (
-        #         f"Benchmarking conversion {conversion_method} failed. Error: {e}"
-        #     )
-        #     logger.error(error_msg)
-        #     all_results[conversion_method] = {
-        #         "status": "error",
-        #         "error": e,
-        #         "traceback": traceback.format_exc(),
-        #     }
+        try:
+            result: Dict[str, float] = benchmark(
+                model, conversion_method, device, data_loader, n_samples
+            )
+            result["status"] = "success"
+            all_results[conversion_method] = result
+        except Exception as e:
+            # If there is an error, we log the error. In the returned "results", we include the
+            # full traceback
+            error_msg = (
+                f"Benchmarking conversion {conversion_method} failed. Error: {e}"
+            )
+            logger.error(error_msg)
+            all_results[conversion_method] = {
+                "status": "error",
+                "error": e,
+                "traceback": traceback.format_exc(),
+            }
 
     return all_results
