@@ -122,6 +122,11 @@ def _get_onnx_forward_call(
         with torch.no_grad():
             output_shape = onnx_cpu_forward(sample_data)
 
+        # Allocate the PyTorch tensor for the model output
+        ort_outs = torch.empty(
+            output_shape, dtype=torch.float32, device="cuda:0"
+        ).contiguous()
+
         def onnx_forward(*data: torch.Tensor) -> torch.Tensor:
             # Make all input tensors contiguous
             data_tensors = [d.contiguous() for d in data]
@@ -137,10 +142,7 @@ def _get_onnx_forward_call(
                     buffer_ptr=tensor.data_ptr(),
                 )
 
-            # Allocate the PyTorch tensor for the model output
-            ort_outs = torch.empty(
-                output_shape, dtype=torch.float32, device="cuda:0"
-            ).contiguous()
+            # Bind output
             binding.bind_output(
                 name=output_name,
                 device_type="cuda",
