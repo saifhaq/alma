@@ -5,13 +5,20 @@ from typing import Any, Callable
 
 import torch
 
+from optimum.quanto import (
+    qint8,
+    qint4,
+    qint2,
+    qfloat8_e5m2,
+    qfloat8_e4m3fnuz,
+    qfloat8_e4m3fn,
+)
 from .options.compile import (
     get_compiled_forward_call_eager_fallback,
     get_compiled_model_forward_call,
 )
 from .options.export_aotinductor import (
     get_export_aot_inductor_forward_call,
-    get_quant_export_aot_inductor_forward_call,
 )
 from .options.export_compile import (
     get_export_compiled_forward_call,
@@ -21,6 +28,10 @@ from .options.export_eager import get_export_eager_forward_call
 from .options.export_quant import get_quant_exported_forward_call
 from .options.fake_quant import get_fake_quantized_model_forward_call
 from .options.onnx import get_onnx_dynamo_forward_call, get_onnx_forward_call
+from .options.optimum_quanto import (
+    get_optimum_quanto_forward_call,
+    get_optimum_quant_model_compiled_forward_call,
+)
 from .options.quant_convert import get_converted_quantized_model_forward_call
 from .options.utils.checks.imports import (
     check_onnxrt,
@@ -41,7 +52,7 @@ MODEL_CONVERSION_OPTIONS = {
     2: "ONNX_CPU",
     3: "ONNX_GPU",
     4: "ONNX+DYNAMO_EXPORT",
-    5: "COMPILE_CUDAGRAPH",
+    5: "COMPILE_CUDAGRAPHS",
     6: "COMPILE_INDUCTOR_DEFAULT",
     7: "COMPILE_INDUCTOR_REDUCE_OVERHEAD",
     8: "COMPILE_INDUCTOR_MAX_AUTOTUNE",
@@ -54,7 +65,7 @@ MODEL_CONVERSION_OPTIONS = {
     17: "EXPORT+AI8WI8_STATIC_QUANTIZED",
     19: "EXPORT+AI8WI8_STATIC_QUANTIZED+RUN_DECOMPOSITION",
     21: "EXPORT+AOT_INDUCTOR",
-    22: "EXPORT+COMPILE_CUDAGRAPH",
+    22: "EXPORT+COMPILE_CUDAGRAPHS",
     23: "EXPORT+COMPILE_INDUCTOR_DEFAULT",
     24: "EXPORT+COMPILE_INDUCTOR_REDUCE_OVERHEAD",
     25: "EXPORT+COMPILE_INDUCTOR_MAX_AUTOTUNE",
@@ -69,6 +80,16 @@ MODEL_CONVERSION_OPTIONS = {
     34: "TENSORRT",
     35: "JIT_TRACE",
     36: "TORCH_SCRIPT",
+    37: "OPTIMIM_QUANTO_AI8WI8",
+    38: "OPTIMIM_QUANTO_AI8WI4",
+    39: "OPTIMIM_QUANTO_AI8WI2",
+    40: "OPTIMIM_QUANTO_WI8",
+    41: "OPTIMIM_QUANTO_WI4",
+    42: "OPTIMIM_QUANTO_WI2",
+    43: "OPTIMIM_QUANTO_Wf8E4M3N",
+    44: "OPTIMIM_QUANTO_Wf8E4M3NUZ",
+    45: "OPTIMIM_QUANTO_Wf8E5M2",
+    46: "OPTIMIM_QUANTO_Wf8E5M2+COMPILE_CUDAGRAPHS",
 }
 
 
@@ -111,7 +132,7 @@ def select_forward_call_function(
                 model, data, backend="inductor-max-autotune"
             )
 
-        case "EXPORT+COMPILE_CUDAGRAPH":
+        case "EXPORT+COMPILE_CUDAGRAPHS":
             forward = get_export_compiled_forward_call(
                 model, data, backend="cudagraphs"
             )
@@ -191,7 +212,7 @@ def select_forward_call_function(
                 model, data, backend="inductor-max-autotune"
             )
 
-        case "COMPILE_CUDAGRAPH":
+        case "COMPILE_CUDAGRAPHS":
             forward = get_compiled_model_forward_call(model, data, backend="cudagraphs")
 
         case "COMPILE_ONNXRT":
@@ -211,7 +232,7 @@ def select_forward_call_function(
             check_tensort()
             forward = get_compiled_model_forward_call(model, data, backend="tensorrt")
 
-        case "COMPILE_INDUCTOR_DEFAULT_EAGER_FALLBACK":
+        case "COMPILE_INDUCTOR_EAGER_FALLBACK":
             forward = get_compiled_forward_call_eager_fallback(
                 model, data, backend="inductor-default"
             )
@@ -253,6 +274,59 @@ def select_forward_call_function(
 
         case "TORCH_SCRIPT":
             forward = get_torch_scripted_model_forward_call(model)
+
+        ###############################
+        # OPTIMUM QUANTO QUANTIZATION #
+        ###############################
+        case "OPTIMIM_QUANTO_AI8WI8":
+            forward = get_optimum_quanto_forward_call(
+                model, data, weights=qint8, activations=qint8
+            )
+
+        case "OPTIMIM_QUANTO_AI8WI4":
+            forward = get_optimum_quanto_forward_call(
+                model, data, weights=qint4, activations=qint8
+            )
+
+        case "OPTIMIM_QUANTO_AI8WI2":
+            forward = get_optimum_quanto_forward_call(
+                model, data, weights=qint2, activations=qint8
+            )
+
+        case "OPTIMIM_QUANTO_WI8":
+            forward = get_optimum_quanto_forward_call(
+                model, data, weights=qint8, activations=None
+            )
+
+        case "OPTIMIM_QUANTO_WI4":
+            forward = get_optimum_quanto_forward_call(
+                model, data, weights=qint4, activations=None
+            )
+
+        case "OPTIMIM_QUANTO_WI2":
+            forward = get_optimum_quanto_forward_call(
+                model, data, weights=qint2, activations=None
+            )
+
+        case "OPTIMIM_QUANTO_Wf8E4M3N":
+            forward = get_optimum_quanto_forward_call(
+                model, data, weights=qfloat8_e4m3fn, activations=None
+            )
+
+        case "OPTIMIM_QUANTO_Wf8E4M3NUZ":
+            forward = get_optimum_quanto_forward_call(
+                model, data, weights=qfloat8_e4m3fnuz, activations=None
+            )
+
+        case "OPTIMIM_QUANTO_Wf8E5M2":
+            forward = get_optimum_quanto_forward_call(
+                model, data, weights=qfloat8_e5m2, activations=None
+            )
+
+        case "OPTIMIM_QUANTO_Wf8E5M2+COMPILE_CUDAGRAPHS":
+            forward = get_optimum_quant_model_compiled_forward_call(
+                model, data, weights=qfloat8_e5m2, activations=None, backend="cudagraphs"
+            )
 
         case _:
             error_msg = f"The option {conversion} is not supported"
