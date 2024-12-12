@@ -10,6 +10,7 @@ from .conversions.select import MODEL_CONVERSION_OPTIONS
 from .dataloader.create import create_single_tensor_dataloader
 from .utils.checks import check_consistent_batch_size, check_inputs
 from .utils.times import inference_time_benchmarking  # should we use this?
+from .utils.processing import process_wrapper
 
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())
@@ -85,8 +86,8 @@ def benchmark_model(
 
         logger.info(f"Benchmarking model using conversion: {conversion_method}")
         try:
-            result: Dict[str, float] = benchmark(
-                model, conversion_method, device, data_loader, n_samples
+            result: Dict[str, float] = process_wrapper(
+                benchmark, model, conversion_method, device, data_loader, n_samples
             )
             result["status"] = "success"
             all_results[conversion_method] = result
