@@ -5,6 +5,7 @@ from typing import Callable, Dict, Literal, Union
 import torch
 import torch._dynamo
 import torch.fx as fx
+from torch._dynamo.eval_frame import OptimizedModule
 from torch.export.exported_program import ExportedProgram
 
 from ...utils.setup_logging import suppress_output
@@ -19,7 +20,7 @@ def get_compiled_model(
     model: Union[torch.nn.Module, fx.GraphModule, ExportedProgram],
     data: torch.Tensor,
     backend: Literal[str],
-) -> Callable:
+) -> OptimizedModule:
     """
     Compile the model using torch.compile.
 
@@ -53,7 +54,7 @@ def get_compiled_model(
         logger.debug("Model graph:")
         logger.debug(model.graph.print_tabular())
 
-    check_model_type(model, torch._dynamo.eval_frame.OptimizedModule)
+    check_model_type(model, OptimizedModule)
 
     return model
 
