@@ -1,7 +1,13 @@
+import logging
 from typing import Callable
 
 import torch
 from torch.utils.data import DataLoader
+
+from ..utils.setup_logging import suppress_output
+
+logger = logging.getLogger(__name__)
+logger.addHandler(logging.NullHandler())
 
 
 def warmup(
@@ -19,11 +25,12 @@ def warmup(
     Outputs:
     None
     """
-    counter = 0
-    with torch.no_grad():
-        for data, _ in data_loader:
-            data = data.to(device)
-            _ = forward_call(data)
-            counter += 1
-            if counter > 10:
-                return
+    with suppress_output(logger.root.level >= logging.DEBUG):
+        counter = 0
+        with torch.no_grad():
+            for data, _ in data_loader:
+                data = data.to(device)
+                _ = forward_call(data)
+                counter += 1
+                if counter > 10:
+                    return

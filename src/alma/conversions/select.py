@@ -22,7 +22,6 @@ from .options.export_quant import get_quant_exported_forward_call
 from .options.fake_quant import get_fake_quantized_model_forward_call
 from .options.onnx import get_onnx_dynamo_forward_call, get_onnx_forward_call
 from .options.quant_convert import get_converted_quantized_model_forward_call
-from .options.tensorrt import get_tensorrt_dynamo_forward_call
 from .options.utils.checks.imports import (
     check_onnxrt,
     check_openxla,
@@ -69,9 +68,11 @@ MODEL_CONVERSION_OPTIONS = {
     29: "EXPORT+COMPILE_TVM",
     30: "NATIVE_CONVERT_AI8WI8_STATIC_QUANTIZED",
     31: "NATIVE_FAKE_QUANTIZED_AI8WI8_STATIC",
-    32: "TENSORRT",
-    33: "JIT_TRACE",
-    34: "TORCH_SCRIPT",
+    32: "COMPILE_TENSORRT",
+    33: "EXPORT+COMPILE_TENSORRT",
+    34: "TENSORRT",
+    35: "JIT_TRACE",
+    36: "TORCH_SCRIPT",
 }
 
 
@@ -132,6 +133,10 @@ def select_forward_call_function(
         case "EXPORT+COMPILE_TVM":
             check_tvm()
             forward = get_export_compiled_forward_call(model, data, backend="tvm")
+
+        case "EXPORT+COMPILE_TENSORRT":
+            check_tensort()
+            forward = get_export_compiled_forward_call(model, data, backend="tensorrt")
 
         case "EXPORT+COMPILE_INDUCTOR_DEFAULT_EAGER_FALLBACK":
             forward = get_export_compiled_forward_call_eager_fallback(
@@ -234,6 +239,10 @@ def select_forward_call_function(
             check_tvm()
             forward = get_compiled_model_forward_call(model, data, backend="tvm")
 
+        case "COMPILE_TENSORRT":
+            check_tensort()
+            forward = get_compiled_model_forward_call(model, data, backend="tensorrt")
+
         case "COMPILE_INDUCTOR_DEFAULT_EAGER_FALLBACK":
             forward = get_compiled_forward_call_eager_fallback(
                 model, data, backend="inductor-default"
@@ -242,10 +251,6 @@ def select_forward_call_function(
         case "EAGER":
             # Regular eager model forward call
             forward = model.forward
-
-        case "TENSORRT":
-            check_tensort()
-            forward = get_tensorrt_dynamo_forward_call(model, data)
 
         case "ONNX_CPU":
             # We create temporary file to save the onnx model
