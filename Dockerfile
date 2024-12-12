@@ -114,7 +114,7 @@ RUN if [ "$INSTALL_TVM" = "true" ]; then \
     echo "set(USE_CUDA   ON)" >> config.cmake && \
     echo "set(USE_METAL  OFF)" >> config.cmake && \
     echo "set(USE_VULKAN OFF)" >> config.cmake && \
-    echo "set(USE_OPENCL OFF)" >> config.cmake && \
+    echo "set(USE_OPENCL ON)" >> config.cmake && \
     echo "set(USE_CUBLAS ON)" >> config.cmake && \
     echo "set(USE_CUDNN  ON)" >> config.cmake && \
     echo "set(USE_CUTLASS OFF)" >> config.cmake && \
