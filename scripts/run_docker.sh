@@ -1,5 +1,5 @@
 docker run -itd \
---name alma2 \
+--name alma3 \
 --gpus=all \
 -v /home:/home \
 --entrypoint=/bin/bash \
