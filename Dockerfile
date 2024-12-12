@@ -166,14 +166,18 @@ RUN mkdir -p /build/tensorrt && \
 ENV TRT_LIB_PATH=/usr/local/lib/python3.10/dist-packages/tensorrt_libs
 ENV LD_LIBRARY_PATH=$TRT_LIB_PATH:$LD_LIBRARY_PATH
 
-ADD requirements.txt /build/requirements.txt
 
-RUN cp /build/requirements.txt /build/requirements.modified.txt && \
-    if [ "$INSTALL_TORCH_TENSORRT" != "true" ]; then \
-        sed -i '/torch-tensorrt/d' /build/requirements.modified.txt; \
+ADD . /build/alma
+
+RUN cp /build/alma/requirements.txt /build/alma/requirements.modified.txt && \
+    if [ "$INSTALL_TENSORRT" != "true" ]; then \
+        sed -i '/torch-tensorrt/d' /build/alma/requirements.modified.txt; \
     fi && \
-    if [ "$INSTALL_APACHE_TVM" != "true" ]; then \
-        sed -i '/apache-tvm/d' /build/requirements.modified.txt; \
+    if [ "$INSTALL_TVM" != "true" ]; then \
+        sed -i '/apache-tvm/d' /build/alma/requirements.modified.txt; \
     fi
 
-RUN uv pip install --system -r /build/requirements.modified.txt
+RUN uv pip install --system -r /build/alma/requirements.modified.txt
+
+RUN cd /build/alma && \
+    pip install -e ./
