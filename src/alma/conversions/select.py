@@ -48,13 +48,9 @@ MODEL_CONVERSION_OPTIONS = {
     11: "COMPILE_OPENXLA",
     12: "COMPILE_TVM",
     13: "EXPORT+AI8WI8_FLOAT_QUANTIZED",
-    14: "EXPORT+AI8WI8_FLOAT_QUANTIZED+AOT_INDUCTOR",
     15: "EXPORT+AI8WI8_FLOAT_QUANTIZED+RUN_DECOMPOSITION",
-    16: "EXPORT+AI8WI8_FLOAT_QUANTIZED+RUN_DECOMPOSITION+AOT_INDUCTOR",
     17: "EXPORT+AI8WI8_STATIC_QUANTIZED",
-    18: "EXPORT+AI8WI8_STATIC_QUANTIZED+AOT_INDUCTOR",
     19: "EXPORT+AI8WI8_STATIC_QUANTIZED+RUN_DECOMPOSITION",
-    20: "EXPORT+AI8WI8_STATIC_QUANTIZED+RUN_DECOMPOSITION+AOT_INDUCTOR",
     21: "EXPORT+AOT_INDUCTOR",
     22: "EXPORT+COMPILE_CUDAGRAPH",
     23: "EXPORT+COMPILE_INDUCTOR_DEFAULT",
@@ -154,20 +150,6 @@ def select_forward_call_function(
                 model, data, int_or_dequant_op="dequant", run_decompositions=False
             )
 
-        case "EXPORT+AI8WI8_STATIC_QUANTIZED+AOT_INDUCTOR":
-            forward = get_quant_export_aot_inductor_forward_call(
-                model, data, device, int_or_dequant_op="int", run_decompositions=False
-            )
-
-        case "EXPORT+AI8WI8_FLOAT_QUANTIZED+AOT_INDUCTOR":
-            forward = get_quant_export_aot_inductor_forward_call(
-                model,
-                data,
-                device,
-                int_or_dequant_op="dequant",
-                run_decompositions=False,
-            )
-
         case "EXPORT+AI8WI8_STATIC_QUANTIZED+RUN_DECOMPOSITION":
             # The difference with training (i.e. inference=False) is that at the end we re-run
             # torch.export and then run `run_decompositions`, with the hope it might shorted the graph
@@ -179,20 +161,6 @@ def select_forward_call_function(
         case "EXPORT+AI8WI8_FLOAT_QUANTIZED+RUN_DECOMPOSITION":
             forward = get_quant_exported_forward_call(
                 model, data, int_or_dequant_op="dequant", run_decompositions=True
-            )
-
-        case "EXPORT+AI8WI8_STATIC_QUANTIZED+RUN_DECOMPOSITION+AOT_INDUCTOR":
-            forward = get_quant_export_aot_inductor_forward_call(
-                model, data, device, int_or_dequant_op="int", run_decompositions=True
-            )
-
-        case "EXPORT+AI8WI8_FLOAT_QUANTIZED+RUN_DECOMPOSITION+AOT_INDUCTOR":
-            forward = get_quant_export_aot_inductor_forward_call(
-                model,
-                data,
-                device,
-                int_or_dequant_op="dequant",
-                run_decompositions=True,
             )
 
         ##################
