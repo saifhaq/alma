@@ -9,9 +9,7 @@ import torch
 from ...utils.setup_logging import suppress_output
 from .utils.checks.type import check_model_type
 
-# Create a module-level logger
 logger = logging.getLogger(__name__)
-# Don't add handlers - let the application configure logging
 logger.addHandler(logging.NullHandler())
 
 
