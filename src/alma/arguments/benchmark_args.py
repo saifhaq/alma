@@ -8,9 +8,7 @@ import torch
 from ..conversions.select import MODEL_CONVERSION_OPTIONS
 from ..utils.ipdb_hook import ipdb_sys_excepthook
 
-# Create a module-level logger
 logger = logging.getLogger(__name__)
-# Don't add handlers - let the application configure logging
 logger.addHandler(logging.NullHandler())
 
 

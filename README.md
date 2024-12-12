@@ -227,36 +227,13 @@ is the source of truth.
 
 ## How to contribute:
 
-Contributions are welcome! If you have a new conversion option or feature you would like to add, 
+Contributions are welcome! If you have a new conversion option, feature, or other you would like to add, 
 so that the whole community can benefit, please open a pull request! We are always looking for new 
 conversion options, and we are happy to help you get started with adding a new conversion 
 option/feature!
 
-If adding new conversion options, please follow the naming conventions outlined in the [Naming 
-Conventions](#naming-conventions) section.
+See the [CONTRIBUTING.md](./CONTRIBUTING.md) file for more detailed information on how to contribute.
 
-
-### Code Standards
-
-- **Black**: Ensures consistency following a strict subset of PEP 8.
-- **isort**: Organizes Python imports systematically.
-
-#### Automatic Formatting Before Commit
-
-1. From the repo root, run:
-
-```bash
-pre-commit install
-```
-
-#### Manually Running Hooks
-
-If you want to manually run all hooks on all files, you can do:
-
-```bash
-git stage .
-pre-commit run --all-files
-```
 
 ## Citation
 ```bibtex
