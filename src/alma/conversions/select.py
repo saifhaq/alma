@@ -21,6 +21,7 @@ from .options.export_eager import get_export_eager_forward_call
 from .options.export_quant import get_quant_exported_forward_call
 from .options.fake_quant import get_fake_quantized_model_forward_call
 from .options.onnx import get_onnx_dynamo_forward_call, get_onnx_forward_call
+from .options.onnx_quant import get_onnx_static_quant_forward_call
 from .options.quant_convert import get_converted_quantized_model_forward_call
 from .options.utils.checks.imports import (
     check_onnxrt,
@@ -41,22 +42,22 @@ MODEL_CONVERSION_OPTIONS = {
     2: "ONNX_CPU",
     3: "ONNX_GPU",
     4: "ONNX+DYNAMO_EXPORT",
-    5: "COMPILE_CUDAGRAPH",
-    6: "COMPILE_INDUCTOR_DEFAULT",
-    7: "COMPILE_INDUCTOR_REDUCE_OVERHEAD",
-    8: "COMPILE_INDUCTOR_MAX_AUTOTUNE",
-    9: "COMPILE_INDUCTOR_EAGER_FALLBACK",
-    10: "COMPILE_ONNXRT",
-    11: "COMPILE_OPENXLA",
-    12: "COMPILE_TVM",
-    13: "EXPORT+AI8WI8_FLOAT_QUANTIZED",
-    14: "EXPORT+AI8WI8_FLOAT_QUANTIZED+AOT_INDUCTOR",
-    15: "EXPORT+AI8WI8_FLOAT_QUANTIZED+RUN_DECOMPOSITION",
-    16: "EXPORT+AI8WI8_FLOAT_QUANTIZED+RUN_DECOMPOSITION+AOT_INDUCTOR",
-    17: "EXPORT+AI8WI8_STATIC_QUANTIZED",
-    18: "EXPORT+AI8WI8_STATIC_QUANTIZED+AOT_INDUCTOR",
-    19: "EXPORT+AI8WI8_STATIC_QUANTIZED+RUN_DECOMPOSITION",
-    20: "EXPORT+AI8WI8_STATIC_QUANTIZED+RUN_DECOMPOSITION+AOT_INDUCTOR",
+    5: "ONNX_CPU+STATIC_QUANT_QOPERATOR",
+    6: "ONNX_CPU+STATIC_QUANT_DQO",
+    7: "ONNX_GPU+STATIC_QUANT_QOPERATOR",
+    8: "ONNX_GPU+STATIC_QUANT_DQO",
+    9: "COMPILE_CUDAGRAPH",
+    10: "COMPILE_INDUCTOR_DEFAULT",
+    11: "COMPILE_INDUCTOR_REDUCE_OVERHEAD",
+    12: "COMPILE_INDUCTOR_MAX_AUTOTUNE",
+    13: "COMPILE_INDUCTOR_DEFAULT_EAGER_FALLBACK",
+    14: "COMPILE_ONNXRT",
+    15: "COMPILE_OPENXLA",
+    16: "COMPILE_TVM",
+    17: "EXPORT+AI8WI8_FLOAT_QUANTIZED",
+    18: "EXPORT+AI8WI8_FLOAT_QUANTIZED+RUN_DECOMPOSITION",
+    19: "EXPORT+AI8WI8_STATIC_QUANTIZED",
+    20: "EXPORT+AI8WI8_STATIC_QUANTIZED+RUN_DECOMPOSITION",
     21: "EXPORT+AOT_INDUCTOR",
     22: "EXPORT+COMPILE_CUDAGRAPH",
     23: "EXPORT+COMPILE_INDUCTOR_DEFAULT",
@@ -164,20 +165,6 @@ def select_forward_call_function(
                 model, data, int_or_dequant_op="dequant", run_decompositions=False
             )
 
-        case "EXPORT+AI8WI8_STATIC_QUANTIZED+AOT_INDUCTOR":
-            forward = get_quant_export_aot_inductor_forward_call(
-                model, data, device, int_or_dequant_op="int", run_decompositions=False
-            )
-
-        case "EXPORT+AI8WI8_FLOAT_QUANTIZED+AOT_INDUCTOR":
-            forward = get_quant_export_aot_inductor_forward_call(
-                model,
-                data,
-                device,
-                int_or_dequant_op="dequant",
-                run_decompositions=False,
-            )
-
         case "EXPORT+AI8WI8_STATIC_QUANTIZED+RUN_DECOMPOSITION":
             # The difference with training (i.e. inference=False) is that at the end we re-run
             # torch.export and then run `run_decompositions`, with the hope it might shorted the graph
@@ -189,20 +176,6 @@ def select_forward_call_function(
         case "EXPORT+AI8WI8_FLOAT_QUANTIZED+RUN_DECOMPOSITION":
             forward = get_quant_exported_forward_call(
                 model, data, int_or_dequant_op="dequant", run_decompositions=True
-            )
-
-        case "EXPORT+AI8WI8_STATIC_QUANTIZED+RUN_DECOMPOSITION+AOT_INDUCTOR":
-            forward = get_quant_export_aot_inductor_forward_call(
-                model, data, device, int_or_dequant_op="int", run_decompositions=True
-            )
-
-        case "EXPORT+AI8WI8_FLOAT_QUANTIZED+RUN_DECOMPOSITION+AOT_INDUCTOR":
-            forward = get_quant_export_aot_inductor_forward_call(
-                model,
-                data,
-                device,
-                int_or_dequant_op="dequant",
-                run_decompositions=True,
             )
 
         ##################
@@ -255,19 +228,113 @@ def select_forward_call_function(
         case "ONNX_CPU":
             # We create temporary file to save the onnx model
             with tempfile.TemporaryDirectory() as tmpdirname:
-                onnx_model_path = Path(f"{tmpdirname}/model.onnx")
-                onnx_backend = "CPUExecutionProvider"
                 forward = get_onnx_forward_call(
-                    model, data, onnx_model_path, onnx_backend
+                    model,
+                    data,
+                    onnx_model_path=Path(f"{tmpdirname}/model.onnx"),
+                    onnx_providers=["CPUExecutionProvider"],
                 )
 
         case "ONNX_GPU":
             # We create temporary file to save the onnx model
             with tempfile.TemporaryDirectory() as tmpdirname:
-                onnx_model_path = Path(f"{tmpdirname}/model.onnx")
-                onnx_backend = "CUDAExecutionProvider"
                 forward = get_onnx_forward_call(
-                    model, data, onnx_model_path, onnx_backend
+                    model,
+                    data,
+                    onnx_model_path=Path(f"{tmpdirname}/model.onnx"),
+                    onnx_providers=[
+                        (
+                            "CUDAExecutionProvider",
+                            {
+                                "enable_cuda_graph": True,
+                                "device_id": 0,
+                                "arena_extend_strategy": "kNextPowerOfTwo",
+                                "gpu_mem_limit": 2 * 1024 * 1024 * 1024,
+                                "cudnn_conv_algo_search": "EXHAUSTIVE",
+                                "do_copy_in_default_stream": True,
+                            },
+                        )
+                    ],
+                )
+
+        case "ONNX_GPU+STATIC_QUANT_QOPERATOR":
+            # We create temporary file to save the onnx model
+            with tempfile.TemporaryDirectory() as tmpdirname:
+                from onnxruntime.quantization import QuantFormat
+
+                forward = get_onnx_static_quant_forward_call(
+                    model,
+                    data,
+                    onnx_model_path=Path(f"{tmpdirname}/model.onnx"),
+                    onnx_quant_model_path=Path(f"{tmpdirname}/quant_model.onnx"),
+                    quant_format=QuantFormat.QOperator,
+                    onnx_providers=[
+                        (
+                            "CUDAExecutionProvider",
+                            {
+                                "enable_cuda_graph": True,
+                                "device_id": 0,
+                                "arena_extend_strategy": "kNextPowerOfTwo",
+                                "gpu_mem_limit": 2 * 1024 * 1024 * 1024,
+                                "cudnn_conv_algo_search": "EXHAUSTIVE",
+                                "do_copy_in_default_stream": True,
+                            },
+                        )
+                    ],
+                )
+
+        case "ONNX_GPU+STATIC_QUANT_DQO":
+            # We create temporary file to save the onnx model
+            with tempfile.TemporaryDirectory() as tmpdirname:
+                from onnxruntime.quantization import QuantFormat
+
+                forward = get_onnx_static_quant_forward_call(
+                    model,
+                    data,
+                    onnx_model_path=Path(f"{tmpdirname}/model.onnx"),
+                    onnx_quant_model_path=Path(f"{tmpdirname}/quant_model.onnx"),
+                    quant_format=QuantFormat.DQO,
+                    onnx_providers=[
+                        (
+                            "CUDAExecutionProvider",
+                            {
+                                "enable_cuda_graph": True,
+                                "device_id": 0,
+                                "arena_extend_strategy": "kNextPowerOfTwo",
+                                "gpu_mem_limit": 2 * 1024 * 1024 * 1024,
+                                "cudnn_conv_algo_search": "EXHAUSTIVE",
+                                "do_copy_in_default_stream": True,
+                            },
+                        )
+                    ],
+                )
+
+        case "ONNX_CPU+STATIC_QUANT_QOPERATOR":
+            # We create temporary file to save the onnx model
+            with tempfile.TemporaryDirectory() as tmpdirname:
+                from onnxruntime.quantization import QuantFormat
+
+                forward = get_onnx_static_quant_forward_call(
+                    model,
+                    data,
+                    onnx_model_path=Path(f"{tmpdirname}/model.onnx"),
+                    onnx_quant_model_path=Path(f"{tmpdirname}/quant_model.onnx"),
+                    quant_format=QuantFormat.QOperator,
+                    onnx_providers=["CPUExecutionProvider"],
+                )
+
+        case "ONNX_CPU+STATIC_QUANT_DQO":
+            # We create temporary file to save the onnx model
+            with tempfile.TemporaryDirectory() as tmpdirname:
+                from onnxruntime.quantization import QuantFormat
+
+                forward = get_onnx_static_quant_forward_call(
+                    model,
+                    data,
+                    onnx_model_path=Path(f"{tmpdirname}/model.onnx"),
+                    onnx_quant_model_path=Path(f"{tmpdirname}/quant_model.onnx"),
+                    quant_format=QuantFormat.DQO,
+                    onnx_providers=["CPUExecutionProvider"],
                 )
 
         case "NATIVE_CONVERT_AI8WI8_STATIC_QUANTIZED":

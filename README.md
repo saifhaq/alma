@@ -101,7 +101,8 @@ config = {
     "n_samples": 4096,
 }
 
-# Choose with conversions to benchmark:
+# Choose with conversions to benchmark. If no options are provided, (i.e. conversions = None | []),
+# then all conversion methods will be benchmarked.
 conversions = ["EAGER", "EXPORT+EAGER"]
 
 # Benchmark the model
@@ -224,6 +225,9 @@ is the source of truth.
 - Multi-device benchmarking. Currently `alma` only supports single-device benchmarking, but ideally a model
   could be split across multiple devices.
 - Integrating conversion options beyond PyTorch, e.g. HuggingFace, JAX, llama.cpp, etc.
+- Support multiple inputs to a model. Currently the implementation assumes each model will be fed
+only one input tensor, however this is not always the case. The forward calls should be generalised to
+support multiple inputs to the forward calls.
 
 ## How to contribute:
 

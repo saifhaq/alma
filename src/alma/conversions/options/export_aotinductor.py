@@ -59,6 +59,7 @@ def get_AOTInductor_lowered_model_forward_call(
 
     # Compile the exported program to a `.so` using ``AOTInductor``
     # E.g. this can be run as a C++ file, or called from Python
+
     with suppress_output(logger.root.level >= logging.DEBUG):
         if isinstance(model, ExportedProgram):
             with torch.no_grad():
@@ -71,6 +72,9 @@ def get_AOTInductor_lowered_model_forward_call(
         # To load and run it in a C++ environment, see:
         # https://pytorch.org/docs/main/torch.compiler_aot_inductor.html
         forward = torch._export.aot_load(so_path, device=device.type)
+
+        # Test we can feed data through the forward
+        _ = forward(data)
 
     return forward
 
