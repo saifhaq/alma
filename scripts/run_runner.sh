@@ -5,4 +5,4 @@ docker run -itd \
 -e REPO=saifhaq/alma \
 -e LABELS=titan \
 --name=torch_runner \
-torch2.4-runner:1
+alma-runner:latest

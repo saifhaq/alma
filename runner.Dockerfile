@@ -34,7 +34,7 @@ RUN export RUNNER_ARCH=${TARGETARCH} \
     && chmod +x /usr/local/lib/docker/cli-plugins/docker-buildx
 
 
-FROM alma
+FROM alma:latest
 
 ENV DEBIAN_FRONTEND=noninteractive
 ENV RUNNER_MANUALLY_TRAP_SIG=1
