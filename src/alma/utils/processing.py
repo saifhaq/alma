@@ -1,13 +1,17 @@
 import multiprocessing as mp
 from multiprocessing import Process, Queue
+from typing import Any, Callable, Union
+
 import torch
-from typing import Any, Union, Callable
 
 if torch.cuda.is_available():
     # Set the start method to 'spawn' at the beginning of your script
-    mp.set_start_method('spawn', force=True)
+    mp.set_start_method("spawn", force=True)
 
-def run_benchmark_process(benchmark_func: Callable, args: tuple, kwargs: dict, result_queue: Queue) -> None:
+
+def run_benchmark_process(
+    benchmark_func: Callable, args: tuple, kwargs: dict, result_queue: Queue
+) -> None:
     """
     Helper function to run the benchmark in a separate process.
 
@@ -20,7 +24,10 @@ def run_benchmark_process(benchmark_func: Callable, args: tuple, kwargs: dict, r
     result = benchmark_func(*args, **kwargs)
     result_queue.put(result)
 
-def process_wrapper(benchmark_func: Callable, *args: Any, **kwargs: Any) -> Union[Any, None]:
+
+def process_wrapper(
+    benchmark_func: Callable, *args: Any, **kwargs: Any
+) -> Union[Any, None]:
     """
     Wrapper to run benchmark in a fresh process and return its results. This allows us
     to run different conversion methods (whose imports may affect the glocal state of PyTorch)
@@ -54,8 +61,7 @@ def process_wrapper(benchmark_func: Callable, *args: Any, **kwargs: Any) -> Unio
 
     # Start process
     p = Process(
-        target=run_benchmark_process,
-        args=(benchmark_func, args, kwargs, result_queue)
+        target=run_benchmark_process, args=(benchmark_func, args, kwargs, result_queue)
     )
     p.start()
     p.join()

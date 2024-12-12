@@ -1,13 +1,13 @@
-from optimum.quanto import quantize, freeze
-from optimum.quanto.tensor.qtype import qtype, qtypes
 import logging
-from typing import Union, Optional
+from typing import Optional, Union
 
-from torch._dynamo.eval_frame import OptimizedModule
 import torch
+from optimum.quanto import freeze, quantize
+from optimum.quanto.tensor.qtype import qtype, qtypes
+from torch._dynamo.eval_frame import OptimizedModule
 
-from .utils.checks.type import check_model_type
 from .compile import get_compiled_model
+from .utils.checks.type import check_model_type
 
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())
@@ -94,7 +94,7 @@ def get_optimum_quant_compiled_model(
     - backend (str): the backend for torch.compile. Default is torch inductor.
 
     Returns:
-    - model (OptimizedModule): the HuggingFace Optimum Quanto quantized, and then torch.compiled, model. 
+    - model (OptimizedModule): the HuggingFace Optimum Quanto quantized, and then torch.compiled, model.
     """
     model = get_optimum_quanto_model(model, data, weights, activations)
 

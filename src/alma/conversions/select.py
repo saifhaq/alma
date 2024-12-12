@@ -4,22 +4,20 @@ from pathlib import Path
 from typing import Any, Callable
 
 import torch
-
 from optimum.quanto import (
-    qint8,
-    qint4,
-    qint2,
-    qfloat8_e5m2,
-    qfloat8_e4m3fnuz,
     qfloat8_e4m3fn,
+    qfloat8_e4m3fnuz,
+    qfloat8_e5m2,
+    qint2,
+    qint4,
+    qint8,
 )
+
 from .options.compile import (
     get_compiled_forward_call_eager_fallback,
     get_compiled_model_forward_call,
 )
-from .options.export_aotinductor import (
-    get_export_aot_inductor_forward_call,
-)
+from .options.export_aotinductor import get_export_aot_inductor_forward_call
 from .options.export_compile import (
     get_export_compiled_forward_call,
     get_export_compiled_forward_call_eager_fallback,
@@ -27,21 +25,20 @@ from .options.export_compile import (
 from .options.export_eager import get_export_eager_forward_call
 from .options.export_quant import get_quant_exported_forward_call
 from .options.fake_quant import get_fake_quantized_model_forward_call
+from .options.jit_trace import get_jit_traced_model_forward_call
 from .options.onnx import get_onnx_dynamo_forward_call, get_onnx_forward_call
 from .options.optimum_quanto import (
-    get_optimum_quanto_forward_call,
     get_optimum_quant_model_compiled_forward_call,
+    get_optimum_quanto_forward_call,
 )
 from .options.quant_convert import get_converted_quantized_model_forward_call
+from .options.torchscript import get_torch_scripted_model_forward_call
 from .options.utils.checks.imports import (
     check_onnxrt,
     check_openxla,
     check_tensort,
     check_tvm,
 )
-from .options.jit_trace import get_jit_traced_model_forward_call
-from .options.torchscript import get_torch_scripted_model_forward_call
-
 
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())
@@ -325,7 +322,11 @@ def select_forward_call_function(
 
         case "OPTIMIM_QUANTO_Wf8E5M2+COMPILE_CUDAGRAPHS":
             forward = get_optimum_quant_model_compiled_forward_call(
-                model, data, weights=qfloat8_e5m2, activations=None, backend="cudagraphs"
+                model,
+                data,
+                weights=qfloat8_e5m2,
+                activations=None,
+                backend="cudagraphs",
             )
 
         case _:

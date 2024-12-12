@@ -5,8 +5,8 @@ from typing import Callable, Dict, Literal, Union
 import torch
 import torch._dynamo
 import torch.fx as fx
-from torch.export.exported_program import ExportedProgram
 from torch._dynamo.eval_frame import OptimizedModule
+from torch.export.exported_program import ExportedProgram
 
 from ...utils.setup_logging import suppress_output
 from .utils.checks.type import check_model_type
