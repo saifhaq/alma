@@ -73,32 +73,3 @@ def get_AOTInductor_lowered_model_forward_call(
         forward = torch._export.aot_load(so_path, device=device.type)
 
     return forward
-
-
-def get_quant_export_aot_inductor_forward_call(
-    model,
-    data: torch.Tensor,
-    device: torch.device,
-    int_or_dequant_op: Literal["int", "dequant"],
-    run_decompositions: bool,
-) -> Callable:
-    """
-    Get the forward call function for the exported quantized model using AOTInductor.
-    We first produce the quantized exported model, then call AOtInductor to lower it.
-
-    Inputs:
-    - model (torch.nn.Module): The model to export
-    - data (torch.Tensor): Sample data to feed through the model for tracing.
-    - device (torch.device): The device we are loading the AOTInductor-lowered model to.
-    - int_or_dequant_op (Literal["int", "dequant"]): do we use integer arithmetic operations on
-            quantized layers, or do we dequantize just prior to the op
-    - run_decompositions (bool): do we, after all of our processing, re-export the model and run
-            `run_decompositions`?
-
-    Outputs:
-    - forward (Callable): The forward call function for the model.
-    """
-
-    model = get_quant_exported_model(model, data, int_or_dequant_op, run_decompositions)
-    forward = get_export_aot_inductor_forward_call(model, data, device)
-    return forward
