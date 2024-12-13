@@ -87,9 +87,6 @@ def benchmark_model(
         torch.cuda.empty_cache()
         logger.info(f"Benchmarking model using conversion: {conversion_method}")
         try:
-            # result: Dict[str, float] = benchmark(
-            #     model, conversion_method, device, data_loader, n_samples
-            # )
             result: Dict[str, float] = process_wrapper(
                 benchmark, model, conversion_method, device, data_loader, n_samples
             )
