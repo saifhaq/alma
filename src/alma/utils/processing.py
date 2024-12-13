@@ -26,13 +26,16 @@ def run_benchmark_process(
 
 
 def process_wrapper(
-    benchmark_func: Callable, *args: Any, **kwargs: Any
+    multiprocessing: bool, benchmark_func: Callable, *args: Any, **kwargs: Any
 ) -> Union[Any, None]:
     """
-    Wrapper to run benchmark in a fresh process and return its results. This allows us
+    Wrapper to run benchmark in a fresh process (if multiprocessing enabled) and return its results. This allows us
     to run different conversion methods (whose imports may affect the glocal state of PyTorch)
     in isolation. This means that every method will be tested with a blank slate, at the cost
     of some overhead.
+
+    However, multiprocessing can make debugging difficult. As such, we provide the option to turn it
+    iff, and just run the benchmark_func callable directly.
 
     # Usage example:
     def benchmark(method_type, model_path, *args, **kwargs):
@@ -45,17 +48,22 @@ def process_wrapper(
         return results
 
     # Run benchmarks
-    result1 = process_wrapper(benchmark, "optimum_quanto", ...)
-    result2 = process_wrapper(benchmark, "torch.export", ...)
+    result1 = process_wrapper(True, benchmark, "optimum_quanto", ...)
+    result2 = process_wrapper(True, benchmark, "torch.export", ...)
 
     Inputs:
-    benchmark_func (callable): the benchmarking (or any to-be-isolated) function
-    args (Any): the argumnts for the callable
-    kawargs (Any): the keyword arguments for the callable
+    - multiprocessing (bool): whether ot not to activatr the multiprocessing / isolated environments.
+    - benchmark_func (callable): the benchmarking (or any to-be-isolated) function
+    - args (Any): the argumnts for the callable
+    - kawargs (Any): the keyword arguments for the callable
 
     Outputs:
     results (Union[Any, None]): the results from the callable.
     """
+    # If multiprocessing is disabled, we just return the callable directly
+    if not multiprocessing:
+        return benchmark_func(*args, **kwargs)
+
     # Queue to get results back from the process
     result_queue = Queue()
 

@@ -29,8 +29,14 @@ def benchmark_model(
     to initialize the dataloader.
     The model is benchmarked on the given conversion methods, and the results are returned.
     The `config` dict must contain the following:
-    - n_samples: int     # The number of samples to benchmark on
-    - batch_size: int    # The batch size to use for benchmarking
+    - n_samples (int): The number of samples to benchmark on
+    - batch_size (int): The batch size to use for benchmarking
+    - multiprocessing (Optional[bool], default True): Whether or not to use multiprocessing to have isolated
+        testing environments per conversion method. This helps keep the global torch state consistent
+        when each method is benchmarked.
+    - fail_fast (Optional[bool], default False): whether or not to fail fast, or fail gracefully.
+        If we fail gracefully, we continue benchmarking other methods if one fails, and store
+        the error message and traceback in the returned struct.
 
     Inputs:
     - model (torch.nn.Module): The model to benchmark.
@@ -47,8 +53,8 @@ def benchmark_model(
     - all_results (Dict[str, Dict[str, Any]]): The results of the benchmarking for each conversion method.
         The key is the conversion method, and the value is a tuple containing the total elapsed
         time, the total time taken, the total number of samples, and the throughput of the model.
-        If the conversion method failed, the value will be a dictionary containing the error and
-        traceback.
+        If the conversion method failed and we fail gracefully, the value will be a dictionary
+        containing the error and traceback.
     """
     # Set to eval mode
     model.eval()
@@ -65,9 +71,17 @@ def benchmark_model(
     if conversions is None:
         conversions = list(MODEL_CONVERSION_OPTIONS.values())
 
-    # The number of samples to benchmark on, batch size, and whether or not to give verbose logging
+    # The number of samples to benchmark on, batch size,
     n_samples: int = config["n_samples"]
     batch_size: int = config["batch_size"]
+
+    # Whether or not to use multiprocessing for isolated testing environments (which protects against
+    # conversion methods contaminating the global torch state), and whether to fail quickly or gracefully.
+    # By default, we enable multiprocessing, and fail gracefully.
+    multiprocessing: bool = (
+        config["multiprocessing"] if "multiprocessing" in config else True
+    )
+    fail_fast: bool = config["fail_fast"] if "fail_fast" in config else False
 
     # Creates a dataloader with random data, of the same size as the input data sample
     # If the data_loader has been provided by the user, we use that one
@@ -85,13 +99,23 @@ def benchmark_model(
         check_consistent_batch_size(conversion_method, n_samples, batch_size)
 
         logger.info(f"Benchmarking model using conversion: {conversion_method}")
+
         try:
             result: Dict[str, float] = process_wrapper(
-                benchmark, model, conversion_method, device, data_loader, n_samples
+                multiprocessing,
+                benchmark,
+                model,
+                conversion_method,
+                device,
+                data_loader,
+                n_samples,
             )
             result["status"] = "success"
             all_results[conversion_method] = result
         except Exception as e:
+            # If we opt to fail fast (e.g. for debugging, we raise immediately)
+            if fail_fast:
+                raise
             # If there is an error, we log the error. In the returned "results", we include the
             # full traceback
             error_msg = (
