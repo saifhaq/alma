@@ -96,10 +96,11 @@ RUN if [ "$INSTALL_TVM" = "true" ]; then \
     /tmp/llvm.sh 18 && \
     rm -rf /tmp/llvm.sh && \
     apt-get install -y --no-install-recommends \
-    llvm-18 llvm-18-dev llvm-18-tools libpolly-18-dev && \
+    llvm-18 llvm-18-dev llvm-18-tools libpolly-18-dev clang-18 && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* && \
-    ln -s /usr/bin/llvm-config-18 /usr/bin/llvm-config; \
+    ln -s /usr/bin/llvm-config-18 /usr/bin/llvm-config && \
+    ln -s /usr/bin/clang-18 /usr/bin/clang; \
 fi
 
 # apache-tvm
@@ -176,6 +177,27 @@ RUN cp /build/alma/requirements.txt /build/alma/requirements.modified.txt && \
     if [ "$INSTALL_TVM" != "true" ]; then \
         sed -i '/apache-tvm/d' /build/alma/requirements.modified.txt; \
     fi
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    gnupg2 \
+    zip \
+    g++ \
+    openjdk-11-jdk \
+    ca-certificates
+
+RUN curl -sSL "https://github.com/bazelbuild/bazelisk/releases/download/v1.25.0/bazelisk-linux-amd64" \
+    -o /usr/local/bin/bazelisk && \
+    chmod +x /usr/local/bin/bazelisk && \
+    ln -s /usr/local/bin/bazelisk /usr/local/bin/bazel && \
+    bazel
+
+RUN mkdir -p /build/openxla && \
+    cd /build && \
+    git clone https://github.com/openxla/openxla.git && \
+    cd /build/openxla && \
+    ./configure.py  --backend=CUDA --backend=CPU && \
+    bazel build //:all && \
+    bazel clean --expunge
 
 RUN uv pip install --system -r /build/alma/requirements.modified.txt
 

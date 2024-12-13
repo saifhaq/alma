@@ -1,4 +1,4 @@
 docker build \
 -f ./Dockerfile \
 --network=host \
--t alma:latest ./
+-t alma:latest2 ./
