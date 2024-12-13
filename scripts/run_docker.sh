@@ -1,6 +1,6 @@
 docker run -itd \
---name alma3 \
+--name alma4 \
 --gpus=all \
 -v /home:/home \
 --entrypoint=/bin/bash \
-alma:latest
+alma:latest2
