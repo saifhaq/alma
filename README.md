@@ -138,13 +138,12 @@ quantize it, see the [`MNIST example`](./examples/mnist/README.md#overview) dire
 code examples for all of the different `alma` features, and is where one can find examples on every
 feature. 
 
-For a short working example on a simple Linear+ReLU, see the [`linear 
-example`](./examples/linear/README.md#overview).
+For a short working example on a simple Linear+ReLU, see the [`linear example`](./examples/linear/README.md#overview).
 
 ## Advanced Features and Design Decisions
 
 `alma` is designed to be simple to use, with a single API call to benchmark a model for different
-conversion options. Here are some features we have produced and some design decisions we have 
+conversion options. Below are some features we have produced and some design decisions we have 
 made, which are all configurable by the user. For examples on how to use these features, see the 
 [`MNIST example`](./examples/mnist/README.md#overview).
 
@@ -187,6 +186,7 @@ in a fair and isolated environment, and is relevant because some of the methods 
 can affect the global torch state and break other methods (e.g. by overwriting tensor defaults in 
 the C++ backend).
 <br>
+
 A consequence of running in multiple processes is that the model, if initialized naively, will be copied
 from the parent process to the child process. This doubles the required model memory, which can be 
 a problem for large models. To avoid this, one can, insead of feeding in a model
