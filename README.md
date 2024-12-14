@@ -130,33 +130,45 @@ Total samples: 2048 - Batch size: 64
 Throughput: 305974.83 samples/second
 ```
 
-## Other Features:
-`alma` is designed to be simple to use, with a single API call to benchmark a model for different
-conversion options. Here are some design decisions we have made, although they are all configurable
-by the user:
+## Advanced Features and Design Decisions
 
-### Initialise a data loader inside of `benchmark_model`:
+`alma` is designed to be simple to use, with a single API call to benchmark a model for different
+conversion options. Here are some features we have produced and some design decisions we have 
+made, which are all configurable by the user.
+
+<details>
+<summary>Initialise a data loader inside of `benchmark_model`:</summary>
+<br>
 Rather than initializing and feeding in a data loader like in the above example, one can also 
 just pass in a `data` tensor (with no batch dimension), and `benchmark_model` will automatically
 create a dataloader that produces random tensors of the same shape as the input tensor, with the batch size
 controlled via the `config` dictionary. This can be convenient if one does not want to create a data loader.
+</details>
 
-
-### A provided argparser for easy control and experimentation:
+<details>
+<summary>A provided argparser for easy control and experimentation:
+</summary>
+<br>
 We provide an argparser that allows one to easily select conversion methods by numerical index or 
 string name. It also allows one to set the batch size, number of samples, and device easily, as well
 as other commonly used parameters like model weights path.
+</details>
 
-### Graceful or fast failure:
+<details>
+<summary>Graceful or fast failure</summary>
+<br>
 By default, `alma` will fail fast if any conversion method fails. This is because we want to know
 if a conversion method fails, so that we can fix it. 
 However, if one wants to continue benchmarking other options even if a conversion method fails, 
 one can set `fail_fast` to False in the config dictionary.
 `alma` will then fail gracefully for that method and one can access the associated error messages 
 and full tracebacks for the failed methods from the returned object.
+</details>
 
 
-### Isolated environments for each conversion method via multi-processing:
+<details>
+<summary>Isolated environments for each conversion method via multi-processing</summary>
+<br>
 By default, `alma` will run each conversion method in a separate process (one at a time), so that one can benchmark
 each conversion method in isolation. This ensures that each conversion method is benchmarked
 in a fair and isolated environment, and is relevant because some of the methods (e.g. optimum quanto)
@@ -171,12 +183,16 @@ only initialized once the child process starts for each conversion method, meani
 one copy of the model at a time.
 
 To disable multiprocessing, set `multiprocessing` to False in the config dictionary.
+</details>
 
-### Logging:
+<details>
+<summary>Logging</summary>
+<br>
+This is how you dropdown.
 A lot of the conversion methods have very verbose logging. We have opted to
 mostly silence those logs. However, if one wants access to those logs, one should use the `setup_logging`
 function and set the debugging level to `DEBUG`.
-
+</details>
 
 ## Examples:
 
