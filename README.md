@@ -138,6 +138,9 @@ quantize it, see the [`MNIST example`](./examples/mnist/README.md#overview) dire
 code examples for all of the different `alma` features, and is where one can find examples on every
 feature. 
 
+For a short working example on a simple Linear+ReLU, see the [`linear 
+example`](./examples/linear/README.md#overview).
+
 ## Advanced Features and Design Decisions
 
 `alma` is designed to be simple to use, with a single API call to benchmark a model for different
@@ -202,7 +205,6 @@ mostly silence those logs. However, if one wants access to those logs, one shoul
 function and set the debugging level to `DEBUG`.
 </details>
 
-For a short working example on a simple Linear+ReLU, see the [`linear example`](./examples/linear/README.md#overview).
 
 
 ## Conversion Options
