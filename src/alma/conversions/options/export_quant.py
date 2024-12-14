@@ -64,11 +64,10 @@ def get_quant_exported_model(
 
     # Step 2. quantization
     # TODO: mess around with affine quantization
-    to_quant_model = copy.deepcopy(m_export)
     quantizer = XNNPACKQuantizer().set_global(get_symmetric_quantization_config())
 
     # PTQ step
-    m_fq: torch.fx.graph_module.GraphModule = prepare_pt2e(to_quant_model, quantizer)
+    m_fq: torch.fx.graph_module.GraphModule = prepare_pt2e(m_export, quantizer)
 
     # Feed some data throuhg the model, if only to intialise the observers and supress the warnings
     with suppress_output(logger.root.level >= logging.DEBUG):
