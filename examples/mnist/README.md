@@ -2,7 +2,7 @@
 
 This example of `alma` demonstrates how to train a simple model on the MNIST dataset and benchmark
 the model speed for different conversions using the `benchmark_model` API. Everything, from not using
-a dataloader, to error handling, to CLI integration, to logging and debugging, is covered.
+a dataloader, to error handling, CLI integration, multiprocessing, logging and debugging, is covered.
 
 It also contains a script to download the MNIST dataset, and extensive example code on how to quantize
 a model using PTQ and QAT.
@@ -46,9 +46,7 @@ To quantize the model running on Apple silicon, run:
 PYTORCH_ENABLE_MPS_FALLBACK=1 python train.py  --quantize
 ```
 
-## Benchmark with `alma`:
-
-### Benchmark conversion options using a default data loader:
+## Benchmark conversion options using a default data loader:
 
 The `benchmark_model` API is used to benchmark the speed of a model for different conversion options.
 The API is used as follows (see `benchmark_with_dataloader.py`):
@@ -73,6 +71,9 @@ data_loader = ...
 config = {
     "batch_size": args.batch_size,
     "n_samples": args.n_samples,
+    "device": device,  # The device to run the model on
+    "multiprocessing": True,  # If True, each conversion option will be run in a separate process
+    "fail_on_error": False,  # If True, the script will fail if a conversion fails
 }
 
 # Benchmark the model
@@ -113,22 +114,7 @@ Total samples: 5000
 Throughput: 12800.82 samples/second
 ```
 
-#### Argparsing:
-In the above example, the batch size of the data loader is controlled via the `--batch_size` 
-argument, fed in via the config object.
-The number of samples to run the benchmark on  is controlled via the `--n_samples` argument. 
-For convenience, we also provide a `--data-dir` argument, so that one can have one's data loader 
-feed in specific data, and a `--model-path` argument, so that one can feed in specific model weights.
-
-Finally, we also provide an `--ipdb` argument, which throws one into an ipdb debugging session if and 
-wherever an Exception occurs. See this 
-[blog post](https://medium.com/@oscar-savolainen/my-favourite-python-snippets-794d5653af38) for 
-more details on the ipdb sysexception hook.
-
-One can of course also just pass in non-CLI arguments directly to the `benchmark_model` API.
-
-
-#### Full working example:
+### Full working example:
 A full working example can be found in `benchmark_with_dataloader.py`.
 With the above command, the script will download the MNIST dataset, train a model, and then benchmark
 the model for the 2nd and 10th conversion options:
@@ -143,10 +129,25 @@ cd examples/mnist/data
 ./reset.sh
 ```
 
+## Pre-defined argparser for easy control and experimentation
+In the above example, the batch size of the data loader is controlled via the `--batch_size` 
+argument, fed in via the config object.
+The number of samples to run the benchmark on  is controlled via the `--n_samples` argument. 
+For convenience, we also provide a `--data-dir` argument, so that one can have one's data loader 
+feed in specific data, and a `--model-path` argument, so that one can feed in specific model weights.
+
+Finally, we also provide an `--ipdb` argument, which throws one into an ipdb debugging session if and 
+wherever an Exception occurs. See this 
+[blog post](https://medium.com/@oscar-savolainen/my-favourite-python-snippets-794d5653af38) for 
+more details on the ipdb sysexception hook.
+
+One can of course also just pass in non-CLI arguments directly to the `benchmark_model` API.
+
 
 ### Selecting conversion options:
 
-To see all of the conversion options, run the following command:
+To see all of the conversion options via the CLI `parse_benchmark_args` argparser function, run 
+the following command:
 
 ```bash
 cd examples/mnist
@@ -176,9 +177,9 @@ cd examples/mnist
 python benchmark_with_dataloader.py --model-path ./model/mnist.pt --data-dir data/data_for_inference
 ```
 
-### Benchmark conversion options using a data tensor to intialise a data loader:
+## Implicitly initialise a data loader inside of `benchmark_model`:
 
-One does not need to pass in a data loader to do the benchmarking. Howeverm, if one does not pass in a data loader,
+One does not need to pass in a data loader to do the benchmarking. However, if one does not pass in a data loader,
 one has to pass in a `data` input, where `data` is just a tensor with batch size 1.
 The benchmarking will generate a data loader, where the size of the generated tensors is
 taken from an inputted `data` tensor, which can be a tensor with random values. Either the `data`
@@ -208,6 +209,7 @@ model = ...
 config = {
     "batch_size": args.batch_size,
     "n_samples": args.n_samples,
+    "device": device,  # The device to run the model on
 }
 
 # Benchmark the model
@@ -223,7 +225,7 @@ display_all_results(results)
 
 One would then run this the same way as before. 
 
-#### Full working example:
+### Full working example:
 A full working example can be found in `examples/mnist/benchmark_random_tensor.py` where a random 
 input tensor is used, and the model is not trained at all.
 E.g.
@@ -233,23 +235,45 @@ python benchmark_random_tensor.py --conversion 10,2 --batch-size 100 --n-samples
 ```
 
 
-### Error handling
+## Graceful or fast failure
+By default, `alma` will fail fast if any conversion method fails. This is because we want to know
+if a conversion method fails, so that we can fix it. 
+However, if one wants to continue benchmarking other options even if a conversion method fails, 
+one can set `fail_on_error` to False in the config dictionary.
+`alma` will then fail gracefully for that method. One can then access the associated error messages 
+and full tracebacks for the failed methods from the returned object.
 
-In case where the benchmarking of a given conversion fails, it will return a dict for that conversion
-which contains the error message as well as the full traceback. This is useful for debugging and
+This is useful for debugging and
 understanding why a given conversion failed, e.g. because of hardware incompatabilities, missing
 dependencies, etc. 
 
 For example, if the `FAKE_QUANTIZED` conversion fails because it's not currently supported for Apple
-silicon, the default results may look like this:
+silicon, one's code with `fail_on_error=False`, may look like this:
+
+```python
+...
+
+config = {
+    "batch_size": 64,
+    "n_samples": 2048,
+    "device": device,  # The device to run the model on
+    "fail_on_error": False,  # If True, the script will fail if a conversion fails
+}
+
+conversions = ["EAGER", "NATIVE_FAKE_QUANTIZED_AI8WI8_STATIC"]
+
+# Benchmark the model
+results: Dict[str, Dict[str, float]] = benchmark_model(
+   model, config, conversions, data=data
+)
+
+# Display the results
+display_all_results(results)
+```
+
+And the results may look like this:
 
 ```bash
-CONVERT_QUANTIZED results:
-Device: cpu
-Total elapsed time: 0.8287 seconds
-Total inference time (model only): 0.4822 seconds
-Total samples: 5000 - Batch size: 50
-Throughput: 6033.89 samples/second
 
 
 FAKE_QUANTIZED results:

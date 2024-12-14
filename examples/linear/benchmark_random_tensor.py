@@ -36,7 +36,7 @@ def main() -> None:
         "batch_size": args.batch_size,
         "multiprocessing": True,  # If True, we test each method in its own isolated environment,
         # which helps keep methods from contaminating the global torch state
-        "fail_fast": False,  # If False, we fail gracefully and keep testing other methods
+        "fail_on_error": False,  # If False, we fail gracefully and keep testing other methods
     }
 
     # Benchmark the model

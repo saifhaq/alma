@@ -171,7 +171,7 @@ as other commonly used parameters like model weights path.
 By default, `alma` will fail fast if any conversion method fails. This is because we want to know
 if a conversion method fails, so that we can fix it. 
 However, if one wants to continue benchmarking other options even if a conversion method fails, 
-one can set `fail_fast` to False in the config dictionary.
+one can set `fail_on_error` to False in the config dictionary.
 `alma` will then fail gracefully for that method. One can then access the associated error messages 
 and full tracebacks for the failed methods from the returned object.
 </details>

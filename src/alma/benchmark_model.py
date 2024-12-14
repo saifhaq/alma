@@ -34,7 +34,7 @@ def benchmark_model(
     - multiprocessing (Optional[bool], default True): Whether or not to use multiprocessing to have isolated
         testing environments per conversion method. This helps keep the global torch state consistent
         when each method is benchmarked.
-    - fail_fast (Optional[bool], default False): whether or not to fail fast, or fail gracefully.
+    - fail_on_error (Optional[bool], default False): whether or not to fail fast, or fail gracefully.
         If we fail gracefully, we continue benchmarking other methods if one fails, and store
         the error message and traceback in the returned struct.
 
@@ -81,7 +81,7 @@ def benchmark_model(
     multiprocessing: bool = (
         config["multiprocessing"] if "multiprocessing" in config else True
     )
-    fail_fast: bool = config["fail_fast"] if "fail_fast" in config else False
+    fail_on_error: bool = config["fail_on_error"] if "fail_on_error" in config else False
 
     # Creates a dataloader with random data, of the same size as the input data sample
     # If the data_loader has been provided by the user, we use that one
@@ -115,7 +115,7 @@ def benchmark_model(
             all_results[conversion_method] = result
         except Exception as e:
             # If we opt to fail fast (e.g. for debugging, we raise immediately)
-            if fail_fast:
+            if fail_on_error:
                 raise
             # If there is an error, we log the error. In the returned "results", we include the
             # full traceback
