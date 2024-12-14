@@ -12,11 +12,12 @@ from ..utils.data import get_sample_data
 from ..utils.times import inference_time_benchmarking  # should we use this?
 from .log import log_results
 from .warmup import warmup
+from ..utils.processing import error_handler
 
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())
 
-
+@error_handler
 def benchmark(
     device: torch.device,
     model: torch.nn.Module,
@@ -27,6 +28,9 @@ def benchmark(
     """
     Benchmark the model using the given data loader. This function will benchmark the model using the
     given conversion method.
+
+    We wrap it in an error handler to catch any exceptions that occur during the benchmarking process.
+    This will allow us to pass the error and traceback back through any multiprocessing handler.
 
     Inputs:
     - device (torch.device): The device we are targetting.
@@ -107,6 +111,7 @@ def benchmark(
         "total_samples": total_samples,
         "batch_size": data.shape[0],
         "throughput": throughput,
+        "status": "success",
     }
     if logger.root.level <= logging.DEBUG:
         log_results(result)

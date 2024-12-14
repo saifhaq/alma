@@ -1,6 +1,8 @@
 import multiprocessing as mp
 from multiprocessing import Process, Queue
 from typing import Any, Callable, Union
+import traceback
+from functools import wraps
 
 import torch
 
@@ -92,4 +94,38 @@ def process_wrapper(
     if not result_queue.empty():
         result = result_queue.get()
         return result
-    return None
+    raise RuntimeError("benchmarking process fialed to return a result")
+
+
+def error_handler(func: Callable) -> Callable:
+    """
+    Decorator to catch exceptions and return them as a dictionary.
+
+    Inputs:
+    - func (callable): the function to wrap, should return a dictionary
+
+    Outputs:
+    - wrapper (callable): the wrapped function
+    """
+    @wraps(func)
+    def wrapper(*args, **kwargs) -> dict:
+        """
+        Wrapper to catch exceptions and return them as a dictionary.
+
+        Inputs:
+        - args (Any): the positional arguments for the function
+        - kwargs (Any): the keyword arguments for the function
+
+        Outputs:
+        - result (dict): the result of the function (should be dict), or an error dictionary
+        """
+        try:
+            result: dict = func(*args, **kwargs)
+            return result
+        except Exception as e:
+            return {
+                "status": "error",
+                "error": str(e),
+                "traceback": traceback.format_exc(),
+            }
+    return wrapper

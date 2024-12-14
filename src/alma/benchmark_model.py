@@ -98,32 +98,21 @@ def benchmark_model(
         torch.cuda.empty_cache()
         logger.info(f"Benchmarking model using conversion: {conversion_method}")
 
-        try:
-            result: Dict[str, Any] = process_wrapper(
-                multiprocessing,
-                benchmark,
-                device,
-                model,
-                conversion_method,
-                data_loader,
-                n_samples,
-            )
-            result["status"] = "success"
-            all_results[conversion_method] = result
-        except Exception as e:
-            # If we opt to fail fast (e.g. for debugging, we raise immediately)
-            if fail_on_error:
-                raise
-            # If there is an error, we log the error. In the returned "results", we include the
-            # full traceback
-            error_msg = (
-                f"Benchmarking conversion {conversion_method} failed. Error: {e}"
-            )
+        result: Dict[str, Any] = process_wrapper(
+            multiprocessing,
+            benchmark,
+            device,
+            model,
+            conversion_method,
+            data_loader,
+            n_samples,
+        )
+        all_results[conversion_method] = result
+
+        # If the conversion failed, we raise an exception if we are failing fast
+        if result["status"] == "error" and fail_on_error:
+            error_msg = f"Benchmarking conversion {conversion_method} failed."
             logger.error(error_msg)
-            all_results[conversion_method] = {
-                "status": "error",
-                "error": e,
-                "traceback": traceback.format_exc(),
-            }
+            raise Exception(result["traceback"])
 
     return all_results
