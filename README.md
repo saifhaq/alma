@@ -90,7 +90,6 @@ device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cp
 
 # Load the model
 model = ...
-model = model.to(device)
 
 # Load the dataloader used in benchmarking
 data_loader = ...
@@ -99,6 +98,7 @@ data_loader = ...
 config = {
     "batch_size": 64,
     "n_samples": 2048,
+    "device": device,
 }
 
 # Choose with conversions to benchmark:
@@ -130,23 +130,60 @@ Total samples: 2048 - Batch size: 64
 Throughput: 305974.83 samples/second
 ```
 
+## Other Features:
+`alma` is designed to be simple to use, with a single API call to benchmark a model for different
+conversion options. Here are some design decisions we have made, although they are all configurable
+by the user:
 
-## Examples:
+### Initialise a data loader inside of `benchmark_model`:
+- Rather than initializing and feeding in a data laoder like in the above example, one can also 
+just pass in a `data` tensor (with no batch dimension), and `benchmark_model` will automatically
+create a dataloader that produces random tensors of the same shape as the input tensor, with the batch size
+controlled via the `config` dictionary. This can be convenient if one does not want to create a data loader.
 
-For extensive examples on how to use `alma`, as well as simple clean examples on how train a model and
-quantize it, see the [`MNIST example`](./examples/mnist/README.md#overview) directory. These more advanced use cases
-include:
-- Feeding in a single tensor rather than a dataloader, and having the data tensor implicitly 
-initialise an internal data loader inside of `benchmark_model`.
-- Using argparser for easy control and experimentation, including selecting conversion methods with
-numerical indices.
-- Dealing with error handling. If any conversion method fails, `alma` will fail gracefully for that method
-and one can access tht error message and traceback from the returned object.
-- Debugging and logging. A lot of the conversion methods have very verbose logging. We have opted to
+
+### A provided argparser for easy control and experimentation:
+We provide an argparser that allows one to easily select conversion methods by numerical index or 
+string name. It also allows one to set the batch size, number of samples, and device easily, as well
+as other commonly used parameters like model weights path.
+
+### Graceful or fast failure:
+By default, `alma` will fail fast if any conversion method fails. This is because we want to know
+if a conversion method fails, so that we can fix it. 
+However, if one wants to continue benchmarking other options even if a conversion method fails, 
+one can set `fail_fast` to False in the config dictionary.
+`alma` will then fail gracefully for that method and one can access the associated error message 
+and full traceback from the returned object.
+
+
+### Isolated environments for each conversion method via multi-processing:
+By default, `alma` will run each conversion method in a separate process, so that one can benchmark
+each conversion method in isolation. This is useful for ensuring that each conversion method is benchmarked
+in a fair and isolated environment. This is relevant because some of the methods (e.g. optimum quanto)
+can affect the global torch state and break other methods.
+
+A consequence of running in multiple processes is that the model, if initialized naively, will be copied
+to each process. This can be slow for large models. To avoid this, one can, insead of feeding in a model
+directly, feed in a function that returns the model. This way, the model is only initialized once the
+child process starts for each conversion method, meaning we only have one copy of the model at a time.
+
+To disable multiprocessing, set `multiprocessing` to False in the config dictionary.
+
+### Logging:
+A lot of the conversion methods have very verbose logging. We have opted to
 mostly silence those logs. However, if one wants access to those logs, one should use the `setup_logging`
 function and set the debugging level to `DEBUG`.
 
+
+## Examples:
+
+For extensive examples on how to use `alma`, as well as simple examples on how train a model and
+quantize it, see the [`MNIST example`](./examples/mnist/README.md#overview) directory. This contains
+code examples for all of the different `alma` features, and is where one can find examples on every
+feature. 
+
 For a short working example on a simple Linear+ReLU, see the [`linear example`](./examples/linear/README.md#overview).
+
 
 ## Conversion Options
 
