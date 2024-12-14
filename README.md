@@ -97,8 +97,8 @@ data_loader = ...
 
 # Set the configuration
 config = {
-    "batch_size": 128,
-    "n_samples": 4096,
+    "batch_size": 64,
+    "n_samples": 2048,
 }
 
 # Choose with conversions to benchmark:
@@ -115,18 +115,19 @@ The results will look like this, depending on one's model, dataloader, and hardw
 
 ```bash
 EAGER results:
-device: cuda:0
-Total elapsed time: 0.4148 seconds
-Total inference time (model only): 0.0436 seconds
-Total samples: 5000
-Throughput: 12054.50 samples/second
+Device: cuda
+Total elapsed time: 0.0211 seconds
+Total inference time (model only): 0.0073 seconds
+Total samples: 2048 - Batch size: 64
+Throughput: 282395.70 samples/second
+
 
 EXPORT+EAGER results:
-device: cuda:0
-Total elapsed time: 0.3906 seconds
-Total inference time (model only): 0.0394 seconds
-Total samples: 5000
-Throughput: 12800.82 samples/second
+Device: cuda
+Total elapsed time: 0.0209 seconds
+Total inference time (model only): 0.0067 seconds
+Total samples: 2048 - Batch size: 64
+Throughput: 305974.83 samples/second
 ```
 
 
