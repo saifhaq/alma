@@ -72,7 +72,7 @@ def process_wrapper(
     if not multiprocessing:
         return benchmark_func(device, *args, **kwargs)
 
-    # If the device is CUDA, we need to set the start method to 'spawn'
+    # If the device to benchmark on is CUDA, we need to set the start method to 'spawn'
     if device.type == "cuda":
         # This is required for CUDA, as the default 'fork' method does not work with CUDA
         mp.set_start_method("spawn", force=True)
