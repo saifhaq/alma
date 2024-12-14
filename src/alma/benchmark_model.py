@@ -84,6 +84,7 @@ def benchmark_model(
     for conversion_method in conversions:
         check_consistent_batch_size(conversion_method, n_samples, batch_size)
 
+        torch.cuda.empty_cache()
         logger.info(f"Benchmarking model using conversion: {conversion_method}")
         try:
             result: Dict[str, float] = process_wrapper(
