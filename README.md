@@ -130,11 +130,20 @@ Total samples: 2048 - Batch size: 64
 Throughput: 305974.83 samples/second
 ```
 
+
+## Examples:
+
+For extensive examples on how to use `alma`, as well as simple examples on how train a model and
+quantize it, see the [`MNIST example`](./examples/mnist/README.md#overview) directory. This contains
+code examples for all of the different `alma` features, and is where one can find examples on every
+feature. 
+
 ## Advanced Features and Design Decisions
 
 `alma` is designed to be simple to use, with a single API call to benchmark a model for different
 conversion options. Here are some features we have produced and some design decisions we have 
-made, which are all configurable by the user.
+made, which are all configurable by the user. For examples on how to use these features, see the 
+[`MNIST example`](./examples/mnist/README.md#overview).
 
 <details>
 <summary>Implicitly initialise a data loader inside of `benchmark_model`</summary>
@@ -192,13 +201,6 @@ A lot of the conversion methods have verbose internal logging. We have opted to
 mostly silence those logs. However, if one wants access to those logs, one should use the `setup_logging`
 function and set the debugging level to `DEBUG`.
 </details>
-
-## Examples:
-
-For extensive examples on how to use `alma`, as well as simple examples on how train a model and
-quantize it, see the [`MNIST example`](./examples/mnist/README.md#overview) directory. This contains
-code examples for all of the different `alma` features, and is where one can find examples on every
-feature. 
 
 For a short working example on a simple Linear+ReLU, see the [`linear example`](./examples/linear/README.md#overview).
 
