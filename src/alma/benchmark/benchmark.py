@@ -44,6 +44,7 @@ def benchmark(
     # If the model is a callable, call it to get the model
     if not isinstance(model, torch.nn.Module):
         model = model()
+        assert isinstance(model, torch.nn.Module), "The provided callable should return a PyTorch model"
 
     # Send the model to device
     model = model.to(device)
