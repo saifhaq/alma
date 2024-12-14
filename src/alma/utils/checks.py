@@ -1,9 +1,9 @@
-from typing import List, Union, Optional, Callable
-
 import logging
+from typing import Callable, List, Optional, Union
+
 import torch
-from torch.utils.data import DataLoader
 from pydantic import BaseModel
+from torch.utils.data import DataLoader
 
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())

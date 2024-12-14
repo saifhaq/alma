@@ -29,9 +29,9 @@ def main() -> None:
     # It is a lot more memory efficienct, if multi-processing is enabled, to create the model in a
     # callable function, which can be called later to create the model.
     # This allows us to initialise the model in each child process, rather than the parent
-    # process. This is because the model is not pickled and sent to the child process (which would 
-    # require the program to sotre the model in memory twice), but rather created in the child 
-    # process. This is especially important if the model is large and two instances would not fit 
+    # process. This is because the model is not pickled and sent to the child process (which would
+    # require the program to sotre the model in memory twice), but rather created in the child
+    # process. This is especially important if the model is large and two instances would not fit
     # on device.
     def model_init() -> torch.nn.Module:
         """

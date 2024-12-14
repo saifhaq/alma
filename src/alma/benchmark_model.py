@@ -1,6 +1,6 @@
 import logging
 import traceback
-from typing import Any, Dict, List, Union, Callable
+from typing import Any, Callable, Dict, List, Union
 
 import torch
 from torch.utils.data import DataLoader
@@ -41,8 +41,8 @@ def benchmark_model(
 
     Inputs:
     - model (Union[torch.nn.Module, Callable]): The model to benchmark. If a callable is provided,
-        it should return the model. This is useful when using multiprocessing, as the creation of 
-        the model is deferred to inside the child process, rather than the parent process. This is 
+        it should return the model. This is useful when using multiprocessing, as the creation of
+        the model is deferred to inside the child process, rather than the parent process. This is
         especially important if the model is large and two instances would not fit on device.
     - config (Dict[str, Any]): The configuration for the benchmarking. This contains the number of
         samples to benchmark on, and the batch size to use for benchmarking.
