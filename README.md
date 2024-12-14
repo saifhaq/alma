@@ -136,7 +136,7 @@ conversion options. Here are some design decisions we have made, although they a
 by the user:
 
 ### Initialise a data loader inside of `benchmark_model`:
-- Rather than initializing and feeding in a data laoder like in the above example, one can also 
+Rather than initializing and feeding in a data loader like in the above example, one can also 
 just pass in a `data` tensor (with no batch dimension), and `benchmark_model` will automatically
 create a dataloader that produces random tensors of the same shape as the input tensor, with the batch size
 controlled via the `config` dictionary. This can be convenient if one does not want to create a data loader.
@@ -152,20 +152,23 @@ By default, `alma` will fail fast if any conversion method fails. This is becaus
 if a conversion method fails, so that we can fix it. 
 However, if one wants to continue benchmarking other options even if a conversion method fails, 
 one can set `fail_fast` to False in the config dictionary.
-`alma` will then fail gracefully for that method and one can access the associated error message 
-and full traceback from the returned object.
+`alma` will then fail gracefully for that method and one can access the associated error messages 
+and full tracebacks for the failed methods from the returned object.
 
 
 ### Isolated environments for each conversion method via multi-processing:
-By default, `alma` will run each conversion method in a separate process, so that one can benchmark
-each conversion method in isolation. This is useful for ensuring that each conversion method is benchmarked
-in a fair and isolated environment. This is relevant because some of the methods (e.g. optimum quanto)
-can affect the global torch state and break other methods.
+By default, `alma` will run each conversion method in a separate process (one at a time), so that one can benchmark
+each conversion method in isolation. This ensures that each conversion method is benchmarked
+in a fair and isolated environment, and is relevant because some of the methods (e.g. optimum quanto)
+can affect the global torch state and break other methods (e.g. by overwriting tensor defaults in 
+the C++ backend).
 
 A consequence of running in multiple processes is that the model, if initialized naively, will be copied
-to each process. This can be slow for large models. To avoid this, one can, insead of feeding in a model
-directly, feed in a function that returns the model. This way, the model is only initialized once the
-child process starts for each conversion method, meaning we only have one copy of the model at a time.
+from the parent process to the child process. This doubles the required model memory, which can be 
+a problem for large models. To avoid this, one can, insead of feeding in a model
+directly to `benchmark_model`, feed in a function that returns the model. This way, the model is 
+only initialized once the child process starts for each conversion method, meaning we only have 
+one copy of the model at a time.
 
 To disable multiprocessing, set `multiprocessing` to False in the config dictionary.
 
@@ -216,41 +219,50 @@ each conversion option does.
 ### Options Summary
 Below is a table summarizing the currently supported conversion options and their identifiers:
 
-  | ID  | Conversion Option                                             |
-  |-----|---------------------------------------------------------------|
-  | 0   |  EAGER                                                        |
-  | 1   |  EXPORT+EAGER                                                 |
-  | 2   |  ONNX_CPU                                                     |
-  | 3   |  ONNX_GPU                                                     |
-  | 4   |  ONNX+DYNAMO_EXPORT                                           |
-  | 5   |  COMPILE_CUDAGRAPH                                            |
-  | 6   |  COMPILE_INDUCTOR_DEFAULT                                     |
-  | 7   |  COMPILE_INDUCTOR_REDUCE_OVERHEAD                             |
-  | 8   |  COMPILE_INDUCTOR_MAX_AUTOTUNE                                |
-  | 9   |  COMPILE_INDUCTOR_EAGER_FALLBACK                              |
-  | 10  |  COMPILE_ONNXRT                                               |
-  | 11  |  COMPILE_OPENXLA                                              |
-  | 12  |  COMPILE_TVM                                                  |
-  | 13  |  EXPORT+AI8WI8_FLOAT_QUANTIZED                                |
-  | 14  |  EXPORT+AI8WI8_FLOAT_QUANTIZED+AOT_INDUCTOR                   |
-  | 15  |  EXPORT+AI8WI8_FLOAT_QUANTIZED+RUN_DECOMPOSITION              |
-  | 16  |  EXPORT+AI8WI8_FLOAT_QUANTIZED+RUN_DECOMPOSITION+AOT_INDUCTOR |
-  | 17  |  EXPORT+AI8WI8_STATIC_QUANTIZED                               |
-  | 18  |  EXPORT+AI8WI8_STATIC_QUANTIZED+AOT_INDUCTOR                  |
-  | 19  |  EXPORT+AI8WI8_STATIC_QUANTIZED+RUN_DECOMPOSITION             |
-  | 20  |  EXPORT+AI8WI8_STATIC_QUANTIZED+RUN_DECOMPOSITION+AOT_INDUCTOR|
-  | 21  |  EXPORT+AOT_INDUCTOR                                          |
-  | 22  |  EXPORT+COMPILE_CUDAGRAPH                                     |
-  | 23  |  EXPORT+COMPILE_INDUCTOR_DEFAULT                              |
-  | 24  |  EXPORT+COMPILE_INDUCTOR_REDUCE_OVERHE                        |
-  | 25  |  EXPORT+COMPILE_INDUCTOR_MAX_AUTOTUNE                         |
-  | 26  |  EXPORT+COMPILE_INDUCTOR_EAGER_FALLBACK                       |
-  | 27  |  EXPORT+COMPILE_ONNXRT                                        | 
-  | 28  |  EXPORT+COMPILE_OPENXLA                                       |
-  | 29  |  EXPORT+COMPILE_TVM                                           |
-  | 30  |  NATIVE_CONVERT_AI8WI8_STATIC_QUANTIZED                       |
-  | 31  |  NATIVE_FAKE_QUANTIZED_AI8WI8_STATIC                          |
-  | 32  |  TENSORRT                                                     |
+  | ID  | Conversion Option                                 |
+  |-----|---------------------------------------------------|
+  | 0   |  EAGER                                            |
+  | 1   |  EXPORT+EAGER                                     |
+  | 2   |  ONNX_CPU                                         |
+  | 3   |  ONNX_GPU                                         |
+  | 4   |  ONNX+DYNAMO_EXPORT                               |
+  | 5   |  COMPILE_CUDAGRAPHS                               |
+  | 6   |  COMPILE_INDUCTOR_DEFAULT                         |
+  | 7   |  COMPILE_INDUCTOR_REDUCE_OVERHEAD                 |
+  | 8   |  COMPILE_INDUCTOR_MAX_AUTOTUNE                    |
+  | 9   |  COMPILE_INDUCTOR_EAGER_FALLBACK                  |
+  | 10  |  COMPILE_ONNXRT                                   |
+  | 11  |  COMPILE_OPENXLA                                  |
+  | 12  |  COMPILE_TVM                                      |
+  | 13  |  EXPORT+AI8WI8_FLOAT_QUANTIZED                    |
+  | 14  |  EXPORT+AI8WI8_FLOAT_QUANTIZED+RUN_DECOMPOSITION  |
+  | 15  |  EXPORT+AI8WI8_STATIC_QUANTIZED                   |
+  | 16  |  EXPORT+AI8WI8_STATIC_QUANTIZED+RUN_DECOMPOSITION |
+  | 17  |  EXPORT+AOT_INDUCTOR                              |
+  | 18  |  EXPORT+COMPILE_CUDAGRAPHS                        |
+  | 19  |  EXPORT+COMPILE_INDUCTOR_DEFAULT                  |
+  | 20  |  EXPORT+COMPILE_INDUCTOR_REDUCE_OVERHEAD          |
+  | 21  |  EXPORT+COMPILE_INDUCTOR_MAX_AUTOTUNE             |
+  | 22  |  EXPORT+COMPILE_INDUCTOR_DEFAULT_EAGER_FALLBACK   |
+  | 23  |  EXPORT+COMPILE_ONNXRT                            |
+  | 24  |  EXPORT+COMPILE_OPENXLA                           |
+  | 25  |  EXPORT+COMPILE_TVM                               |
+  | 26  |  NATIVE_CONVERT_AI8WI8_STATIC_QUANTIZED           |
+  | 27  |  NATIVE_FAKE_QUANTIZED_AI8WI8_STATIC              | 
+  | 28  |  COMPILE_TENSORRT                                 |
+  | 29  |  EXPORT+COMPILE_TENSORRT                          |
+  | 30  |  JIT_TRACE                                        |
+  | 31  |  TORCH_SCRIPT                                     |
+  | 32  |  OPTIMIM_QUANTO_AI8WI8                            |
+  | 33  |  OPTIMIM_QUANTO_AI8WI4                            |
+  | 34  |  OPTIMIM_QUANTO_AI8WI2                            |
+  | 35  |  OPTIMIM_QUANTO_WI8                               |
+  | 36  |  OPTIMIM_QUANTO_WI4                               |
+  | 37  |  OPTIMIM_QUANTO_WI2                               |
+  | 38  |  OPTIMIM_QUANTO_Wf8E4M3N                          |
+  | 39  |  OPTIMIM_QUANTO_Wf8E4M3NUZ                        |
+  | 40  |  OPTIMIM_QUANTO_Wf8E5M2                           |
+  | 41  |  OPTIMIM_QUANTO_Wf8E5M2+COMPILE_CUDAGRAPHS        |
 
 
 These conversion options are also all hard-coded in the `alma/conversions/select.py` file, which 
