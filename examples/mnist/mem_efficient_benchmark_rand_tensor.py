@@ -28,7 +28,8 @@ def model_init() -> torch.nn.Module:
     the model inside the child process, we avoid having two instances of the model in memory at
     once.
 
-    NOTE: THIS HAS TO BE DEFINED AT THE MODULE LEVEL, NOT NESTED INSIDE ANY FUNCTION.
+    NOTE: THIS HAS TO BE DEFINED AT THE MODULE LEVEL, NOT NESTED INSIDE ANY FUNCTION. This is so
+    that it is pickle-able, necessary for it to be passed to multi-processing.
     """
     return Net()
 
@@ -43,7 +44,6 @@ def main() -> None:
 
     # Create random tensor (of MNIST image size)
     data = torch.rand(1, 3, 28, 28).to(device)
-
 
     # Configuration for the benchmarking
     config = {

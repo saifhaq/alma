@@ -24,7 +24,7 @@ def check_model(model: Union[torch.nn.Module, Callable], config: dict) -> None:
     if not isinstance(model, torch.nn.Module) and config.get("multiprocessing", True):
         type_error_msg = "If not torch.nn.Module, the modle type should be a Callable that loads the model"
         assert isinstance(model, Callable), type_error_msg
-        error_msg = """Please ensure that your load_model function is pickle-able. The function 
+        error_msg = """Please ensure that your 'load model' function is pickle-able. The function 
 must not be locally sourced, but sourced at the module level."""
         check_is_local_function(model, error_msg)
 
