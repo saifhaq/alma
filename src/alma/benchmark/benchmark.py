@@ -45,6 +45,9 @@ def benchmark(
     if not isinstance(model, torch.nn.Module):
         model = model()
 
+    # Send the model to device
+    model = model.to(device)
+
     # Set to eval mode
     model.eval()
 

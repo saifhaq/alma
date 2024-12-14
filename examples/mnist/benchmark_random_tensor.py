@@ -24,15 +24,16 @@ def main() -> None:
     args, device = parse_benchmark_args()
 
     # Create random tensor (of MNIST image size)
-    data = torch.rand(1, 3, 28, 28).to(device)
+    data = torch.rand(1, 3, 28, 28)
 
     # Load model (random weights)
-    model = Net().to(device)
+    model = Net()
 
     # Configuration for the benchmarking
     config = {
         "n_samples": args.n_samples,
         "batch_size": args.batch_size,
+        "device": device,  # The device to benchmark on
         "multiprocessing": True,  # If True, we test each method in its own isolated environment,
         # which helps keep methods from contaminating the global torch state
         "fail_fast": False,  # If False, we fail gracefully and keep testing other methods

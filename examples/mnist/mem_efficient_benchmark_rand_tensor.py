@@ -13,6 +13,24 @@ from alma.utils.setup_logging import setup_logging
 # torch.backends.quantized.engine = 'x86'
 torch.backends.quantized.engine = "qnnpack"
 
+# It is a lot more memory efficienct, if multi-processing is enabled, to create the model in a
+# callable function, which can be called later to create the model.
+# This allows us to initialise the model in each child process, rather than the parent
+# process. This is because the model is not pickled and sent to the child process (which would
+# require the program to sotre the model in memory twice), but rather created in the child
+# process. This is especially important if the model is large and two instances would not fit
+# on device.
+def model_init() -> torch.nn.Module:
+    """
+    A callable that returns the model to be benchmarked. This allows us to initialise the model
+    at a later date, which is useful when using multiprocessing (in turn used to isolate each method
+    in its own process, keeping them from contaminating the global torch state). By initialising
+    the model inside the child process, we avoid having two instances of the model in memory at
+    once.
+
+    NOTE: THIS HAS TO BE DEFINED AT THE MODULE LEVEL, NOT NESTED INSIDE ANY FUNCTION.
+    """
+    return Net()
 
 def main() -> None:
     # Set up logging. DEBUG level will also log the internal conversion logs (where available), as well
@@ -26,22 +44,6 @@ def main() -> None:
     # Create random tensor (of MNIST image size)
     data = torch.rand(1, 3, 28, 28).to(device)
 
-    # It is a lot more memory efficienct, if multi-processing is enabled, to create the model in a
-    # callable function, which can be called later to create the model.
-    # This allows us to initialise the model in each child process, rather than the parent
-    # process. This is because the model is not pickled and sent to the child process (which would
-    # require the program to sotre the model in memory twice), but rather created in the child
-    # process. This is especially important if the model is large and two instances would not fit
-    # on device.
-    def model_init() -> torch.nn.Module:
-        """
-        A callable that returns the model to be benchmarked. This allows us to initialise the model
-        at a later date, which is useful when using multiprocessing (in turn used to isolate each method
-        in its own process, keeping them from contaminating the global torch state). By initialising
-        the model inside the child process, we avoid having two instances of the model in memory at
-        once.
-        """
-        return Net()
 
     # Configuration for the benchmarking
     config = {
