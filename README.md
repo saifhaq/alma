@@ -137,7 +137,7 @@ conversion options. Here are some features we have produced and some design deci
 made, which are all configurable by the user.
 
 <details>
-<summary>Initialise a data loader inside of `benchmark_model`:</summary>
+<summary>Implicitly initialise a data loader inside of `benchmark_model`</summary>
 <br>
 Rather than initializing and feeding in a data loader like in the above example, one can also 
 just pass in a `data` tensor (with no batch dimension), and `benchmark_model` will automatically
@@ -146,7 +146,7 @@ controlled via the `config` dictionary. This can be convenient if one does not w
 </details>
 
 <details>
-<summary>A provided argparser for easy control and experimentation:
+<summary>Pre-defined argparser for easy control and experimentation
 </summary>
 <br>
 We provide an argparser that allows one to easily select conversion methods by numerical index or 
@@ -161,7 +161,7 @@ By default, `alma` will fail fast if any conversion method fails. This is becaus
 if a conversion method fails, so that we can fix it. 
 However, if one wants to continue benchmarking other options even if a conversion method fails, 
 one can set `fail_fast` to False in the config dictionary.
-`alma` will then fail gracefully for that method and one can access the associated error messages 
+`alma` will then fail gracefully for that method. One can then access the associated error messages 
 and full tracebacks for the failed methods from the returned object.
 </details>
 
@@ -174,13 +174,13 @@ each conversion method in isolation. This ensures that each conversion method is
 in a fair and isolated environment, and is relevant because some of the methods (e.g. optimum quanto)
 can affect the global torch state and break other methods (e.g. by overwriting tensor defaults in 
 the C++ backend).
-
+<br>
 A consequence of running in multiple processes is that the model, if initialized naively, will be copied
 from the parent process to the child process. This doubles the required model memory, which can be 
 a problem for large models. To avoid this, one can, insead of feeding in a model
 directly to `benchmark_model`, feed in a function that returns the model. This way, the model is 
 only initialized once the child process starts for each conversion method, meaning we only have 
-one copy of the model at a time.
+one copy of the model at a time in device memory.
 
 To disable multiprocessing, set `multiprocessing` to False in the config dictionary.
 </details>
@@ -188,8 +188,7 @@ To disable multiprocessing, set `multiprocessing` to False in the config diction
 <details>
 <summary>Logging</summary>
 <br>
-This is how you dropdown.
-A lot of the conversion methods have very verbose logging. We have opted to
+A lot of the conversion methods have verbose internal logging. We have opted to
 mostly silence those logs. However, if one wants access to those logs, one should use the `setup_logging`
 function and set the debugging level to `DEBUG`.
 </details>
@@ -304,7 +303,7 @@ See the [CONTRIBUTING.md](./CONTRIBUTING.md) file for more detailed information 
 ## Citation
 ```bibtex
 @Misc{alma,
-  title =        {Alma: One-stop-shop for PyTorch model speed benchmarking for all conversion types.},
+  title =        {Alma: PyTorch model speed benchmarking across all conversion types},
   author =       {Oscar Savolainen and Saif Haq},
   howpublished = {\url{https://github.com/saifhaq/alma}},
   year =         {2024}
