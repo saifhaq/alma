@@ -25,15 +25,16 @@ def main() -> None:
     model = torch.nn.Sequential(
         torch.nn.Linear(3, 3),
         torch.nn.ReLU(),
-    ).to(device)
+    )
 
     # Create a random tensor
-    data = torch.rand(1, 512, 3).to(device)
+    data = torch.rand(1, 512, 3)
 
     # Configuration for the benchmarking
     config = {
         "n_samples": args.n_samples,
         "batch_size": args.batch_size,
+        "device": device,  # The device to benchmark on
         "multiprocessing": True,  # If True, we test each method in its own isolated environment,
         # which helps keep methods from contaminating the global torch state
         "fail_on_error": False,  # If False, we fail gracefully and keep testing other methods

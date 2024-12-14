@@ -1,6 +1,6 @@
 import logging
 import traceback
-from typing import Any, Dict, List, Union
+from typing import Any, Callable, Dict, List, Union
 
 import torch
 from torch.utils.data import DataLoader
@@ -17,7 +17,7 @@ logger.addHandler(logging.NullHandler())
 
 
 def benchmark_model(
-    model: torch.nn.Module,
+    model: Union[torch.nn.Module, Callable],
     config: Dict[str, Any],
     conversions: Union[List[str], None] = None,
     data: Union[torch.Tensor, None] = None,
@@ -31,6 +31,7 @@ def benchmark_model(
     The `config` dict must contain the following:
     - n_samples (int): The number of samples to benchmark on
     - batch_size (int): The batch size to use for benchmarking
+    - device (torch.device): The device to benchmark on.
     - multiprocessing (Optional[bool], default True): Whether or not to use multiprocessing to have isolated
         testing environments per conversion method. This helps keep the global torch state consistent
         when each method is benchmarked.
@@ -39,7 +40,10 @@ def benchmark_model(
         the error message and traceback in the returned struct.
 
     Inputs:
-    - model (torch.nn.Module): The model to benchmark.
+    - model (Union[torch.nn.Module, Callable]): The model to benchmark. If a callable is provided,
+        it should return the model. This is useful when using multiprocessing, as the creation of
+        the model is deferred to inside the child process, rather than the parent process. This is
+        especially important if the model is large and two instances would not fit on device.
     - config (Dict[str, Any]): The configuration for the benchmarking. This contains the number of
         samples to benchmark on, and the batch size to use for benchmarking.
     - conversions (List[str]): The list of conversion methods to benchmark. If None, all of the
@@ -56,14 +60,6 @@ def benchmark_model(
         If the conversion method failed and we fail gracefully, the value will be a dictionary
         containing the error and traceback.
     """
-    # Set to eval mode
-    model.eval()
-
-    # We determine the device to run the model on
-    # NOTE: this will only work for single-device set ups. Benchmarking on multiple devices is not
-    # currently supported.
-    device: torch.device = next(model.parameters()).device
-
     # Check the inputs
     check_inputs(model, config, conversions, data, data_loader)
 
@@ -71,9 +67,10 @@ def benchmark_model(
     if conversions is None:
         conversions = list(MODEL_CONVERSION_OPTIONS.values())
 
-    # The number of samples to benchmark on, batch size,
+    # The number of samples to benchmark on, batch size, and device to benchmark on
     n_samples: int = config["n_samples"]
     batch_size: int = config["batch_size"]
+    device: torch.device = config["device"]
 
     # Whether or not to use multiprocessing for isolated testing environments (which protects against
     # conversion methods contaminating the global torch state), and whether to fail quickly or gracefully.
@@ -102,12 +99,12 @@ def benchmark_model(
         logger.info(f"Benchmarking model using conversion: {conversion_method}")
 
         try:
-            result: Dict[str, float] = process_wrapper(
+            result: Dict[str, Any] = process_wrapper(
                 multiprocessing,
                 benchmark,
+                device,
                 model,
                 conversion_method,
-                device,
                 data_loader,
                 n_samples,
             )

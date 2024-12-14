@@ -18,9 +18,9 @@ logger.addHandler(logging.NullHandler())
 
 
 def benchmark(
+    device: torch.device,
     model: torch.nn.Module,
     conversion: str,
-    device: torch.device,
     data_loader: DataLoader,
     n_samples: int,
 ) -> Dict[str, float]:
@@ -29,9 +29,9 @@ def benchmark(
     given conversion method.
 
     Inputs:
+    - device (torch.device): The device we are targetting.
     - model (torch.nn.Module): The model to benchmark.
     - conversion (str): The conversion method to use for benchmarking.
-    - device (torch.device): The device we are targetting.
     - data_loader (DataLoader): The DataLoader to get samples of data from.
     - n_samples (int): The number of samples to benchmark on.
 
@@ -41,6 +41,20 @@ def benchmark(
     - total_samples (int): The total number of samples benchmarked.
     - throughput (float): The throughput of the model.
     """
+    # If the model is a callable, call it to get the model
+    if not isinstance(model, torch.nn.Module):
+        model = model()
+        assert isinstance(
+            model, torch.nn.Module
+        ), "The provided callable should return a PyTorch model"
+
+    # Send the model to device
+    model = model.to(device)
+
+    # Set to eval mode
+    model.eval()
+
+    # Initialize benchmark variables
     total_inf_time = 0.0
     total_samples = 0
     num_batches = 0
@@ -72,8 +86,6 @@ def benchmark(
             data = data.to(device)
             batch_start_time = time.perf_counter()
             _ = forward_call(data)
-            # if conversion in ["EXPORT+INFERENCE+AI8WI8_FLOAT_QUANTIZED", "EXPORT+TRAINING+AI8WI8_FLOAT_QUANTIZED"]:
-            #     import ipdb; ipdb.set_trace()
             batch_end_time = time.perf_counter()
 
             batch_size = min(data.size(0), n_samples - total_samples)
