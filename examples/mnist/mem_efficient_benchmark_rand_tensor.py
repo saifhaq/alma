@@ -13,6 +13,7 @@ from alma.utils.setup_logging import setup_logging
 # torch.backends.quantized.engine = 'x86'
 torch.backends.quantized.engine = "qnnpack"
 
+
 # It is a lot more memory efficienct, if multi-processing is enabled, to create the model in a
 # callable function, which can be called later to create the model.
 # This allows us to initialise the model in each child process, rather than the parent
@@ -32,6 +33,7 @@ def model_init() -> torch.nn.Module:
     that it is pickle-able, necessary for it to be passed to multi-processing.
     """
     return Net()
+
 
 def main() -> None:
     # Set up logging. DEBUG level will also log the internal conversion logs (where available), as well

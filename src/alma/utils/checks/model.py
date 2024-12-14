@@ -1,8 +1,9 @@
-import logging
-import torch
 import inspect
+import logging
 import pickle
 from typing import Callable, Union
+
+import torch
 
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())

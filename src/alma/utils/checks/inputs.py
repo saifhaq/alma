@@ -53,7 +53,6 @@ for an example."""
         logger.warning(warning_msg)
 
 
-
 def check_input_type(model, config, conversions, data, data_loader) -> None:
     """
     Checks that the inputs are of the correct types

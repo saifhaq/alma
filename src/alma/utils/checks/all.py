@@ -40,4 +40,3 @@ def check_inputs(
 
     # Check model is valid for multiprocessing (if callable, should be pickle-able)
     check_model(model, config)
-
