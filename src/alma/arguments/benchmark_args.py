@@ -1,5 +1,6 @@
 import argparse
 import logging
+import os
 from pathlib import Path
 from typing import Tuple, Union
 
@@ -46,7 +47,7 @@ def parse_benchmark_args() -> Tuple[argparse.Namespace, torch.device]:
         type=int,
         default=64,
         metavar="N",
-        help="input batch size for benchmarking (default: 30)",
+        help="Input batch size for benchmarking (default: 30)",
     )
     parser.add_argument(
         "--n-samples",
@@ -58,22 +59,22 @@ def parse_benchmark_args() -> Tuple[argparse.Namespace, torch.device]:
         "--no-cuda",
         action="store_true",
         default=False,
-        help="disables CUDA acceleration",
+        help="Disables CUDA acceleration",
     )
     parser.add_argument(
         "--no-mps",
         action="store_true",
         default=False,
-        help="disables MPS acceleration",
+        help="Disables MPS acceleration",
     )
     parser.add_argument(
         "--conversions",
         type=list_of_strings,
         # choices=[str(i) for i in MODEL_CONVERSION_OPTIONS.keys()] + list(MODEL_CONVERSION_OPTIONS.values()),
         default=None,
-        help=f"""The model option you would like to benchmark. These are integers that correspond 
-to different transforms, or their string names. MUltiple options can be selected, e.g. --conversions
-0,2,EAGER . The mapping is this:\n{string_rep_of_conv_options}""",
+        help=f"""The model options you would like to benchmark. These are integers that correspond 
+to different transforms or their string names. Multiple options can be selected, e.g., --conversions
+0,2,EAGER. The mapping is this:\n{string_rep_of_conv_options}""",
     )
     parser.add_argument(
         "--ipdb",
@@ -138,11 +139,30 @@ to different transforms, or their string names. MUltiple options can be selected
 
     args.conversions = selected_conversions
 
-    if use_cuda:
-        device = torch.device("cuda")
-    elif use_mps:
-        device = torch.device("mps")
+    # Determine device and set PJRT_DEVICE based on the presence of "XLA"
+    if any("XLA" in conversion for conversion in selected_conversions):
+        if use_cuda:
+            os.environ["PJRT_DEVICE"] = "CUDA"
+            os.environ["GPU_NUM_DEVICES"] = "1"  # Default to 1 GPU; adjust if necessary
+            logger.info("Environment set: PJRT_DEVICE=CUDA, GPU_NUM_DEVICES=1")
+        else:
+            os.environ["PJRT_DEVICE"] = "CPU"
+            logger.info("Environment set: PJRT_DEVICE=CPU")
+
+        # Now import torch_xla after setting the environment
+        import torch_xla.core.xla_model as xm
+
+        device = xm.xla_device()
+        logger.info(f"XLA with {os.environ['PJRT_DEVICE']} selected for benchmarking.")
     else:
-        device = torch.device("cpu")
+        if use_cuda:
+            device = torch.device("cuda")
+            logger.info("CUDA device selected for benchmarking.")
+        elif use_mps:
+            device = torch.device("mps")
+            logger.info("MPS device selected for benchmarking.")
+        else:
+            device = torch.device("cpu")
+            logger.info("CPU device selected for benchmarking.")
 
     return args, device

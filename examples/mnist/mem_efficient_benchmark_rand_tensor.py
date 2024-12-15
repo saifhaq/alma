@@ -36,6 +36,7 @@ def model_init() -> torch.nn.Module:
 
 
 def main() -> None:
+
     # Set up logging. DEBUG level will also log the internal conversion logs (where available), as well
     # as the model graphs. A `setup_logging` function is provided for convenience, but one can use
     # whatever logging one wishes, or none.
@@ -69,7 +70,10 @@ def main() -> None:
 
     # Display the results. Do display errors in results, but do not display tracebacks of the results.
     display_all_results(
-        results, display_function=print, include_errors=True, include_traceback_for_errors=False
+        results,
+        display_function=print,
+        include_errors=True,
+        include_traceback_for_errors=False,
     )
 
 

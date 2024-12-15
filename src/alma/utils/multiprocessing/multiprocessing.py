@@ -89,9 +89,8 @@ def benchmark_process_wrapper(
         next_cmd_single = get_next_line_info()
         result = benchmark_func(device, *args, **kwargs)
         return result, formatted_stacktrace + next_cmd_single
-
     # If the device to benchmark on is CUDA, we need to set the start method to 'spawn'
-    if device.type == "cuda":
+    if device.type in ["cuda", "xla"]:
         # This is required for CUDA, as the default 'fork' method does not work with CUDA
         mp.set_start_method("spawn", force=True)
 
