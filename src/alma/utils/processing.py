@@ -1,11 +1,11 @@
+import inspect
 import multiprocessing as mp
 import os
+import sys
+import traceback
+from functools import wraps
 from multiprocessing import Process, Queue
 from typing import Any, Callable, Union
-import traceback
-import inspect
-import sys
-from functools import wraps
 
 import torch
 
@@ -149,11 +149,13 @@ def error_handler(func: Callable) -> Callable:
             # Get the frame where the decorated function is being called
             # Get the actual function's code object info
             filename = func.__code__.co_filename
-            line_number = func.__code__.co_firstlineno + 1  # This gets the line where the function is defined
-            
+            line_number = (
+                func.__code__.co_firstlineno + 1
+            )  # This gets the line where the function is defined
+
             # Format the function call line in traceback style
             function_trace = f'\n  File "{filename}", line {line_number}, in {func.__name__}\n    {func.__name__}('
-        
+
             # Get the full traceback object from here forwards
             exc_type, exc_value, exc_traceback = sys.exc_info()
 
