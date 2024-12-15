@@ -9,7 +9,7 @@ from .benchmark import benchmark
 from .conversions.select import MODEL_CONVERSION_OPTIONS
 from .dataloader.create import create_single_tensor_dataloader
 from .utils.checks import check_consistent_batch_size, check_inputs
-from .utils.processing import process_wrapper
+from .utils.processing import benchmark_process_wrapper
 from .utils.times import inference_time_benchmarking  # should we use this?
 
 logger = logging.getLogger(__name__)
@@ -78,7 +78,7 @@ def benchmark_model(
     multiprocessing: bool = (
         config["multiprocessing"] if "multiprocessing" in config else True
     )
-    fail_on_error: bool = config["fail_on_error"] if "fail_on_error" in config else False
+    fail_on_error: bool = config["fail_on_error"] if "fail_on_error" in config else True
 
     # Creates a dataloader with random data, of the same size as the input data sample
     # If the data_loader has been provided by the user, we use that one
@@ -98,7 +98,7 @@ def benchmark_model(
         torch.cuda.empty_cache()
         logger.info(f"Benchmarking model using conversion: {conversion_method}")
 
-        result: Dict[str, Any] = process_wrapper(
+        result, stacktrace = benchmark_process_wrapper(
             multiprocessing,
             benchmark,
             device,
@@ -110,9 +110,13 @@ def benchmark_model(
         all_results[conversion_method] = result
 
         # If the conversion failed, we raise an exception if we are failing fast
-        if result["status"] == "error" and fail_on_error:
+        if result["status"] == "error":
             error_msg = f"Benchmarking conversion {conversion_method} failed."
             logger.error(error_msg)
-            raise Exception(result["traceback"])
+
+            # We combine the stacktrace from the child process with the stacktrace from the parent process
+            result["traceback"] = stacktrace + result["traceback"]
+            if fail_on_error:
+                raise Exception(result["traceback"])
 
     return all_results

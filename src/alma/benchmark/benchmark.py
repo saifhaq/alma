@@ -29,8 +29,9 @@ def benchmark(
     Benchmark the model using the given data loader. This function will benchmark the model using the
     given conversion method.
 
-    We wrap it in an error handler to catch any exceptions that occur during the benchmarking process.
-    This will allow us to pass the error and traceback back through any multiprocessing handler.
+    NOTE: We wrap this function in an error handler to catch any exceptions that occur during the
+    benchmarking process. This will allow us to pass the error and traceback back through any
+    multiprocessing handler.
 
     Inputs:
     - device (torch.device): The device we are targetting.
