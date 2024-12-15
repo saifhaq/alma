@@ -1,6 +1,6 @@
 import logging
 import time
-from typing import Any, Dict
+from typing import Any, Dict, Callable, Union
 
 import torch
 import torch._dynamo
@@ -12,15 +12,15 @@ from ..utils.data import get_sample_data
 from ..utils.times import inference_time_benchmarking  # should we use this?
 from .log import log_results
 from .warmup import warmup
-from ..utils.processing import error_handler
+from ..utils.multiprocessing import benchmark_error_handler
 
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())
 
-@error_handler
+@benchmark_error_handler
 def benchmark(
     device: torch.device,
-    model: torch.nn.Module,
+    model: Union[torch.nn.Module, Callable],
     conversion: str,
     data_loader: DataLoader,
     n_samples: int,
@@ -35,7 +35,9 @@ def benchmark(
 
     Inputs:
     - device (torch.device): The device we are targetting.
-    - model (torch.nn.Module): The model to benchmark.
+    - model (Union[torch.nn.Module, Callable]): The model to benchmark, or callable which returns
+    the model (used for memory efficiency when using multi-processing, as a means of creating
+    isolated test environments).
     - conversion (str): The conversion method to use for benchmarking.
     - data_loader (DataLoader): The DataLoader to get samples of data from.
     - n_samples (int): The number of samples to benchmark on.
@@ -48,6 +50,7 @@ def benchmark(
     """
     # If the model is a callable, call it to get the model
     if not isinstance(model, torch.nn.Module):
+        logger.info(f"Initializing model inside {conversion} benchmarking")
         model = model()
         assert isinstance(
             model, torch.nn.Module
