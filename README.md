@@ -203,9 +203,14 @@ To disable multiprocessing, set `multiprocessing` to False in the config diction
 A lot of the conversion methods have verbose internal logging. We have opted to
 mostly silence those logs. However, if one wants access to those logs, one should use the `setup_logging`
 function and set the debugging level to `DEBUG`.
+See [here](./examples/mnist/README.md#logging-and-ci-integration) for more detials:
 </details>
 
-
+<!-- - [here](#pre-defined-argparser-for-easy-control-and-experimentation) -->
+<!-- - [here](#implicitly-initialise-a-data-loader-inside-of-benchmark_model) -->
+<!-- - [here](#graceful-or-fast-failure) -->
+<!-- - [here](#isolated-environments-for-each-conversion-method-via-multi-processing) -->
+<!-- - [here](#logging-and-ci-integration) -->
 
 ## Conversion Options
 
