@@ -72,8 +72,6 @@ config = {
     "batch_size": args.batch_size,
     "n_samples": args.n_samples,
     "device": device,  # The device to run the model on
-    "multiprocessing": True,  # If True, each conversion option will be run in a separate process
-    "fail_on_error": False,  # If True, the script will fail if a conversion fails
 }
 
 # Benchmark the model
@@ -139,7 +137,8 @@ feed in specific data, and a `--model-path` argument, so that one can feed in sp
 Finally, we also provide an `--ipdb` argument, which throws one into an ipdb debugging session if and 
 wherever an Exception occurs. See this 
 [blog post](https://medium.com/@oscar-savolainen/my-favourite-python-snippets-794d5653af38) for 
-more details on the ipdb sysexception hook.
+more details on the ipdb sysexception hook. This will not work if one sets the `fail_with_error` argument,
+which is discussed later in section [Graceful or fast failure](#graceful-or-fast-failure), to False.
 
 One can of course also just pass in non-CLI arguments directly to the `benchmark_model` API.
 
@@ -270,7 +269,7 @@ results: Dict[str, Dict[str, float]] = benchmark_model(
 display_all_results(results)
 ```
 
-And the results may look like this:
+And the results may look like this (did not fail when the error occured):
 
 ```bash
 EAGER results:

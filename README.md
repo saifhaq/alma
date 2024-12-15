@@ -154,6 +154,8 @@ Rather than initializing and feeding in a data loader like in the above example,
 just pass in a `data` tensor (with no batch dimension), and `benchmark_model` will automatically
 create a dataloader that produces random tensors of the same shape as the input tensor, with the batch size
 controlled via the `config` dictionary. This can be convenient if one does not want to create a data loader.
+
+See <a href="./examples/mnist/README.md#implicitly-initialise-a-data-loader-inside-of-benchmark_model">here</a> for details.
 </details>
 
 <details>
@@ -163,6 +165,8 @@ controlled via the `config` dictionary. This can be convenient if one does not w
 We provide an argparser that allows one to easily select conversion methods by numerical index or 
 string name. It also allows one to set the batch size, number of samples, and device easily, as well
 as other commonly used parameters like model weights path.
+
+See <a href="./examples/mnist/README.md#pre-defined-argparser-for-easy-control-and-experimentation">here</a> for details.
 </details>
 
 <details>
@@ -174,8 +178,9 @@ However, if one wants to continue benchmarking other options even if a conversio
 one can set `fail_on_error` to False in the config dictionary.
 `alma` will then fail gracefully for that method. One can then access the associated error messages 
 and full tracebacks for the failed methods from the returned object.
-</details>
 
+See <a href="./examples/mnist/README.md#graceful-or-fast-failure">here</a> for details.
+</details>
 
 <details>
 <summary>Isolated environments for each conversion method via multi-processing</summary>
@@ -185,32 +190,22 @@ each conversion method in isolation. This ensures that each conversion method is
 in a fair and isolated environment, and is relevant because some of the methods (e.g. optimum quanto)
 can affect the global torch state and break other methods (e.g. by overwriting tensor defaults in 
 the C++ backend).
-<br>
-
-A consequence of running in multiple processes is that the model, if initialized naively, will be copied
-from the parent process to the child process. This doubles the required model memory, which can be 
-a problem for large models. To avoid this, one can, insead of feeding in a model
-directly to `benchmark_model`, feed in a function that returns the model. This way, the model is 
-only initialized once the child process starts for each conversion method, meaning we only have 
-one copy of the model at a time in device memory.
 
 To disable multiprocessing, set `multiprocessing` to False in the config dictionary.
+
+See <a href="./examples/mnist/README.md#isolated-environments-for-each-conversion-method-via-multi-processing">here</a> for details and discussion.
 </details>
 
 <details>
-<summary>Logging</summary>
+<summary>Logging, debugging, and CI integration</summary>
 <br>
 A lot of the conversion methods have verbose internal logging. We have opted to
 mostly silence those logs. However, if one wants access to those logs, one should use the `setup_logging`
 function and set the debugging level to `DEBUG`.
-See [here](./examples/mnist/README.md#logging-and-ci-integration) for more detials:
+
+See <a href="./examples/mnist/README.md#logging-and-ci-integration">here</a> for details.
 </details>
 
-<!-- - [here](#pre-defined-argparser-for-easy-control-and-experimentation) -->
-<!-- - [here](#implicitly-initialise-a-data-loader-inside-of-benchmark_model) -->
-<!-- - [here](#graceful-or-fast-failure) -->
-<!-- - [here](#isolated-environments-for-each-conversion-method-via-multi-processing) -->
-<!-- - [here](#logging-and-ci-integration) -->
 
 ## Conversion Options
 

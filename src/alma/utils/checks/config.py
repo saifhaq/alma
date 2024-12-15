@@ -13,7 +13,7 @@ class BenchmarkConfig(BaseModel):
     batch_size: int
     device: Any
     multiprocessing: Optional[bool]
-    fail_fast: Optional[bool]
+    fail_on_error: Optional[bool]
 
 
 def check_consistent_batch_size(
@@ -68,9 +68,4 @@ def check_config(config: dict) -> None:
     config["device"] = device
 
     # Check the configuration, there are some required fields
-    try:
-        _ = BenchmarkConfig.model_validate(config)
-    except ValueError as e:
-        logger.error(
-            f"Validation error: {e}, Please ensure the `config` has all of the required fields."
-        )
+    _ = BenchmarkConfig.model_validate(config)
