@@ -28,8 +28,8 @@ def get_exported_model(model, data: torch.Tensor) -> ExportedProgram:
     with suppress_output(logger.root.level >= logging.DEBUG):
         model = torch.export.export(model, (data,))
 
-    logger.debug("Model graph:")
     if logger.root.level <= logging.DEBUG:
+        logger.debug("Model graph:")
         logger.debug(model.graph.print_tabular())
 
     return model
