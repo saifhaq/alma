@@ -1,5 +1,5 @@
-import os
 import inspect
+import os
 
 
 def get_next_line_info() -> str:

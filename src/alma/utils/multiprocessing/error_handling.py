@@ -1,7 +1,7 @@
-from typing import Callable
-import traceback
 import sys
+import traceback
 from functools import wraps
+from typing import Callable
 
 
 def benchmark_error_handler(decorated_func: Callable) -> Callable:
@@ -9,7 +9,7 @@ def benchmark_error_handler(decorated_func: Callable) -> Callable:
     Decorator to catch exceptions and return them as a dictionary.
 
     Inputs:
-    - decorated_func (callable): the benchmarking function to wrap/decorate, should return a 
+    - decorated_func (callable): the benchmarking function to wrap/decorate, should return a
         dictionary.
 
     Outputs:

@@ -1,6 +1,6 @@
 import logging
 import time
-from typing import Any, Dict, Callable, Union
+from typing import Any, Callable, Dict, Union
 
 import torch
 import torch._dynamo
@@ -9,13 +9,14 @@ from tqdm import tqdm
 
 from ..conversions.select import select_forward_call_function
 from ..utils.data import get_sample_data
+from ..utils.multiprocessing import benchmark_error_handler
 from ..utils.times import inference_time_benchmarking  # should we use this?
 from .log import log_results
 from .warmup import warmup
-from ..utils.multiprocessing import benchmark_error_handler
 
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())
+
 
 @benchmark_error_handler
 def benchmark(

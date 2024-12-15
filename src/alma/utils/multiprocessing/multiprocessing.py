@@ -1,7 +1,7 @@
 import multiprocessing as mp
+import traceback
 from multiprocessing import Process, Queue
 from typing import Any, Callable, Union
-import traceback
 
 import torch
 
