@@ -8,11 +8,7 @@ from torch.ao.quantization.qconfig_mapping import QConfigMapping
 from torch.ao.quantization.quantize_fx import prepare_qat_fx
 
 from .utils.checks.type import check_model_type
-from .utils.qconfigs import fake_quant_act, fixed_0255, learnable_act, learnable_weights
-
-# One needs to set their quantization backend engine to what is appropriate for their system.
-# torch.backends.quantized.engine = 'x86'
-torch.backends.quantized.engine = "qnnpack"
+from .utils.qconfigs import learnable_act, learnable_weights
 
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())

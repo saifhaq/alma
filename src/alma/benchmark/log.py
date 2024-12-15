@@ -8,7 +8,8 @@ logger.addHandler(logging.NullHandler())
 def display_all_results(
     all_results: Dict[str, Dict[str, Any]],
     display_function: Callable = print,
-    include_traceback_for_errors: bool = True,
+    include_errors: bool = True,
+    include_traceback_for_errors: bool = False,
 ) -> None:
     """
     Display all the benchmarking results.
@@ -19,6 +20,7 @@ def display_all_results(
         results of the benchmarking. These can be floats giving the timings, or strings if there
         is an error containing the traceback.
     - display_function (Callable): The function to use to display the results. Default is print.
+    - include_errors (bool): Whether to include the error message for errors. Default is True.
     - include_traceback_for_errors (bool): Whether to include the traceback for errors. Default is True.
 
     Outputs:
@@ -33,6 +35,7 @@ def display_all_results(
             log_failure(
                 result,
                 display_function=display_function,
+                include_errors=include_errors,
                 include_traceback=include_traceback_for_errors,
             )
         display_function("\n")
@@ -72,6 +75,7 @@ def log_results(
 def log_failure(
     error_result: Dict[str, str],
     display_function: Callable = logger.info,
+    include_errors: bool = True,
     include_traceback: bool = True,
 ) -> None:
     """
@@ -81,11 +85,14 @@ def log_failure(
     - error_result (Dict[str, str]): the error message and traceback.
     - display_function (Callable): The function to use to display the results. Default is logger.info.
         Can be `print`, etc.
+    - include_errors (bool): Whether to include the error message for errors. Default is True.
     - include_traceback (bool): Whether to include the traceback. Default is True.
 
     Outputs:
     None
     """
-    display_function(f"Benchmarking failed, error: {error_result['error']}")
+    display_function("Benchmarking failed")
+    if include_errors:
+        display_function(f"Error: {error_result['error']}")
     if include_traceback:
         display_function(error_result["traceback"])

@@ -36,13 +36,14 @@ def get_compiled_model(
     logger.info(f"Running torch.compile [{backend} backend] on the model")
     check_model_type(model, (torch.nn.Module, fx.GraphModule, ExportedProgram))
 
-    torch._dynamo.reset()
-
-    # Set the compilation settings
-    compile_settings: Dict[str, str] = get_compile_settings(backend)
-
     # Compile the model, with suppressed internal logs if logging is above Debug level.
     with suppress_output(logger.root.level >= logging.DEBUG):
+        # Reset env
+        torch._dynamo.reset()
+
+        # Set the compilation settings
+        compile_settings: Dict[str, str] = get_compile_settings(backend)
+
         with torch.no_grad():
             model = torch.compile(model, **compile_settings)
 

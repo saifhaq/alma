@@ -1,6 +1,6 @@
 import logging
 import traceback
-from typing import Any, Dict, List, Union
+from typing import Any, Callable, Dict, List, Union
 
 import torch
 from torch.utils.data import DataLoader
@@ -9,7 +9,7 @@ from .benchmark import benchmark
 from .conversions.select import MODEL_CONVERSION_OPTIONS
 from .dataloader.create import create_single_tensor_dataloader
 from .utils.checks import check_consistent_batch_size, check_inputs
-from .utils.processing import process_wrapper
+from .utils.multiprocessing import benchmark_process_wrapper
 from .utils.times import inference_time_benchmarking  # should we use this?
 
 logger = logging.getLogger(__name__)
@@ -17,7 +17,7 @@ logger.addHandler(logging.NullHandler())
 
 
 def benchmark_model(
-    model: torch.nn.Module,
+    model: Union[torch.nn.Module, Callable],
     config: Dict[str, Any],
     conversions: Union[List[str], None] = None,
     data: Union[torch.Tensor, None] = None,
@@ -31,15 +31,19 @@ def benchmark_model(
     The `config` dict must contain the following:
     - n_samples (int): The number of samples to benchmark on
     - batch_size (int): The batch size to use for benchmarking
+    - device (torch.device): The device to benchmark on.
     - multiprocessing (Optional[bool], default True): Whether or not to use multiprocessing to have isolated
         testing environments per conversion method. This helps keep the global torch state consistent
         when each method is benchmarked.
-    - fail_fast (Optional[bool], default False): whether or not to fail fast, or fail gracefully.
+    - fail_on_error (Optional[bool], default False): whether or not to fail fast, or fail gracefully.
         If we fail gracefully, we continue benchmarking other methods if one fails, and store
         the error message and traceback in the returned struct.
 
     Inputs:
-    - model (torch.nn.Module): The model to benchmark.
+    - model (Union[torch.nn.Module, Callable]): The model to benchmark. If a callable is provided,
+        it should return the model. This is useful when using multiprocessing, as the creation of
+        the model is deferred to inside the child process, rather than the parent process. This is
+        especially important if the model is large and two instances would not fit on device.
     - config (Dict[str, Any]): The configuration for the benchmarking. This contains the number of
         samples to benchmark on, and the batch size to use for benchmarking.
     - conversions (List[str]): The list of conversion methods to benchmark. If None, all of the
@@ -56,14 +60,6 @@ def benchmark_model(
         If the conversion method failed and we fail gracefully, the value will be a dictionary
         containing the error and traceback.
     """
-    # Set to eval mode
-    model.eval()
-
-    # We determine the device to run the model on
-    # NOTE: this will only work for single-device set ups. Benchmarking on multiple devices is not
-    # currently supported.
-    device: torch.device = next(model.parameters()).device
-
     # Check the inputs
     check_inputs(model, config, conversions, data, data_loader)
 
@@ -71,9 +67,10 @@ def benchmark_model(
     if conversions is None:
         conversions = list(MODEL_CONVERSION_OPTIONS.values())
 
-    # The number of samples to benchmark on, batch size,
+    # The number of samples to benchmark on, batch size, and device to benchmark on
     n_samples: int = config["n_samples"]
     batch_size: int = config["batch_size"]
+    device: torch.device = config["device"]
 
     # Whether or not to use multiprocessing for isolated testing environments (which protects against
     # conversion methods contaminating the global torch state), and whether to fail quickly or gracefully.
@@ -81,7 +78,7 @@ def benchmark_model(
     multiprocessing: bool = (
         config["multiprocessing"] if "multiprocessing" in config else True
     )
-    fail_fast: bool = config["fail_fast"] if "fail_fast" in config else False
+    fail_on_error: bool = config["fail_on_error"] if "fail_on_error" in config else True
 
     # Creates a dataloader with random data, of the same size as the input data sample
     # If the data_loader has been provided by the user, we use that one
@@ -101,32 +98,25 @@ def benchmark_model(
         torch.cuda.empty_cache()
         logger.info(f"Benchmarking model using conversion: {conversion_method}")
 
-        try:
-            result: Dict[str, float] = process_wrapper(
-                multiprocessing,
-                benchmark,
-                model,
-                conversion_method,
-                device,
-                data_loader,
-                n_samples,
-            )
-            result["status"] = "success"
-            all_results[conversion_method] = result
-        except Exception as e:
-            # If we opt to fail fast (e.g. for debugging, we raise immediately)
-            if fail_fast:
-                raise
-            # If there is an error, we log the error. In the returned "results", we include the
-            # full traceback
-            error_msg = (
-                f"Benchmarking conversion {conversion_method} failed. Error: {e}"
-            )
+        result, stacktrace = benchmark_process_wrapper(
+            multiprocessing,
+            benchmark,
+            device,
+            model,
+            conversion_method,
+            data_loader,
+            n_samples,
+        )
+        all_results[conversion_method] = result
+
+        # If the conversion failed, we raise an exception if we are failing fast
+        if result["status"] == "error":
+            error_msg = f"Benchmarking conversion {conversion_method} failed."
             logger.error(error_msg)
-            all_results[conversion_method] = {
-                "status": "error",
-                "error": e,
-                "traceback": traceback.format_exc(),
-            }
+
+            # We combine the stacktrace from the child process with the stacktrace from the parent process
+            result["traceback"] = stacktrace + result["traceback"]
+            if fail_on_error:
+                raise Exception(result["traceback"])
 
     return all_results
