@@ -273,7 +273,7 @@ And the results may look like this (did not fail when the error occured):
 
 ```bash
 EAGER results:
-Device: mps
+device: mps
 Total elapsed time: 0.0871 seconds
 Total inference time (model only): 0.0085 seconds
 Total samples: 2048 - Batch size: 64

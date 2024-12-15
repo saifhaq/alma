@@ -115,7 +115,7 @@ The results will look like this, depending on one's model, dataloader, and hardw
 
 ```bash
 EAGER results:
-Device: cuda
+device: cuda:0
 Total elapsed time: 0.0211 seconds
 Total inference time (model only): 0.0073 seconds
 Total samples: 2048 - Batch size: 64
@@ -123,7 +123,7 @@ Throughput: 282395.70 samples/second
 
 
 EXPORT+EAGER results:
-Device: cuda
+device: cuda:0
 Total elapsed time: 0.0209 seconds
 Total inference time (model only): 0.0067 seconds
 Total samples: 2048 - Batch size: 64
