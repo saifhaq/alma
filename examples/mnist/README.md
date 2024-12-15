@@ -2,7 +2,7 @@
 
 This example of `alma` demonstrates how to train a simple model on the MNIST dataset and benchmark
 the model speed for different conversions using the `benchmark_model` API. Everything, from not using
-a dataloader, to error handling, to CLI integration, to logging and debugging, is covered.
+a dataloader, to error handling, CLI integration, multiprocessing, logging and debugging, is covered.
 
 It also contains a script to download the MNIST dataset, and extensive example code on how to quantize
 a model using PTQ and QAT.
@@ -46,9 +46,7 @@ To quantize the model running on Apple silicon, run:
 PYTORCH_ENABLE_MPS_FALLBACK=1 python train.py  --quantize
 ```
 
-## Benchmark with `alma`:
-
-### Benchmark conversion options using a default data loader:
+## Benchmark conversion options using a default data loader:
 
 The `benchmark_model` API is used to benchmark the speed of a model for different conversion options.
 The API is used as follows (see `benchmark_with_dataloader.py`):
@@ -73,6 +71,7 @@ data_loader = ...
 config = {
     "batch_size": args.batch_size,
     "n_samples": args.n_samples,
+    "device": device,  # The device to run the model on
 }
 
 # Benchmark the model
@@ -113,22 +112,7 @@ Total samples: 5000
 Throughput: 12800.82 samples/second
 ```
 
-#### Argparsing:
-In the above example, the batch size of the data loader is controlled via the `--batch_size` 
-argument, fed in via the config object.
-The number of samples to run the benchmark on  is controlled via the `--n_samples` argument. 
-For convenience, we also provide a `--data-dir` argument, so that one can have one's data loader 
-feed in specific data, and a `--model-path` argument, so that one can feed in specific model weights.
-
-Finally, we also provide an `--ipdb` argument, which throws one into an ipdb debugging session if and 
-wherever an Exception occurs. See this 
-[blog post](https://medium.com/@oscar-savolainen/my-favourite-python-snippets-794d5653af38) for 
-more details on the ipdb sysexception hook.
-
-One can of course also just pass in non-CLI arguments directly to the `benchmark_model` API.
-
-
-#### Full working example:
+### Full working example:
 A full working example can be found in `benchmark_with_dataloader.py`.
 With the above command, the script will download the MNIST dataset, train a model, and then benchmark
 the model for the 2nd and 10th conversion options:
@@ -143,10 +127,26 @@ cd examples/mnist/data
 ./reset.sh
 ```
 
+## Pre-defined argparser for easy control and experimentation
+In the above example, the batch size of the data loader is controlled via the `--batch_size` 
+argument, fed in via the config object.
+The number of samples to run the benchmark on  is controlled via the `--n_samples` argument. 
+For convenience, we also provide a `--data-dir` argument, so that one can have one's data loader 
+feed in specific data, and a `--model-path` argument, so that one can feed in specific model weights.
+
+Finally, we also provide an `--ipdb` argument, which throws one into an ipdb debugging session if and 
+wherever an Exception occurs. See this 
+[blog post](https://medium.com/@oscar-savolainen/my-favourite-python-snippets-794d5653af38) for 
+more details on the ipdb sysexception hook. This will not work if one sets the `fail_with_error` argument,
+which is discussed later in section [Graceful or fast failure](#graceful-or-fast-failure), to False.
+
+One can of course also just pass in non-CLI arguments directly to the `benchmark_model` API.
+
 
 ### Selecting conversion options:
 
-To see all of the conversion options, run the following command:
+To see all of the conversion options via the CLI `parse_benchmark_args` argparser function, run 
+the following command:
 
 ```bash
 cd examples/mnist
@@ -176,9 +176,9 @@ cd examples/mnist
 python benchmark_with_dataloader.py --model-path ./model/mnist.pt --data-dir data/data_for_inference
 ```
 
-### Benchmark conversion options using a data tensor to intialise a data loader:
+## Implicitly initialise a data loader inside of `benchmark_model`:
 
-One does not need to pass in a data loader to do the benchmarking. Howeverm, if one does not pass in a data loader,
+One does not need to pass in a data loader to do the benchmarking. However, if one does not pass in a data loader,
 one has to pass in a `data` input, where `data` is just a tensor with batch size 1.
 The benchmarking will generate a data loader, where the size of the generated tensors is
 taken from an inputted `data` tensor, which can be a tensor with random values. Either the `data`
@@ -208,6 +208,7 @@ model = ...
 config = {
     "batch_size": args.batch_size,
     "n_samples": args.n_samples,
+    "device": device,  # The device to run the model on
 }
 
 # Benchmark the model
@@ -223,7 +224,7 @@ display_all_results(results)
 
 One would then run this the same way as before. 
 
-#### Full working example:
+### Full working example:
 A full working example can be found in `examples/mnist/benchmark_random_tensor.py` where a random 
 input tensor is used, and the model is not trained at all.
 E.g.
@@ -233,26 +234,53 @@ python benchmark_random_tensor.py --conversion 10,2 --batch-size 100 --n-samples
 ```
 
 
-### Error handling
+## Graceful or fast failure
+By default, `alma` will fail fast if any conversion method fails. This is because we want to know
+if a conversion method fails, so that we can fix it. 
+However, if one wants to continue benchmarking other options even if a conversion method fails, 
+one can set `fail_on_error` to False in the config dictionary.
+`alma` will then fail gracefully for that method. One can then access the associated error messages 
+and full tracebacks for the failed methods from the returned object.
 
-In case where the benchmarking of a given conversion fails, it will return a dict for that conversion
-which contains the error message as well as the full traceback. This is useful for debugging and
-understanding why a given conversion failed, e.g. because of hardware incompatabilities, missing
-dependencies, etc. 
+This is useful for debugging and understanding why a given conversion failed, e.g. because of 
+hardware incompatabilities, missing dependencies, etc. 
 
 For example, if the `FAKE_QUANTIZED` conversion fails because it's not currently supported for Apple
-silicon, the default results may look like this:
+silicon, one's code with `fail_on_error=False`, may look like this:
+
+```python
+...
+
+config = {
+    "batch_size": 64,
+    "n_samples": 2048,
+    "device": device,  # The device to run the model on
+    "fail_on_error": False,  # If True, the script will fail if a conversion fails
+}
+
+conversions = ["EAGER", "NATIVE_FAKE_QUANTIZED_AI8WI8_STATIC"]
+
+# Benchmark the model
+results: Dict[str, Dict[str, float]] = benchmark_model(
+   model, config, conversions, data=data
+)
+
+# Display the results
+display_all_results(results)
+```
+
+And the results may look like this (did not fail when the error occured):
 
 ```bash
-CONVERT_QUANTIZED results:
-Device: cpu
-Total elapsed time: 0.8287 seconds
-Total inference time (model only): 0.4822 seconds
-Total samples: 5000 - Batch size: 50
-Throughput: 6033.89 samples/second
+EAGER results:
+Device: mps
+Total elapsed time: 0.0871 seconds
+Total inference time (model only): 0.0085 seconds
+Total samples: 2048 - Batch size: 64
+Throughput: 241577.09 samples/second
 
 
-FAKE_QUANTIZED results:
+NATIVE_FAKE_QUANTIZED_AI8WI8_STATIC results:
 Benchmarking failed, error: The operator 'aten::_fake_quantize_learnable_per_tensor_affine' is not 
 currently implemented for the MPS device. If you want this op to be added in priority during the 
 prototype phase of this feature, please comment on 
@@ -268,39 +296,112 @@ In this example, `print(results["FAKE_QUANTIZED"]["traceback"])` gives us:
 
 ```bash
 Traceback (most recent call last):
-  File "/Users/oscarsavolainen/Coding/Mine/Alma-Saif/src/alma/benchmark_model.py", line 88, in benchmark_model
-    result: Dict[str, float] = benchmark(
-                               ^^^^^^^^^^
-  File "/Users/oscarsavolainen/Coding/Mine/Alma-Saif/src/alma/benchmark/benchmark.py", line 63, in benchmark
+  File "/Users/oscarsavolainen/Coding/Mine/Alma-Saif/examples/mnist/benchmark_random_tensor.py", line 60, in <module>
+    main()
+  File "/Users/oscarsavolainen/Coding/Mine/Alma-Saif/examples/mnist/benchmark_random_tensor.py", line 48, in main
+    results: Dict[str, Dict[str, Any]] = benchmark_model(
+  File "/Users/oscarsavolainen/Coding/Mine/Alma-Saif/src/alma/benchmark_model.py", line 101, in benchmark_model
+    result, stacktrace = benchmark_process_wrapper(
+  File "/Users/oscarsavolainen/Coding/Mine/Alma-Saif/src/alma/utils/processing.py", line 36, in run_benchmark_process
+    result = benchmark_func(device, *args, **kwargs)
+  File "/Users/oscarsavolainen/Coding/Mine/Alma-Saif/src/alma/benchmark/benchmark.py", line 21, in benchmark
+    benchmark(
+  File "/Users/oscarsavolainen/Coding/Mine/Alma-Saif/src/alma/utils/processing.py", line 144, in wrapper
+    result: dict = func(*args, **kwargs)
+                   ^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/oscarsavolainen/Coding/Mine/Alma-Saif/src/alma/benchmark/benchmark.py", line 81, in benchmark
     warmup(forward_call, data_loader, device)
-  File "/Users/oscarsavolainen/Coding/Mine/Alma-Saif/src/alma/benchmark/warmup.py", line 26, in warmup
+  File "/Users/oscarsavolainen/Coding/Mine/Alma-Saif/src/alma/benchmark/warmup.py", line 33, in warmup
     _ = forward_call(data)
         ^^^^^^^^^^^^^^^^^^
-  File "<eval_with_key>.173", line 5, in forward
+  File "<eval_with_key>.2", line 5, in forward
     activation_post_process_0 = self.activation_post_process_0(x);  x = None
                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/opt/homebrew/Caskroom/miniconda/base/envs/quantization-tuts/lib/python3.11/site-packages/torch/nn/modules/module.py", line 1553, in _wrapped_call_impl
+  File "/opt/homebrew/Caskroom/miniconda/base/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1532, in _wrapped_call_impl
     return self._call_impl(*args, **kwargs)
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/opt/homebrew/Caskroom/miniconda/base/envs/quantization-tuts/lib/python3.11/site-packages/torch/nn/modules/module.py", line 1562, in _call_impl
+  File "/opt/homebrew/Caskroom/miniconda/base/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1541, in _call_impl
     return forward_call(*args, **kwargs)
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/opt/homebrew/Caskroom/miniconda/base/envs/quantization-tuts/lib/python3.11/site-packages/torch/ao/quantization/_learnable_fake_quantize.py", line 160, in forward
+  File "/opt/homebrew/Caskroom/miniconda/base/lib/python3.12/site-packages/torch/ao/quantization/_learnable_fake_quantize.py", line 160, in forward
     X = torch._fake_quantize_learnable_per_tensor_affine(
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-NotImplementedError: The operator 'aten::_fake_quantize_learnable_per_tensor_affine' is not currently implemented for the MPS device. If you want this op to be added in priority during the prototype phase of this feature, please comment on https://github.com/pytorch/pytorch/issues/77764. As a temporary fix, you can set the environment variable `PYTORCH_ENABLE_MPS_FALLBACK=1` to use the CPU as a fallback for this op. WARNING: this will be slower than running natively on MPS.
+NotImplementedError: The operator 'aten::_fake_quantize_learnable_per_tensor_affine' is not 
+currently implemented for the MPS device. If you want this op to be added in priority during the 
+prototype phase of this feature, please comment on 
+https://github.com/pytorch/pytorch/issues/77764. As a temporary fix, you can set the environment 
+variable `PYTORCH_ENABLE_MPS_FALLBACK=1` to use the CPU as a fallback for this op. WARNING: this 
+will be slower than running natively on MPS.
 ```
 
 By default `display_all_results` only logs the error from the conversion, but one can also 
 include the traceback in `display_all_results` via the `include_traceback_for_errors` argument
 E.g. `display_all_results(results, include_traceback_for_errors=True)`.
 
-Incidentally, this Apple-silicon-quantization issue can be solved by setting the environmental variable:
-```bash
-PYTORCH_ENABLE_MPS_FALLBACK=1
+If there are any issues with the traceback, please let us know! Stitching the traceback together
+through multiprocessing and error-handler wrappers was non-trivial to do, but hopefully it gives 
+informative tracebacks! If anything can be improved, please raise an issue!
+
+## Isolated environments for each conversion method via multi-processing</summary>
+
+By default, `alma` will run each conversion method in a separate process (one at a time), so that 
+one can benchmark each conversion method in isolation. This ensures that each conversion method is benchmarked
+in a fair and isolated environment, and is relevant because some of the methods (e.g. optimum quanto)
+can affect the global torch state and break other methods (e.g. by overwriting tensor defaults in 
+the C++ backend).
+
+To disable this, one can set `multiprocessing` to False in the config dictionary.
+E.g.
+
+```python
+config = {
+    "batch_size": 64,
+    "n_samples": 2048,
+    "device": device, 
+    "multiprocessing": False,  # If True, each conversion option will be run in a separate process
+    "fail_on_error": False, 
+}
 ```
 
-### Logging and CI integration
+### Effect on model memory
+A consequence of running in multiple processes is that the model, if initialized naively, will be copied
+from the parent process to the child process. This doubles the required model memory, which can be 
+a problem for large models. To avoid this, one can, insead of feeding in a model
+directly to `benchmark_model`, feed in a function that returns the model. This way, the model is 
+only initialized once the child process starts for each conversion method, meaning we only have 
+one copy of the model at a time in device memory.
+
+E.g.
+
+```python
+...
+
+# This callable function returns the model, only once when we call it inside the child process
+def get_model():
+    return Net()
+
+config = {
+    "batch_size": 64,
+    "n_samples": 2048,
+    "device": device, 
+    "multiprocessing": True,  # If True, each conversion option will be run in a separate process
+}
+
+# Feed in `get_model` instead of the model directly
+results: Dict[str, Dict[str, float]] = benchmark_model(
+   get_model, config, conversions, data=data
+)
+```
+
+If one does feed in a model directly, with `multiprocessing=True`, the program will throw a warning
+but continue.
+
+#### Full working example:
+
+A full working example can be found in `examples/mnist/mem_efficient_benchmark_rand_tensor.py` where
+a callable function is fed in that returns the model. 
+
+## Logging and CI integration
 
 A lot of the imported modules have verbose logging, and so `alma` provides some logging functions
 to help manage the logging level. The `setup_logging` function is provided for convenience, but one

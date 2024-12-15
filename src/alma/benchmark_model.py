@@ -9,7 +9,7 @@ from .benchmark import benchmark
 from .conversions.select import MODEL_CONVERSION_OPTIONS
 from .dataloader.create import create_single_tensor_dataloader
 from .utils.checks import check_consistent_batch_size, check_inputs
-from .utils.processing import process_wrapper
+from .utils.processing import benchmark_process_wrapper
 from .utils.times import inference_time_benchmarking  # should we use this?
 
 logger = logging.getLogger(__name__)
@@ -35,7 +35,7 @@ def benchmark_model(
     - multiprocessing (Optional[bool], default True): Whether or not to use multiprocessing to have isolated
         testing environments per conversion method. This helps keep the global torch state consistent
         when each method is benchmarked.
-    - fail_fast (Optional[bool], default False): whether or not to fail fast, or fail gracefully.
+    - fail_on_error (Optional[bool], default False): whether or not to fail fast, or fail gracefully.
         If we fail gracefully, we continue benchmarking other methods if one fails, and store
         the error message and traceback in the returned struct.
 
@@ -78,7 +78,7 @@ def benchmark_model(
     multiprocessing: bool = (
         config["multiprocessing"] if "multiprocessing" in config else True
     )
-    fail_fast: bool = config["fail_fast"] if "fail_fast" in config else False
+    fail_on_error: bool = config["fail_on_error"] if "fail_on_error" in config else True
 
     # Creates a dataloader with random data, of the same size as the input data sample
     # If the data_loader has been provided by the user, we use that one
@@ -98,32 +98,25 @@ def benchmark_model(
         torch.cuda.empty_cache()
         logger.info(f"Benchmarking model using conversion: {conversion_method}")
 
-        try:
-            result: Dict[str, Any] = process_wrapper(
-                multiprocessing,
-                benchmark,
-                device,
-                model,
-                conversion_method,
-                data_loader,
-                n_samples,
-            )
-            result["status"] = "success"
-            all_results[conversion_method] = result
-        except Exception as e:
-            # If we opt to fail fast (e.g. for debugging, we raise immediately)
-            if fail_fast:
-                raise
-            # If there is an error, we log the error. In the returned "results", we include the
-            # full traceback
-            error_msg = (
-                f"Benchmarking conversion {conversion_method} failed. Error: {e}"
-            )
+        result, stacktrace = benchmark_process_wrapper(
+            multiprocessing,
+            benchmark,
+            device,
+            model,
+            conversion_method,
+            data_loader,
+            n_samples,
+        )
+        all_results[conversion_method] = result
+
+        # If the conversion failed, we raise an exception if we are failing fast
+        if result["status"] == "error":
+            error_msg = f"Benchmarking conversion {conversion_method} failed."
             logger.error(error_msg)
-            all_results[conversion_method] = {
-                "status": "error",
-                "error": e,
-                "traceback": traceback.format_exc(),
-            }
+
+            # We combine the stacktrace from the child process with the stacktrace from the parent process
+            result["traceback"] = stacktrace + result["traceback"]
+            if fail_on_error:
+                raise Exception(result["traceback"])
 
     return all_results
