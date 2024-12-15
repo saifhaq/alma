@@ -152,54 +152,80 @@ uv pip install --system "nvidia-modelopt[torch,onnx]" -U && \
     python -c "import modelopt.torch.quantization.extensions as ext; ext.precompile()"; \
 fi
 
-
-RUN mkdir -p /build/tensorrt && \
-    cd /build/tensorrt && \ 
-    wget -q -O tensorrt.tar.gz $TENSORRT_URL && \
-    tar -xf tensorrt.tar.gz && \
-    cp TensorRT-*/bin/trtexec /usr/local/bin && \
-    cp TensorRT-*/include/* /usr/include/x86_64-linux-gnu && \
-    python -m pip install TensorRT-*/python/tensorrt-*-cp310-none-linux_x86_64.whl && \ 
-    cd /build/tensorrt && \
-    mkdir -p /usr/local/lib/python3.10/dist-packages/tensorrt_libs && \
-    cp -a TensorRT-*/targets/x86_64-linux-gnu/lib/* /usr/local/lib/python3.10/dist-packages/tensorrt_libs && \
-    rm -rf TensorRT-*.Linux.x86_64-gnu.cuda-*.tar.gz TensorRT-* tensorrt.tar.gz
-ENV TRT_LIB_PATH=/usr/local/lib/python3.10/dist-packages/tensorrt_libs
-ENV LD_LIBRARY_PATH=$TRT_LIB_PATH:$LD_LIBRARY_PATH
-
-
-ADD . /build/alma
-
-RUN cp /build/alma/requirements.txt /build/alma/requirements.modified.txt && \
-    if [ "$INSTALL_TENSORRT" != "true" ]; then \
-        sed -i '/torch-tensorrt/d' /build/alma/requirements.modified.txt; \
-    fi && \
-    if [ "$INSTALL_TVM" != "true" ]; then \
-        sed -i '/apache-tvm/d' /build/alma/requirements.modified.txt; \
-    fi
-
 RUN apt-get update && apt-get install -y --no-install-recommends \
     gnupg2 \
     zip \
     g++ \
     openjdk-11-jdk \
-    ca-certificates
+    ca-certificates \
+    sudo
+
+
+
+# ENV TF_CUDA_COMPUTE_CAPABILITIES "${TORCH_CUDA_ARCH_LIST}"
+# RUN cd /build && \
+#   git clone --recursive https://github.com/pytorch/xla && \
+#   cd /build && \
+#   git clone --recursive https://github.com/pytorch-tpu/examples tpu-examples
 
 RUN curl -sSL "https://github.com/bazelbuild/bazelisk/releases/download/v1.25.0/bazelisk-linux-amd64" \
-    -o /usr/local/bin/bazelisk && \
-    chmod +x /usr/local/bin/bazelisk && \
-    ln -s /usr/local/bin/bazelisk /usr/local/bin/bazel && \
-    bazel
+  -o /usr/local/bin/bazelisk && \
+  chmod +x /usr/local/bin/bazelisk && \
+  ln -s /usr/local/bin/bazelisk /usr/local/bin/bazel && \
+  bazel
 
-RUN mkdir -p /build/openxla && \
-    cd /build && \
-    git clone https://github.com/openxla/openxla.git && \
-    cd /build/openxla && \
-    ./configure.py  --backend=CUDA --backend=CPU && \
-    bazel build //:all && \
-    bazel clean --expunge
+# RUN apt install -y apt-transport-https ca-certificates wget procps && \
+#     echo 'TF_CUDA_COMPUTE_CAPABILITIES="${TORCH_CUDA_ARCH_LIST}"' >> ~/.bashrc && \
+#     echo 'TF_CUDA_PATHS="/usr/local/cuda,/usr/include,/usr"' >> ~/.bashrc && \
+#     apt-get -qq install npm nodejs ninja-build  && \
+#     export PATH="$PATH:$HOME/bin" && \
+#     cd /build/xla && \
+#     git submodule update --init --recursive 
 
-RUN uv pip install --system -r /build/alma/requirements.modified.txt
+# RUN uv pip install --system torch~=2.5.0 torch_xla~=2.5.0 https://storage.googleapis.com/pytorch-xla-releases/wheels/cuda/12.1/torch_xla_cuda_plugin-2.5.0-py3-none-any.whl
+# RUN uv pip install --system https://storage.googleapis.com/pytorch-xla-releases/wheels/cuda/12.4/torch_xla-2.5.0-cp310-cp310-manylinux_2_28_x86_64.whl
+# RUN uv pip install --system torch~=2.5.0 torch_xla[tpu]~=2.5.0 -f https://storage.googleapis.com/libtpu-releases/index.html -f https://storage.googleapis.com/libtpu-wheels/index.html --prerelease=allow
+RUN uv pip install --system torch~=2.5.0 torch_xla~=2.5.0 https://storage.googleapis.com/pytorch-xla-releases/wheels/cuda/12.4/torch_xla_cuda_plugin-2.5.0-py3-none-any.whl
 
-RUN cd /build/alma && \
-    pip install -e ./
+RUN cd /build && \
+    git clone https://github.com/openxla/xla.git
+    #  && \
+    # cd /build/xla && \
+    # ./configure.py  --backend=CUDA && \
+    # bazel build //:all && \
+    # bazel clean --expunge
+
+# RUN cd /build/xla && \ 
+#     uv pip install --system requests wheel torch && \
+#     python setup.py bdist_wheel && \
+#     uv pip install --system  dist/*.whl && \
+#     mkdir -p /build/dist && \
+#     cp dist/*.whl /build/dist && \
+#     mkdir -p /build/dist 
+
+# RUN git clone https://github.com/pytorch/vision.git && \
+#     cd vision && \
+#     python setup.py bdist_wheel && \
+#     uv pip install --system  dist/*.whl && \
+#     cp dist/*.whl /build/dist
+
+
+
+# RUN cd /build/xla && bash scripts/build_torch_wheels.sh 3.10 nightly 0
+# ENV LD_PRELOAD="/usr/lib/x86_64-linux-gnu/libtcmalloc.so.4"
+
+
+# ADD . /build/alma
+
+# RUN cp /build/alma/requirements.txt /build/alma/requirements.modified.txt && \
+#     if [ "$INSTALL_TENSORRT" != "true" ]; then \
+#         sed -i '/torch-tensorrt/d' /build/alma/requirements.modified.txt; \
+#     fi && \
+#     if [ "$INSTALL_TVM" != "true" ]; then \
+#         sed -i '/apache-tvm/d' /build/alma/requirements.modified.txt; \
+#     fi
+
+# RUN uv pip install --system -r /build/alma/requirements.modified.txt
+
+# RUN cd /build/alma && \
+#     pip install -e ./
