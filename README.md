@@ -28,6 +28,7 @@ affect model speed and performance.
   - [Docker](#docker)
 - [Basic Usage](#basic-usage)
 - [Examples](#examples)
+- [Advanced Features and Design Decisions](#advanced-features-and-design-decisions)
 - [Conversion Options](#conversion-options)
 - [Future Work](#future-work)
 - [How to Contribute](#how-to-contribute)
