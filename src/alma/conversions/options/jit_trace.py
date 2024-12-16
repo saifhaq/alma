@@ -21,5 +21,5 @@ def get_jit_traced_model_forward_call(
     Returns:
     - forward (Callable): the forward call representing the traced model.
     """
-    traced_model = torch.jit.trace(model, data)
+    traced_model = torch.jit.trace(model, data).eval()
     return traced_model.forward

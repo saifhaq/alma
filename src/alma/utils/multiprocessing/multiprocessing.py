@@ -30,6 +30,20 @@ def run_benchmark_process(
     - result_queue (Queue): queue to store the results or errors
     """
     # Get the next line to include in the traceback
+
+    try:
+        # Initialize the XLA environment if device is XLA
+        if device.type == "xla":
+            import torch_xla.core.xla_model as xm
+
+            device = xm.xla_device()
+        next_cmd_multi = get_next_line_info()
+        result = benchmark_func(device, *args, **kwargs)
+        result_queue.put((result, formatted_stacktrace + next_cmd_multi))
+    except Exception as e:
+        formatted_stacktrace += f"\n{traceback.format_exc()}"
+        result_queue.put((None, formatted_stacktrace))
+
     next_cmd_multi = get_next_line_info()
     result = benchmark_func(device, *args, **kwargs)
     result_queue.put((result, formatted_stacktrace + next_cmd_multi))
