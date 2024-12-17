@@ -1,13 +1,14 @@
-from alma.utils.checks.model import (
-    check_model,
-    check_is_local_function,
-    is_local_function_name,
-    is_picklable,
-)
+from unittest.mock import patch
 
 import pytest
 import torch
-from unittest.mock import patch
+
+from alma.utils.checks.model import (
+    check_is_local_function,
+    check_model,
+    is_local_function_name,
+    is_picklable,
+)
 
 
 # Helper functions and classes for testing
@@ -36,6 +37,7 @@ def return_unpicklable_function():
     def unpicklable_function():
         """This function is not picklable as it is locally scoped"""
         pass
+
     return unpicklable_function
 
 

@@ -1,5 +1,5 @@
-import torch
 import pytest
+import torch
 
 from alma.benchmark_model import benchmark_model
 
@@ -23,8 +23,8 @@ def test_eager_success():
         "batch_size": 2,
         "device": torch.device("cpu"),  # The device to benchmark on
         "multiprocessing": True,  # If True, we test each method in its own isolated environment,
-                                 # which helps keep methods from contaminating the global torch state
-        "fail_on_error": True,   # If False, we fail gracefully and keep testing other methods
+        # which helps keep methods from contaminating the global torch state
+        "fail_on_error": True,  # If False, we fail gracefully and keep testing other methods
     }
 
     conversions = ["EAGER"]
@@ -33,4 +33,6 @@ def test_eager_success():
     results = benchmark_model(model, config, conversions, data=data.squeeze())
 
     assert len(results) == 1, "Expected 1 result for EAGER conversion"
-    assert results["EAGER"]["status"] == "success", "Expected EAGER conversion to succeed"
+    assert (
+        results["EAGER"]["status"] == "success"
+    ), "Expected EAGER conversion to succeed"

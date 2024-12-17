@@ -1,8 +1,8 @@
-from alma.utils.checks.data import check_data_or_dataloader
-
 import pytest
 import torch
 from torch.utils.data import DataLoader, TensorDataset
+
+from alma.utils.checks.data import check_data_or_dataloader
 
 
 def test_data_only():

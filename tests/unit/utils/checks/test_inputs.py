@@ -1,8 +1,8 @@
-from alma.utils.checks.inputs import check_input_type
-
 import pytest
 import torch
 from torch.utils.data import DataLoader, TensorDataset
+
+from alma.utils.checks.inputs import check_input_type
 
 
 def dummy_callable(x):

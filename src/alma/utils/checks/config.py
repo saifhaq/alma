@@ -29,6 +29,7 @@ otherwise the last batch will fail due to having a different shape. n-samples wa
 batch size was {batch_size} """
             raise ValueError(error_msg)
 
+
 def is_valid_torch_device(device: Union[str, torch.device]) -> torch.device:
     """
     Check if a string is a valid torch device.

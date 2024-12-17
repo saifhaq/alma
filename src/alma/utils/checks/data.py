@@ -1,6 +1,7 @@
 import torch
 from torch.utils.data import DataLoader
 
+
 def check_data_or_dataloader(data: torch.Tensor, data_loader: DataLoader) -> None:
     """
     Check that either data or data loader is provided, and not both.

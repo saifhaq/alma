@@ -2,7 +2,12 @@ import pytest
 import torch
 from pydantic import ValidationError
 
-from alma.utils.checks.config import check_config, BenchmarkConfig, is_valid_torch_device, check_consistent_batch_size
+from alma.utils.checks.config import (
+    BenchmarkConfig,
+    check_config,
+    check_consistent_batch_size,
+    is_valid_torch_device,
+)
 
 
 # Test check_consistent_batch_size function
