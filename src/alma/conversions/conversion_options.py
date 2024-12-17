@@ -1,9 +1,25 @@
-from typing import TypedDict, Union
+from typing import List, Tuple, TypedDict, Union
 
 
 class ConversionOption(TypedDict):
     mode: str
     device_override: Union[str, None]
+
+
+def conversions_to_modes(conversions: List[Union[str, ConversionOption]]) -> List[str]:
+    """
+    Converts a list of conversions (which may be strings or ConversionOption dictionaries)
+    into a list of mode strings.
+    """
+    modes = []
+    for c in conversions:
+        if isinstance(c, str):
+            # Already a mode string
+            modes.append(c)
+        else:
+            # c is a ConversionOption
+            modes.append(c["mode"])
+    return modes
 
 
 MODEL_CONVERSION_OPTIONS: dict[int, ConversionOption] = {

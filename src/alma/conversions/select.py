@@ -13,6 +13,7 @@ from optimum.quanto import (
     qint8,
 )
 
+from .conversion_options import MODEL_CONVERSION_OPTIONS
 from .options.compile import (
     get_compiled_forward_call_eager_fallback,
     get_compiled_model_forward_call,
