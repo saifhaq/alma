@@ -22,7 +22,7 @@ def check_model(model: Union[torch.nn.Module, Callable], config: dict) -> None:
     None
     """
 
-    if not isinstance(model, torch.nn.Module) and config.get("multiprocessing", True):
+    if not isinstance(model, torch.nn.Module) and config.multiprocessing:
         type_error_msg = "If not torch.nn.Module, the modle type should be a Callable that loads the model"
         assert isinstance(model, Callable), type_error_msg
         error_msg = """Please ensure that your 'load model' function is pickle-able. The function 
@@ -31,7 +31,7 @@ must not be locally sourced, but sourced at the module level."""
 
     # If the model is a torch.nn.Mpodule and multiprocessing is enabled, we log a warning
     # that this is not memory efficient
-    if isinstance(model, torch.nn.Module) and config.get("multiprocessing", True):
+    elif isinstance(model, torch.nn.Module) and config.multiprocessing:
         warning_msg = """Multiprocessing is enabled, and the model is a torch.nn.Module. This is not memory efficient,
 as the model will be pickled and sent to each child process, which will require the model to be stored in memory
 twice. If the model is large, this may cause memory issues. Consider using a callable to return the model, which

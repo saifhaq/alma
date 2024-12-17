@@ -7,8 +7,9 @@ from model.model import Net
 from alma.arguments.benchmark_args import parse_benchmark_args
 from alma.benchmark.log import display_all_results
 from alma.benchmark_model import benchmark_model
-from alma.utils.device import select_device, setup_device
+from alma.utils.device import setup_device
 from alma.utils.setup_logging import setup_logging
+from alma.utils.types.benchmark_config import BenchmarkConfig
 
 # One needs to set their quantization backend engine to what is appropriate for their system.
 # torch.backends.quantized.engine = 'x86'
@@ -48,23 +49,23 @@ def main() -> None:
     args, conversions = parse_benchmark_args()
 
     # Create random input tensor on the default device
-    current_device = select_device(not args.no_cuda, not args.no_mps)
+    current_device = setup_device(None, not args.no_cuda, not args.no_mps)
 
     # Iterate through each selected conversion (which is now a ConversionOption typed dict)
     for conversion in conversions:
 
-        mode = conversion["mode"]
+        # mode = conversion["mode"]
 
-        device = setup_device(args, conversion, current_device)
-
-        # Configuration for benchmarking
-        config = {
-            "n_samples": args.n_samples,
-            "batch_size": args.batch_size,
-            "device": device,
-            "multiprocessing": True,  # Test each method in isolation
-            "fail_on_error": False,  # Fail gracefully and continue testing other methods if one fails
-        }
+        config = BenchmarkConfig(
+            n_samples=args.n_samples,
+            batch_size=args.batch_size,
+            multiprocessing=True,  # Test each method in isolation
+            fail_on_error=False,  # Fail gracefully and continue testing other methods if one fails
+            allow_device_override=not args.no_device_override,  # Allow device override for specific conversions, ie ONNX_CPU
+            allow_cuda=not args.no_cuda,  # Allow CUDA if not disabled
+            allow_mps=not args.no_mps,  # Allow MPS if not disabled
+            device=current_device,
+        )
 
         # Benchmark the model, fed in as a callable
         # Feeding in a tensor, and no dataloader, will cause the benchmark_model function to generate a
@@ -72,10 +73,10 @@ def main() -> None:
         # benchmark the model.
         # NOTE: one needs to squeeze the data tensor to remove the batch dimension
 
-        logging.info(f"Benchmarking {mode} on {device} using random data")
-        data = torch.rand(1, 3, 28, 28).to(device)
+        # logging.info(f"Benchmarking {mode} on {device} using random data")
+        data = torch.rand(1, 3, 28, 28)
         # Prepare random data on the selected device for this conversion
-        random_data = data.to(device)
+        random_data = data
 
         # Benchmark the model with the current conversion
         # Here we pass the conversion directly as `ConversionOption` and
@@ -83,7 +84,7 @@ def main() -> None:
         results: Dict[str, Dict[str, Any]] = benchmark_model(
             model_init,
             config,
-            [conversion["mode"]],
+            [conversion],
             data=random_data.squeeze(),
         )
 

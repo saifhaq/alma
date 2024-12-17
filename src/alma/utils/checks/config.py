@@ -4,16 +4,10 @@ from typing import Any, Optional, Union
 import torch
 from pydantic import BaseModel
 
+from alma.utils.types.benchmark_config import BenchmarkConfig
+
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())
-
-
-class BenchmarkConfig(BaseModel):
-    n_samples: int
-    batch_size: int
-    device: Any
-    multiprocessing: Optional[bool]
-    fail_on_error: Optional[bool]
 
 
 def check_consistent_batch_size(
@@ -52,20 +46,15 @@ def is_valid_torch_device(device: Union[str, torch.device]) -> torch.device:
         return device
 
 
-def check_config(config: dict) -> None:
+def check_config(config: BenchmarkConfig) -> None:
     """
     Check the config is valid.
 
     Inputs:
-    - comfig (dict): the config
+    - config (BenchmarkConfig): the config
 
     Outputs:
     None
     """
-    # Check the device in the config
-    assert "device" in config, "`device` must be provided in config"
-    device = is_valid_torch_device(config["device"])
-    config["device"] = device
-
     # Check the configuration, there are some required fields
     _ = BenchmarkConfig.model_validate(config)

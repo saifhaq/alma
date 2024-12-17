@@ -3,6 +3,8 @@ from typing import Callable, List, Union
 import torch
 from torch.utils.data import DataLoader
 
+from alma.utils.types.benchmark_config import BenchmarkConfig
+
 from .config import check_config
 from .data import check_data_or_dataloader
 from .inputs import check_input_type
@@ -11,7 +13,7 @@ from .model import check_model
 
 def check_inputs(
     model: Union[torch.nn.Module, Callable],
-    config: dict,
+    config: BenchmarkConfig,
     conversions: Union[List[str], None],
     data: Union[torch.Tensor, None],
     data_loader: Union[DataLoader, None],

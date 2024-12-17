@@ -1,16 +1,17 @@
 import logging
 import traceback
-from typing import Any, Callable, Dict, List, Union
+from typing import Any, Callable, Dict, List, Optional, Union
 
 import torch
 from torch.utils.data import DataLoader
 
 from .benchmark import benchmark
-from .conversions.conversion_options import MODEL_CONVERSION_OPTIONS
+from .conversions.conversion_options import MODEL_CONVERSION_OPTIONS, ConversionOption
 from .dataloader.create import create_single_tensor_dataloader
 from .utils.checks import check_consistent_batch_size, check_inputs
+from .utils.device import setup_device
 from .utils.multiprocessing import benchmark_process_wrapper
-from .utils.times import inference_time_benchmarking  # should we use this?
+from .utils.types.benchmark_config import BenchmarkConfig
 
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())
@@ -18,17 +19,18 @@ logger.addHandler(logging.NullHandler())
 
 def benchmark_model(
     model: Union[torch.nn.Module, Callable],
-    config: Dict[str, Any],
-    conversions: Union[List[str], None] = None,
-    data: Union[torch.Tensor, None] = None,
-    data_loader: Union[DataLoader, None] = None,
+    config: BenchmarkConfig,
+    conversions: Optional[List[ConversionOption]] = None,
+    data: Optional[torch.Tensor] = None,
+    data_loader: Optional[DataLoader] = None,
 ) -> Dict[str, Dict[str, Any]]:
     """
     Benchmark the model on different conversion methods. If provided, the dataloader will be used.
     Else, a random dataloader will be created, in which case the `data` tensor must be provided
     to initialize the dataloader.
+
     The model is benchmarked on the given conversion methods, and the results are returned.
-    The `config` dict must contain the following:
+    The `config` BenchmarkConfig must contain the following:
     - n_samples (int): The number of samples to benchmark on
     - batch_size (int): The batch size to use for benchmarking
     - device (torch.device): The device to benchmark on.
@@ -39,26 +41,22 @@ def benchmark_model(
         If we fail gracefully, we continue benchmarking other methods if one fails, and store
         the error message and traceback in the returned struct.
 
-    Inputs:
-    - model (Union[torch.nn.Module, Callable]): The model to benchmark. If a callable is provided,
-        it should return the model. This is useful when using multiprocessing, as the creation of
-        the model is deferred to inside the child process, rather than the parent process. This is
-        especially important if the model is large and two instances would not fit on device.
-    - config (Dict[str, Any]): The configuration for the benchmarking. This contains the number of
-        samples to benchmark on, and the batch size to use for benchmarking.
-    - conversions (List[str]): The list of conversion methods to benchmark. If None, all of the
-        available conversion methods will be benchmarked.
-    - data (torch.Tensor): The data to use for benchmarking. If provided, and the data loader has
-            not been provided, then the data shape will be used as the basis for the data loader.
-    - data_loader (DataLoader): The DataLoader to get samples of data from. If provided, this will
-            be used. Else, a random dataloader will be created.
+    Args:
+        model (Union[torch.nn.Module, Callable]): The model to benchmark. If a callable is provided,
+            it should return the model instance. This helps when using multiprocessing, as the model
+            can be instantiated inside isolated child processes.
+        config (BenchmarkConfig): A validated Pydantic configuration for benchmarking.
+        conversions (Optional[List[ConversionOption]]): List of `ConversionOption` objects to benchmark.
+            If None, all available conversion methods will be used.
+        data (Optional[torch.Tensor]): Input data for benchmarking, required if no `data_loader` is provided.
+        data_loader (Optional[DataLoader]): DataLoader for data samples. If provided, it takes precedence.
 
-    Outputs:
+    Returns:
     - all_results (Dict[str, Dict[str, Any]]): The results of the benchmarking for each conversion method.
         The key is the conversion method, and the value is a tuple containing the total elapsed
         time, the total time taken, the total number of samples, and the throughput of the model.
         If the conversion method failed and we fail gracefully, the value will be a dictionary
-        containing the error and traceback.
+        containing the error and traceback.            If a method fails, its value contains the error message and traceback.
     """
     # Check the inputs
     check_inputs(model, config, conversions, data, data_loader)
@@ -68,17 +66,14 @@ def benchmark_model(
         conversions = list(MODEL_CONVERSION_OPTIONS.values())
 
     # The number of samples to benchmark on, batch size, and device to benchmark on
-    n_samples: int = config["n_samples"]
-    batch_size: int = config["batch_size"]
-    device: torch.device = config["device"]
-
+    n_samples: int = config.n_samples
+    batch_size: int = config.batch_size
+    device: torch.device = config.device
     # Whether or not to use multiprocessing for isolated testing environments (which protects against
     # conversion methods contaminating the global torch state), and whether to fail quickly or gracefully.
     # By default, we enable multiprocessing, and fail gracefully.
-    multiprocessing: bool = (
-        config["multiprocessing"] if "multiprocessing" in config else True
-    )
-    fail_on_error: bool = config["fail_on_error"] if "fail_on_error" in config else True
+    multiprocessing: bool = config.multiprocessing
+    fail_on_error: bool = config.fail_on_error
 
     # Creates a dataloader with random data, of the same size as the input data sample
     # If the data_loader has been provided by the user, we use that one
@@ -88,35 +83,92 @@ def benchmark_model(
             num_tensors=n_samples,
             random_type="normal",
             random_params={"mean": 0.0, "std": 2.0},
-            batch_size=config["batch_size"],
+            batch_size=batch_size,
         )
 
-    all_results: Dict[str, Dict[str, float]] = {}
-    for conversion_method in conversions:
-        check_consistent_batch_size(conversion_method, n_samples, batch_size)
+    all_results: Dict[str, Dict[str, Any]] = {}
+
+    for conversion_option in conversions:
+        # Step 5.1: Extract mode and device override from the ConversionOption
+        conversion_mode = conversion_option.mode
+        device_override = conversion_option.device_override
+
+        check_consistent_batch_size(conversion_mode, n_samples, batch_size)
 
         torch.cuda.empty_cache()
-        logger.info(f"Benchmarking model using conversion: {conversion_method}")
+        logger.info(f"Benchmarking model using conversion: {conversion_mode}")
 
-        result, stacktrace = benchmark_process_wrapper(
-            multiprocessing,
-            benchmark,
+        device = setup_device(
             device,
-            model,
-            conversion_method,
-            data_loader,
-            n_samples,
+            allow_cuda=config.allow_cuda,
+            allow_mps=config.allow_mps,
+            allow_device_override=config.allow_device_override,
+            selected_conversion=conversion_option,
         )
-        all_results[conversion_method] = result
+        data = data.to(device)
 
-        # If the conversion failed, we raise an exception if we are failing fast
-        if result["status"] == "error":
-            error_msg = f"Benchmarking conversion {conversion_method} failed."
-            logger.error(error_msg)
+        try:
+            result, stacktrace = benchmark_process_wrapper(
+                multiprocessing,
+                benchmark,
+                device,
+                model,
+                conversion_mode,
+                data_loader,
+                n_samples,
+            )
 
-            # We combine the stacktrace from the child process with the stacktrace from the parent process
-            result["traceback"] = stacktrace + result["traceback"]
+            all_results[conversion_mode] = result
+
+            # If the conversion failed, we raise an exception if we are failing fast
+            if result["status"] == "error":
+                logger.error(f"Benchmark failed for conversion: {conversion_mode}")
+
+                # We combine the stacktrace from the child process with the stacktrace from the parent process
+
+                result["traceback"] = stacktrace + result["traceback"]
+                if fail_on_error:
+                    raise RuntimeError(result["traceback"])
+
+        except Exception as e:
+            logger.error(f"Exception during benchmarking for {conversion_mode}: {e}")
             if fail_on_error:
-                raise Exception(result["traceback"])
+                raise
+            all_results[conversion_mode] = {
+                "status": "error",
+                "traceback": traceback.format_exc(),
+            }
 
     return all_results
+
+
+# Example Usage
+if __name__ == "__main__":
+    from .utils.types.benchmark_config import BenchmarkConfig
+
+    model = torch.nn.Linear(10, 1)
+    config = BenchmarkConfig(
+        n_samples=256,
+        batch_size=32,
+        allow_cuda=True,  # Set to False to test on CPU
+        fail_on_error=True,
+    )
+
+    # Input data
+    sample_data = torch.randn(32, 10)
+
+    conversions = [
+        MODEL_CONVERSION_OPTIONS[0],  # EAGER mode
+        MODEL_CONVERSION_OPTIONS[2],  # ONNX_CPU mode
+    ]
+
+    # Run benchmark
+    try:
+        results = benchmark_model(
+            model, config, conversions=conversions, data=sample_data
+        )
+        print("Benchmark Results:")
+        for conversion, result in results.items():
+            print(f"{conversion}: {result}")
+    except Exception as e:
+        logger.error(f"Benchmarking failed: {e}")
