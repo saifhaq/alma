@@ -9,7 +9,7 @@ logger = logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())
 
 
-def get_exported_model(model, data: torch.Tensor) -> ExportedProgram:
+def get_exported_model(model: torch.nn.Module, data: torch.Tensor) -> ExportedProgram:
     """
     Export the model using torch.export.
 

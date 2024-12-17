@@ -1,12 +1,17 @@
-import pytest
 import torch
 
 from alma.benchmark_model import benchmark_model
 
 
-def test_eager_success():
+def simple_model_for_testing(conversions: list) -> None:
     """
     Test that eager mode benchmarking works successfully with a simple model.
+
+    Inputs:
+    - conversions (list): The list of conversion methods to benchmark.
+
+    Outputs:
+    None
     """
     # Create a random model
     model = torch.nn.Sequential(
@@ -27,12 +32,7 @@ def test_eager_success():
         "fail_on_error": True,  # If False, we fail gracefully and keep testing other methods
     }
 
-    conversions = ["EAGER"]
-
     # Benchmark the model
     results = benchmark_model(model, config, conversions, data=data.squeeze())
 
-    assert len(results) == 1, "Expected 1 result for EAGER conversion"
-    assert (
-        results["EAGER"]["status"] == "success"
-    ), "Expected EAGER conversion to succeed"
+    return results
