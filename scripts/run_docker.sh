@@ -1,5 +1,5 @@
 docker run -itd \
---name alma5 \
+--name alma6 \
 --gpus=all \
 --shm-size=16g \
 -v /home:/home \

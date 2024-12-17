@@ -6,7 +6,7 @@ import torch
 from torch.utils.data import DataLoader
 
 from .benchmark import benchmark
-from .conversions.select import MODEL_CONVERSION_OPTIONS
+from .conversions.conversion_options import MODEL_CONVERSION_OPTIONS
 from .dataloader.create import create_single_tensor_dataloader
 from .utils.checks import check_consistent_batch_size, check_inputs
 from .utils.multiprocessing import benchmark_process_wrapper

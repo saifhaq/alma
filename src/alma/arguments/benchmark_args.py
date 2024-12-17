@@ -1,34 +1,50 @@
 import argparse
 import logging
-import os
 from pathlib import Path
-from typing import Tuple, Union
+from typing import List, Tuple, Union
 
 import torch
+from typing_extensions import TypedDict
 
-from ..conversions.select import MODEL_CONVERSION_OPTIONS
+from ..conversions.conversion_options import MODEL_CONVERSION_OPTIONS
 from ..utils.ipdb_hook import ipdb_sys_excepthook
 
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())
 
 
-# Define a custom argument type for a list of strings
-def list_of_strings(arg):
+class ConversionOption(TypedDict):
+    mode: str
+    device_override: Union[str, None]
+
+
+def list_of_strings(arg: str) -> List[str]:
+    """Parse a comma-separated string into a list of strings."""
     return arg.split(",")
 
 
-def parse_benchmark_args() -> Tuple[argparse.Namespace, torch.device]:
+def parse_benchmark_args() -> Tuple[argparse.Namespace, List[ConversionOption]]:
+    """
+    Parses command-line arguments for benchmarking PyTorch models and determines
+    the selected conversions.
 
-    # Create a string represenation of the model conversion options
-    # to add to the argparser description.
+    Returns:
+        Tuple[argparse.Namespace, List[ConversionOption]]: Parsed arguments and selected conversions.
+    """
+    # Create a string representation of the model conversion options
     string_rep_of_conv_options: str = "; \n".join(
-        [f"{key}: {value}" for key, value in MODEL_CONVERSION_OPTIONS.items()]
-    )
-    valid_conversion_options = list(MODEL_CONVERSION_OPTIONS.keys()) + list(
-        MODEL_CONVERSION_OPTIONS.values()
+        [f"{key}: {value['mode']}" for key, value in MODEL_CONVERSION_OPTIONS.items()]
     )
 
+    # Construct a helper mapping from mode strings to their integer keys for validation
+    mode_to_key = {v["mode"]: k for k, v in MODEL_CONVERSION_OPTIONS.items()}
+
+    # Valid options are keys (ints) or mode strings
+    valid_conversion_options = list(MODEL_CONVERSION_OPTIONS.keys()) + list(
+        mode_to_key.keys()
+    )
+
+    # Set up argument parser
     parser = argparse.ArgumentParser(description="Benchmark PyTorch Models")
     parser.add_argument(
         "--model-path",
@@ -47,13 +63,13 @@ def parse_benchmark_args() -> Tuple[argparse.Namespace, torch.device]:
         type=int,
         default=64,
         metavar="N",
-        help="Input batch size for benchmarking (default: 30)",
+        help="Input batch size for benchmarking (default: 64)",
     )
     parser.add_argument(
         "--n-samples",
         type=int,
         default=2048,
-        help="Total number of samples to process (default: 300)",
+        help="Total number of samples to process (default: 2048)",
     )
     parser.add_argument(
         "--no-cuda",
@@ -68,13 +84,18 @@ def parse_benchmark_args() -> Tuple[argparse.Namespace, torch.device]:
         help="Disables MPS acceleration",
     )
     parser.add_argument(
+        "--no-device-override",
+        action="store_true",
+        default=False,
+        help="If set, ignores any device_override in the selected conversions.",
+    )
+    parser.add_argument(
         "--conversions",
         type=list_of_strings,
-        # choices=[str(i) for i in MODEL_CONVERSION_OPTIONS.keys()] + list(MODEL_CONVERSION_OPTIONS.values()),
         default=None,
-        help=f"""The model options you would like to benchmark. These are integers that correspond 
-to different transforms or their string names. Multiple options can be selected, e.g., --conversions
-0,2,EAGER. The mapping is this:\n{string_rep_of_conv_options}""",
+        help=f"""The model options you would like to benchmark. These can be integers that correspond 
+        to different transforms or their string names. Multiple options can be selected, e.g., --conversions
+        0,2,EAGER. The mapping is this:\n{string_rep_of_conv_options}""",
     )
     parser.add_argument(
         "--ipdb",
@@ -86,15 +107,11 @@ to different transforms or their string names. Multiple options can be selected,
     args = parser.parse_args()
 
     if args.ipdb:
-        # Add an ipdb hook to the sys.excepthook, which will throw one into an ipdb shell when an
-        # exception is raised.
         ipdb_sys_excepthook()
 
+    # Convert model path to Path object if provided
     if args.model_path is not None:
         args.model_path = Path(args.model_path)
-
-    use_cuda = not args.no_cuda and torch.cuda.is_available()
-    use_mps = not args.no_mps and torch.backends.mps.is_available()
 
     # If no conversion options are provided, we use all available options
     if not args.conversions:
@@ -112,57 +129,45 @@ to different transforms or their string names. Multiple options can be selected,
     error_msg = (
         lambda conversion: f"Please select a valid option for the model conversion, {conversion} not in {valid_conversion_options}. Call `-h` for help."
     )
-    # Convert all selected conversion options to a list of strings. I.e., all ints become strings
-    # We also check that the provided conversion options are valid
-    selected_conversions = []
+
+    selected_conversions: List[ConversionOption] = []
     for conversion in conversions:
+        # Handle numeric strings
         if isinstance(conversion, str) and conversion.isnumeric():
-            conversion = int(conversion)
-            assert conversion in valid_conversion_options, error_msg(conversion)
-            selected_conversions.append(MODEL_CONVERSION_OPTIONS[conversion])
+            conversion_int = int(conversion)
+            assert conversion_int in MODEL_CONVERSION_OPTIONS, error_msg(conversion_int)
+            selected_conversions.append(MODEL_CONVERSION_OPTIONS[conversion_int])
+        # Handle string modes
         elif isinstance(conversion, str) and not conversion.isnumeric():
             assert conversion in valid_conversion_options, error_msg(conversion)
-            selected_conversions.append(conversion)
+            # If it's a known mode, find its int key and append the corresponding ConversionOption
+            if conversion in mode_to_key:
+                selected_conversions.append(
+                    MODEL_CONVERSION_OPTIONS[mode_to_key[conversion]]
+                )
+            else:
+                # This case theoretically shouldn't happen since we validated above
+                raise ValueError(error_msg(conversion))
+        # Handle ints directly
         elif isinstance(conversion, int):
-            assert conversion in valid_conversion_options, error_msg(conversion)
+            assert conversion in MODEL_CONVERSION_OPTIONS, error_msg(conversion)
             selected_conversions.append(MODEL_CONVERSION_OPTIONS[conversion])
         else:
             raise ValueError(error_msg(conversion))
 
-    # Convert the list of selected conversions to a "pretty" string for logging
-    format_list = lambda lst: ", ".join(lst[:-1]) + (
-        " and " + lst[-1] if len(lst) > 1 else lst[0] if lst else ""
-    )
+    def format_list(lst: List[ConversionOption]) -> str:
+        if not lst:
+            return ""
+        modes = [c["mode"] for c in lst]
+        if len(modes) > 1:
+            return ", ".join(modes[:-1]) + " and " + modes[-1]
+        else:
+            return modes[0]
+
     logger.info(
         f"{format_list(selected_conversions)} model conversions selected for benchmarking\n"
     )
 
     args.conversions = selected_conversions
 
-    # Determine device and set PJRT_DEVICE based on the presence of "XLA"
-    if any("XLA" in conversion for conversion in selected_conversions):
-        if use_cuda:
-            os.environ["PJRT_DEVICE"] = "CUDA"
-            os.environ["GPU_NUM_DEVICES"] = "1"  # Default to 1 GPU; adjust if necessary
-            logger.info("Environment set: PJRT_DEVICE=CUDA, GPU_NUM_DEVICES=1")
-        else:
-            os.environ["PJRT_DEVICE"] = "CPU"
-            logger.info("Environment set: PJRT_DEVICE=CPU")
-
-        # Now import torch_xla after setting the environment
-        import torch_xla.core.xla_model as xm
-
-        device = xm.xla_device()
-        logger.info(f"XLA with {os.environ['PJRT_DEVICE']} selected for benchmarking.")
-    else:
-        if use_cuda:
-            device = torch.device("cuda")
-            logger.info("CUDA device selected for benchmarking.")
-        elif use_mps:
-            device = torch.device("mps")
-            logger.info("MPS device selected for benchmarking.")
-        else:
-            device = torch.device("cpu")
-            logger.info("CPU device selected for benchmarking.")
-
-    return args, device
+    return args, selected_conversions
