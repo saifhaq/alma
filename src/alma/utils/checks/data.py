@@ -1,18 +1,26 @@
 import torch
 from torch.utils.data import DataLoader
 
-
 def check_data_or_dataloader(data: torch.Tensor, data_loader: DataLoader) -> None:
     """
     Check that either data or data loader is provided, and not both.
 
-    Inputs:
-    - data (torch.Tensor): The data to use for benchmarking (initialising the dataloader).
-    - data_loader (DataLoader): The DataLoader to get samples of data from.
+    Args:
+        data: The data to use for benchmarking (initialising the dataloader)
+        data_loader: The DataLoader to get samples of data from
 
-    Outputs:
-    None
+    Returns:
+        None
+
+    Raises:
+        TypeError: If data is provided but is not a torch.Tensor, or if data_loader is provided but is not a DataLoader
+        AssertionError: If neither or both inputs are provided
     """
+    # Type checking
+    if data is not None and not isinstance(data, torch.Tensor):
+        raise TypeError("data must be a torch.Tensor or None")
+    if data_loader is not None and not isinstance(data_loader, DataLoader):
+        raise TypeError("data_loader must be a DataLoader or None")
 
     # Validate that data is a torch.Tensor if it's not None
     if data is not None and not isinstance(data, torch.Tensor):
