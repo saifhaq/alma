@@ -1,5 +1,4 @@
-import unittest
-
+import pytest
 import torch
 
 from alma.utils.multiprocessing.error_handling import benchmark_error_handler
@@ -20,14 +19,14 @@ decorated_failing_benchmark = benchmark_error_handler(failing_benchmark)
 def create_benchmark_error(multiprocessing: bool) -> dict:
     """
     Provided a decorated benchmark function which will fail, we call the benchmark_process_wrapper
-    to trigger the error and return the result. We cna then monitor the traceback to make sure
+    to trigger the error and return the result. We can then monitor the traceback to make sure
     it is as expected.
 
-    Inputs:
-    - multiprocessing (bool): whether to run the benchmark in a separate process
+    Args:
+        multiprocessing: Whether to run the benchmark in a separate process
 
-    Outputs:
-    - result (dict): the result of the benchmark, in this case the error dictionary.
+    Returns:
+        The result of the benchmark, in this case the error dictionary
     """
     # Call benchmark_process_wrapper which should trigger the decorated benchmark
     result = benchmark_process_wrapper(
@@ -47,12 +46,12 @@ def check_traceback_for_benchmark_error(result: dict, multiprocessing: bool) -> 
     """
     Given an error in the `benchmark` function, we check that the traceback is as expected.
 
-    Inputs:
-    - result (dict): the result of the benchmark, in this case the error dictionary.
-    - multiprocessing (bool): whether the benchmark was run in a separate process.
+    Args:
+        result: The result of the benchmark, in this case the error dictionary
+        multiprocessing: Whether the benchmark was run in a separate process
 
-    Outputs:
-    - None
+    Returns:
+        None
     """
     traceback = result["traceback"].split("\n")
     assert "result = benchmark_process_wrapper" in traceback[-11]
@@ -70,37 +69,16 @@ def check_traceback_for_benchmark_error(result: dict, multiprocessing: bool) -> 
     assert "failing_benchmark" in traceback[-4]
 
 
-class TestBenchmark(unittest.TestCase):
-    def test_error_handler_wrapper_no_multi(self):
-        """
-        Test the error handler with multiprocessing disabled.
-        """
-        multiprocessing: bool = False
+@pytest.mark.parametrize("multiprocessing", [False, True])
+def test_error_handler_wrapper(multiprocessing):
+    """
+    Test the error handler with multiprocessing enabled and disabled.
+    """
+    # Call create_benchmark_error, which should trigger the decorated benchmark
+    result = create_benchmark_error(multiprocessing)
 
-        # Call create_benchmark_error, which should trigger the decorated benchmark
-        result = create_benchmark_error(multiprocessing)
+    # Check error message is correct
+    assert result["error"] == "Test error"
 
-        # Check error message is correct
-        assert result["error"] == "Test error"
-
-        # Check the traceback is as expected
-        check_traceback_for_benchmark_error(result, multiprocessing)
-
-    def test_error_handler_wrapper_multi(self):
-        """
-        Test the error handler with multiprocessing enabled.
-        """
-        multiprocessing: bool = True
-
-        # Call create_benchmark_error, which should trigger the decorated benchmark
-        result = create_benchmark_error(multiprocessing)
-
-        # Check error message is correct
-        assert result["error"] == "Test error"
-
-        # Check the traceback is as expected
-        check_traceback_for_benchmark_error(result, multiprocessing)
-
-
-if __name__ == "__main__":
-    unittest.main()
+    # Check the traceback is as expected
+    check_traceback_for_benchmark_error(result, multiprocessing)

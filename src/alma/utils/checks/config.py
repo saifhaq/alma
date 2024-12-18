@@ -1,8 +1,7 @@
 import logging
-from typing import Any, Optional, Union
+from typing import Union
 
 import torch
-from pydantic import BaseModel
 
 from alma.benchmark.benchmark_config import BenchmarkConfig
 
@@ -29,7 +28,6 @@ def check_consistent_batch_size(
 otherwise the last batch will fail due to having a different shape. n-samples was {n_samples}, and 
 batch size was {batch_size} """
             raise ValueError(error_msg)
-
 
 def is_valid_torch_device(device: Union[str, torch.device]) -> torch.device:
     """

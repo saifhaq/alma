@@ -69,11 +69,13 @@ def benchmark_model(
     n_samples: int = config.n_samples
     batch_size: int = config.batch_size
     device: torch.device = config.device
+
     # Whether or not to use multiprocessing for isolated testing environments (which protects against
     # conversion methods contaminating the global torch state), and whether to fail quickly or gracefully.
     # By default, we enable multiprocessing, and fail gracefully.
     multiprocessing: bool = config.multiprocessing
     fail_on_error: bool = config.fail_on_error
+
     # Creates a dataloader with random data, of the same size as the input data sample
     # If the data_loader has been provided by the user, we use that one
     if not isinstance(data_loader, DataLoader):
