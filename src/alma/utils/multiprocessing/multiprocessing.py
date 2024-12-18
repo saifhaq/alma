@@ -44,7 +44,9 @@ def run_benchmark_process(
     # If the benchmark function returns an error, we prepend the traceback with the formatted stack trace
     # up to this point.
     if result["status"] == "error":
-        result["traceback"] = formatted_stacktrace + next_cmd_multi + result["traceback"]
+        result["traceback"] = (
+            formatted_stacktrace + next_cmd_multi + result["traceback"]
+        )
     result_queue.put(result)
 
 
@@ -104,7 +106,9 @@ def benchmark_process_wrapper(
         # If the benchmark function returns an error, we prepend the traceback with the formatted stack trace
         # up to this point.
         if result["status"] == "error":
-            result["traceback"] = formatted_stacktrace + next_cmd_single + result["traceback"]
+            result["traceback"] = (
+                formatted_stacktrace + next_cmd_single + result["traceback"]
+            )
         return result
 
     # If the device to benchmark on is CUDA, we need to set the start method to 'spawn'

@@ -1,7 +1,9 @@
 import unittest
+
 import torch
-from alma.utils.multiprocessing.multiprocessing import benchmark_process_wrapper
+
 from alma.utils.multiprocessing.error_handling import benchmark_error_handler
+from alma.utils.multiprocessing.multiprocessing import benchmark_process_wrapper
 
 
 def failing_benchmark(*args, **kwargs):
