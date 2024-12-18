@@ -41,7 +41,11 @@ def run_benchmark_process(
     # Get the next line to include in the traceback
     next_cmd_multi = get_next_line_info()
     result = benchmark_func(device, *args, **kwargs)
-    result_queue.put((result, formatted_stacktrace + next_cmd_multi))
+    # If the benchmark function returns an error, we prepend the traceback with the formatted stack trace
+    # up to this point.
+    if result["status"] == "error":
+        result["traceback"] = formatted_stacktrace + next_cmd_multi + result["traceback"]
+    result_queue.put(result)
 
 
 def benchmark_process_wrapper(
@@ -97,11 +101,18 @@ def benchmark_process_wrapper(
         # Get next line to include in the traceback
         next_cmd_single = get_next_line_info()
         result = benchmark_func(device, *args, **kwargs)
-        return result, formatted_stacktrace + next_cmd_single
+        # If the benchmark function returns an error, we prepend the traceback with the formatted stack trace
+        # up to this point.
+        if result["status"] == "error":
+            result["traceback"] = formatted_stacktrace + next_cmd_single + result["traceback"]
+        return result
+
     # If the device to benchmark on is CUDA, we need to set the start method to 'spawn'
     if device.type in ["cuda", "xla"]:
         # This is required for CUDA, as the default 'fork' method does not work with CUDA
         mp.set_start_method("spawn", force=True)
+    elif device.type == "cpu":
+        mp.set_start_method("fork", force=True)
 
     # Queue to get results back from the process
     result_queue = Queue()
@@ -116,6 +127,6 @@ def benchmark_process_wrapper(
 
     # Get result (if any)
     if not result_queue.empty():
-        result, stacktrace = result_queue.get()
-        return result, stacktrace
-    raise RuntimeError("benchmarking process fialed to return a result")
+        result = result_queue.get()
+        return result
+    raise RuntimeError("benchmarking process failed to return a result")

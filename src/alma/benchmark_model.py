@@ -107,7 +107,7 @@ def benchmark_model(
         )
 
         # Benchmark the model
-        result, stacktrace = benchmark_process_wrapper(
+        result = benchmark_process_wrapper(
             multiprocessing,
             benchmark,
             device,
@@ -120,9 +120,9 @@ def benchmark_model(
 
         # If the conversion failed, we raise an exception if we are failing fast
         if result["status"] == "error":
-            logger.error(f"Benchmark failed for conversion: {conversion_mode}")
-            # We combine the stacktrace from the child process with the stacktrace from the parent process
-            result["traceback"] = stacktrace + result["traceback"]
+            error_msg = f"Benchmarking conversion {conversion_method} failed."
+            logger.error(error_msg)
+
             if fail_on_error:
                 raise RuntimeError(result["traceback"])
 
