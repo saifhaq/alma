@@ -17,12 +17,6 @@ def check_data_or_dataloader(data: torch.Tensor, data_loader: DataLoader) -> Non
         TypeError: If data is provided but is not a torch.Tensor, or if data_loader is provided but is not a DataLoader
         AssertionError: If neither or both inputs are provided
     """
-    # Type checking
-    if data is not None and not isinstance(data, torch.Tensor):
-        raise TypeError("data must be a torch.Tensor or None")
-    if data_loader is not None and not isinstance(data_loader, DataLoader):
-        raise TypeError("data_loader must be a DataLoader or None")
-
     # Validate that data is a torch.Tensor if it's not None
     if data is not None and not isinstance(data, torch.Tensor):
         raise TypeError("The 'data' parameter must be of type torch.Tensor.")
@@ -31,16 +25,6 @@ def check_data_or_dataloader(data: torch.Tensor, data_loader: DataLoader) -> Non
         raise TypeError(
             "The 'data_loader' parameter must be of type torch.utils.data.DataLoader."
         )
-
-    # Validate that data is a torch.Tensor if it's not None
-    if data is not None and not isinstance(data, torch.Tensor):
-        raise TypeError("The 'data' parameter must be of type torch.Tensor.")
-
-    if data_loader is not None and not isinstance(data_loader, DataLoader):
-        raise TypeError(
-            "The 'data_loader' parameter must be of type torch.utils.data.DataLoader."
-        )
-
     # Either the `data` Tensor must be provided, or a data loader
     if data is None:
         error_msg = "If data is not provided, the data_loader must be provided"
