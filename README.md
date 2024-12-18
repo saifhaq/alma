@@ -208,6 +208,15 @@ See <a href="./examples/mnist/README.md#using-a-dict-for-the-config">here</a> fo
 </details>
 
 <details>
+<summary>Device fallbacks</summary>
+<br>
+Certain options only work on certain hardware, and so we allow the option to gracefully move to
+the required device. This can be controlled via the config, and is discussed more 
+<a href="./examples/mnist/README.md#device-fallbacks">here</a>. 
+</details>
+
+
+<details>
 <summary>Logging, debugging, and CI integration</summary>
 <br>
 A lot of the conversion methods have verbose internal logging. We have opted to

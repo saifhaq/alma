@@ -375,24 +375,6 @@ config = BenchmarkConfig(
 ```
 
 
-### Device fallbacks
-`BenchmarkConfig` exposes a few more options, related to device fallbacks. These are:
-- allow_device_override
-- allow_cuda
-- allow_mps
-
-`allow_device_override` is a boolean that defines whether or not we will allow `alma` to move 
-conversion methods to specific devices, if the conversion method in question only works on that 
-device. E.g. `ONNX_CPU` will fail on GPU, as will PyTorch's native converted quantized models 
-which are CPU only: `NATIVE_CONVERT_AI8WI8_STATIC_QUANTIZED`. This is `True` by default, but it is 
-very much up to the user. If you want the methods to fail if not compatible with `device`, then set 
-this to `False`. If you want `alma` to automatically move the method to the appropriate device, 
-leave it as `True`.
-
-`allow_cuda` and `allow_mps` are guides on which device to fallback to in case `device` fails to 
-run the conversion method in question. If `allow_cuda=True` and CUDA is available, then it will 
-default to cuda. If not, then it will similarly check `mps`.
-
 
 ### Effect on model memory
 A consequence of running in multiple processes is that the model, if initialized naively, will be copied
@@ -447,6 +429,39 @@ config = {
 }
 ```
 This will throw an error if any of the required keys are missing or if the types are incorrect.
+
+## Device fallbacks
+`BenchmarkConfig` exposes a few more options, related to device fallbacks. These are:
+- allow_device_override
+- allow_cuda
+- allow_mps
+
+`allow_device_override` is a boolean that defines whether or not we will allow `alma` to move 
+conversion methods to specific devices, if the conversion method in question only works on that 
+device. E.g. `ONNX_CPU` will fail on GPU, as will PyTorch's native converted quantized models 
+which are CPU only: `NATIVE_CONVERT_AI8WI8_STATIC_QUANTIZED`. This is `True` by default, but it is 
+very much up to the user. If you want the methods to fail if not compatiblewith `device`, then set 
+this to `False`. If you want `alma` to automatically move the method to the appropriate device, 
+leave it as `True`.
+
+`allow_cuda` and `allow_mps` are guides on which device to fallback to in case `device` fails to 
+run the conversion method in question. If `allow_cuda=True` and CUDA is available, then it will 
+default to cuda. If not, then it will similarly check `mps`.
+
+As such, a "complete" config looks like this:
+```python
+
+config = BenchmarkConfig(
+    n_samples=args.n_samples,
+    batch_size=args.batch_size,
+    device=device,
+    multiprocessing=True,
+    fail_on_error=False,
+    allow_device_override=True,  # Allow device override for device-specific conversions
+    allow_cuda=True,  # True allows CUDA as an override option
+    allow_mps=True,  # True allows MPS as an override option
+)
+```
 
 ## Logging and CI integration
 
