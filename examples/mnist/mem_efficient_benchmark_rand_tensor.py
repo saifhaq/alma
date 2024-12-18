@@ -14,6 +14,7 @@ from alma.utils.setup_logging import setup_logging
 # torch.backends.quantized.engine = 'x86'
 torch.backends.quantized.engine = "qnnpack"
 
+
 # It is a lot more memory efficienct, if multi-processing is enabled, to create the model in a
 # callable function, which can be called later to create the model.
 # This allows us to initialise the model in each child process, rather than the parent
@@ -57,7 +58,6 @@ def main() -> None:
         multiprocessing=True,  # If True, we test each method in its own isolated environment,
         # which helps keep methods from contaminating the global torch state
         fail_on_error=False,  # If False, we fail gracefully and keep testing other methods
-
         # Device options:
         allow_device_override=not args.no_device_override,  # Allow device override for device-specific conversions
         allow_cuda=not args.no_cuda,  # True allows CUDA as an override option

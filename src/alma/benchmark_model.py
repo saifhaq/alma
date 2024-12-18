@@ -96,7 +96,7 @@ def benchmark_model(
         torch.cuda.empty_cache()
         logger.info(f"Benchmarking model using conversion: {conversion_mode}")
 
-        # Potential device override, depending on if the conversion method is device-specific and 
+        # Potential device override, depending on if the conversion method is device-specific and
         # the provided override options
         device = setup_device(
             device,
