@@ -115,7 +115,7 @@ def benchmark_process_wrapper(
     if device.type in ["cuda", "xla"]:
         # This is required for CUDA, as the default 'fork' method does not work with CUDA
         mp.set_start_method("spawn", force=True)
-    elif device.type == "cpu":
+    elif device.type in ["cpu"]:
         mp.set_start_method("fork", force=True)
 
     # Queue to get results back from the process
@@ -133,4 +133,11 @@ def benchmark_process_wrapper(
     if not result_queue.empty():
         result = result_queue.get()
         return result
-    raise RuntimeError("benchmarking process failed to return a result")
+
+    # No result was returned
+    result = {
+        "status": "error",
+        "error": "No result was returned from the benchmarking process",
+        "traceback": formatted_stacktrace,
+    }
+    return result

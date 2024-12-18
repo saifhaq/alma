@@ -131,7 +131,7 @@ def benchmark_model(
 
         # If the conversion failed, we raise an exception if we are failing fast
         if result["status"] == "error":
-            error_msg = f"Benchmarking conversion {conversion_method} failed."
+            error_msg = f"Benchmarking conversion {conversion_mode} failed."
             logger.error(error_msg)
 
             if fail_on_error:
