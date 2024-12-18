@@ -85,6 +85,7 @@ conversion options. The usage is as follows:
 
 ```python
 from alma import benchmark_model
+from alma.benchmark import BenchmarkConfig
 from alma.benchmark.log import display_all_results
 
 device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
@@ -95,14 +96,14 @@ model = ...
 # Load the dataloader used in benchmarking
 data_loader = ...
 
-# Set the configuration
-config = {
-    "batch_size": 64,
-    "n_samples": 2048,
-    "device": device,
-}
+# Set the configuration (this can also be passed in as a dict)
+config = BenchmarkConfig(
+    n_samples=2048,
+    batch_size=64,
+    device=device,  # The device to run the model on
+)
 
-# Choose with conversions to benchmark:
+# Choose with conversions to benchmark
 conversions = ["EAGER", "EXPORT+EAGER"]
 
 # Benchmark the model
@@ -195,6 +196,15 @@ the C++ backend).
 To disable multiprocessing, set `multiprocessing` to False in the config dictionary.
 
 See <a href="./examples/mnist/README.md#isolated-environments-for-each-conversion-method-via-multi-processing">here</a> for details and discussion.
+</details>
+
+
+<details>
+<summary>Using a dict for the config</summary>
+<br>
+We give the option for users to pass in a dictionary for the config, rather than a BenchmarkConfig object.
+
+See <a href="./examples/mnist/README.md#using-a-dict-for-the-config">here</a> for details.
 </details>
 
 <details>

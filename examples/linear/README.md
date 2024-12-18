@@ -30,7 +30,7 @@ setup_logging(log_file=None, level="INFO")
 # Parse the arguments, e.g. the model path, device, and conversion options
 # This is provided for convenience, but one can also just pass in the arguments directly to the
 # `benchmark_model` API.
-args, device = parse_benchmark_args()
+args, conversions = parse_benchmark_args()
     
 # Load the model
 model = ...
@@ -43,7 +43,7 @@ config = {
 
 # Benchmark the model
 results: Dict[str, Dict[str, float]] = benchmark_model(
-    model, config, args.conversions, data=torch.randn(1, 3, 28, 28).squeeze()
+    model, config, conversions, data=torch.randn(1, 3, 28, 28).squeeze()
 )
 
 # Display the results
