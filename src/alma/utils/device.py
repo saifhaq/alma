@@ -9,13 +9,6 @@ from alma.conversions.conversion_options import ConversionOption
 
 logger = logging.getLogger(__name__)
 
-import logging
-import os
-
-import torch
-
-logger = logging.getLogger(__name__)
-
 
 def handle_xla_device(mode: str, allow_cuda: bool = True) -> torch.device:
     """
@@ -152,7 +145,7 @@ def setup_device(
     if "XLA" in mode:
         try:
             xla_device = handle_xla_device(mode, allow_cuda)
-            print(f"Chosen device: {xla_device} (XLA Mode: {mode})")
+            logger.info(f"Chosen device: {xla_device} (XLA Mode: {mode})")
             return xla_device
         except ImportError as e:
             logger.error("torch_xla is unavailable.", exc_info=e)
@@ -162,10 +155,10 @@ def setup_device(
     if allow_device_override and selected_conversion and device_override:
         overridden_device = override_device_if_allowed(device_override, current_device)
         if overridden_device:
-            print(f"Chosen device: {overridden_device} (Device override applied)")
+            logger.info(f"Chosen device: {overridden_device} (Device override applied)")
             return overridden_device
 
     # Fallback to CUDA, MPS, or CPU
     fallback_device = fallback_device_selection(allow_cuda, allow_mps)
-    print(f"Chosen device: {fallback_device} (Fallback selection)")
+    logger.info(f"Chosen device: {fallback_device} (Fallback selection)")
     return fallback_device
