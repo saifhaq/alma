@@ -4,11 +4,12 @@ import torch
 from torch.utils.data import DataLoader
 
 from alma.benchmark.benchmark_config import BenchmarkConfig
+from alma.conversions.conversion_options import ConversionOption
 
 
 def check_input_type(model, config, conversions, data, data_loader) -> None:
     """
-    Checks that the inputs are of the correct types
+    Checks that the inputs are of the correct types.
     """
     assert isinstance(
         model, (torch.nn.Module, Callable)
@@ -16,7 +17,16 @@ def check_input_type(model, config, conversions, data, data_loader) -> None:
     assert isinstance(
         config, BenchmarkConfig
     ), "The config must be of type BenchmarkConfig"
-    assert isinstance(conversions, (list, type(None))), "The conversions must be a list"
+
+    assert isinstance(
+        conversions, (list, type(None))
+    ), f"Expected conversions to be a list or None, got {type(conversions)}."
+    for conv in conversions:
+        assert isinstance(conv, ConversionOption), (
+            f"Expected each element of conversions to be of type ConversionOption, "
+            f"but got {type(conv)}."
+        )
+
     assert isinstance(
         data, (torch.Tensor, type(None))
     ), "The data must be a torch.Tensor"
