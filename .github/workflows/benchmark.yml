@@ -38,11 +38,11 @@ jobs:
       run: |
         echo "Displaying benchmark results:"
         echo "::group::Benchmark JSON Output"
-        cat examples/mnist/results/benchmark.json
+        cat examples/mnist/results/result.json
         echo "::endgroup::"
 
     - name: Upload benchmark results
       uses: actions/upload-artifact@v3
       with:
         name: benchmark-results
-        path: examples/mnist/results/
+        path: examples/mnist/results/results.json
