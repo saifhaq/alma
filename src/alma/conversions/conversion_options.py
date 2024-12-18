@@ -63,7 +63,7 @@ MODEL_CONVERSION_OPTIONS: dict[int, ConversionOption] = {
     39: ConversionOption(mode="OPTIMIM_QUANTO_Wf8E4M3NUZ"),
     40: ConversionOption(mode="OPTIMIM_QUANTO_Wf8E5M2"),
     41: ConversionOption(
-        mode="OPTIMIM_QUANTO_Wf8E5M2+COMPILE_CUDAGRAPHS", device_override="cuda"
+        mode="OPTIMIM_QUANTO_Wf8E5M2+COMPILE_CUDAGRAPHS", device_override="CUDA"
     ),
 }
 

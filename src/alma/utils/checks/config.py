@@ -5,6 +5,8 @@ import torch
 
 from alma.benchmark.benchmark_config import BenchmarkConfig
 
+from alma.benchmark.benchmark_config import BenchmarkConfig
+
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())
 
