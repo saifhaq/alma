@@ -26,6 +26,9 @@ def main() -> None:
     # Parse the benchmarking arguments
     args, conversions = parse_benchmark_args()
 
+    # Set the device one wants to benchmark on
+    device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
+
     # Create random tensor (of MNIST image size)
     data = torch.rand(1, 3, 28, 28)
 
@@ -36,6 +39,7 @@ def main() -> None:
     config = BenchmarkConfig(
         n_samples=args.n_samples,
         batch_size=args.batch_size,
+        device=device,
         multiprocessing=True,  # If True, we test each method in its own isolated environment,
         # which helps keep methods from contaminating the global torch state
         fail_on_error=False,  # If False, we fail gracefully and keep testing other methods
@@ -55,6 +59,8 @@ def main() -> None:
     display_all_results(
         results, display_function=print, include_traceback_for_errors=False
     )
+
+    # Save the results to JSON for easy CI integration
     save_dict_to_json(results, "result.json")
 
 

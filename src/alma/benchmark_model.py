@@ -96,6 +96,8 @@ def benchmark_model(
         torch.cuda.empty_cache()
         logger.info(f"Benchmarking model using conversion: {conversion_mode}")
 
+        # Potential device override, depending on if the conversion method is device-specific and
+        # the provided override options
         device = setup_device(
             device,
             allow_cuda=config.allow_cuda,
@@ -103,9 +105,8 @@ def benchmark_model(
             allow_device_override=config.allow_device_override,
             selected_conversion=conversion_option,
         )
-        # data = data.to(device)
 
-        # try:
+        # Benchmark the model
         result, stacktrace = benchmark_process_wrapper(
             multiprocessing,
             benchmark,

@@ -1,4 +1,3 @@
-import argparse
 import logging
 import os
 from typing import Optional
@@ -8,6 +7,7 @@ import torch
 from alma.conversions.conversion_options import ConversionOption
 
 logger = logging.getLogger(__name__)
+logger.addHandler(logging.NullHandler())
 
 
 def handle_xla_device(mode: str, allow_cuda: bool = True) -> torch.device:
