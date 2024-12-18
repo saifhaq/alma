@@ -28,15 +28,18 @@ jobs:
         cd examples/mnist
         python train.py --save-path ./model/mnist
 
-
-    - name: Benchmark 
+    - name: Benchmark
       run: |
         cd examples/mnist
         mkdir -p ../results
-        for i in {0..14}; do
-          echo "Running benchmark with data loader, with conversion $i"
-          timeout 60s python benchmark_with_dataloader.py --model-path ./model/mnist.pt --data-dir data/data_for_inference --conversions $i > ../results/benchmark_conversion_$i.txt 2>&1 || echo "Conversion $i failed due to timeout or error" > ../results/benchmark_conversion_$i.txt
-        done
+        python benchmark_random_tensor.py > ../results/benchmark.json
+
+    - name: Display benchmark results
+      run: |
+        echo "Displaying benchmark results:"
+        echo "::group::Benchmark JSON Output"
+        cat examples/results/benchmark.json
+        echo "::endgroup::"
 
     - name: Upload benchmark results
       uses: actions/upload-artifact@v3

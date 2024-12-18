@@ -1,4 +1,4 @@
 docker build \
 -f ./runner.Dockerfile \
 --network=host \
--t alma_runner ./
+-t alma_runner:latest ./

@@ -4,5 +4,9 @@ docker run -itd \
 -e RUNNER_TOKEN=$(cat ~/.ssh/alma_runner_token) \
 -e REPO=saifhaq/alma \
 -e LABELS=titan \
---name=torch_runner \
-alma-runner:latest
+-e RUNNER_NAME=ron \
+--name=alma_runner \
+alma_runner:latest
+
+# The token can be found in the repository settings under Actions > Add runner
+# ""./config.sh --url https://github.com/saifhaq/alma --token TOKEN" THIS_IS_WHAT_YOU_SHOULD_STORE_AT ~/.ssh/alma_runner_token 
