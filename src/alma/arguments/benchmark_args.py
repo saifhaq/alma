@@ -1,33 +1,41 @@
 import argparse
 import logging
 from pathlib import Path
-from typing import Tuple, Union
+from typing import List, Tuple, Union
 
-import torch
+from pydantic import ValidationError
 
-from ..conversions.select import MODEL_CONVERSION_OPTIONS
+from ..conversions.conversion_options import MODEL_CONVERSION_OPTIONS, ConversionOption
 from ..utils.ipdb_hook import ipdb_sys_excepthook
 
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())
 
 
-# Define a custom argument type for a list of strings
-def list_of_strings(arg):
+def list_of_strings(arg: str) -> List[str]:
+    """
+    Parse a comma-separated string into a list of strings.
+    """
     return arg.split(",")
 
 
-def parse_benchmark_args() -> Tuple[argparse.Namespace, torch.device]:
+def parse_benchmark_args() -> Tuple[argparse.Namespace, List[ConversionOption]]:
+    """
+    Parses command-line arguments for benchmarking PyTorch models and determines
+    the selected conversions.
 
-    # Create a string represenation of the model conversion options
-    # to add to the argparser description.
-    string_rep_of_conv_options: str = "; \n".join(
-        [f"{key}: {value}" for key, value in MODEL_CONVERSION_OPTIONS.items()]
-    )
-    valid_conversion_options = list(MODEL_CONVERSION_OPTIONS.keys()) + list(
-        MODEL_CONVERSION_OPTIONS.values()
+    Returns:
+        Tuple[argparse.Namespace, List[ConversionOption]]: Parsed arguments and selected conversions.
+    """
+    # String representation of all available conversion options
+    string_rep_of_conv_options: str = "\n".join(
+        [f"{key}: {value.mode}" for key, value in MODEL_CONVERSION_OPTIONS.items()]
     )
 
+    # Mapping from mode strings to their integer keys
+    mode_to_key = {v.mode: k for k, v in MODEL_CONVERSION_OPTIONS.items()}
+
+    # Set up argument parser
     parser = argparse.ArgumentParser(description="Benchmark PyTorch Models")
     parser.add_argument(
         "--model-path",
@@ -39,110 +47,111 @@ def parse_benchmark_args() -> Tuple[argparse.Namespace, torch.device]:
         "--data-dir",
         type=str,
         default=None,
-        help="Path to the directory containing samples for inference",
+        help="Path to the directory containing samples for inference.",
     )
     parser.add_argument(
         "--batch-size",
         type=int,
         default=64,
         metavar="N",
-        help="input batch size for benchmarking (default: 30)",
+        help="Input batch size for benchmarking (default: 64).",
     )
     parser.add_argument(
         "--n-samples",
         type=int,
         default=2048,
-        help="Total number of samples to process (default: 300)",
+        help="Total number of samples to process (default: 2048).",
     )
     parser.add_argument(
         "--no-cuda",
         action="store_true",
         default=False,
-        help="disables CUDA acceleration",
+        help="Disables CUDA acceleration.",
     )
     parser.add_argument(
         "--no-mps",
         action="store_true",
         default=False,
-        help="disables MPS acceleration",
+        help="Disables MPS acceleration.",
+    )
+    parser.add_argument(
+        "--no-device-override",
+        action="store_true",
+        default=False,
+        help="Ignores any device_override in the selected conversions.",
     )
     parser.add_argument(
         "--conversions",
         type=list_of_strings,
-        # choices=[str(i) for i in MODEL_CONVERSION_OPTIONS.keys()] + list(MODEL_CONVERSION_OPTIONS.values()),
         default=None,
-        help=f"""The model option you would like to benchmark. These are integers that correspond 
-to different transforms, or their string names. MUltiple options can be selected, e.g. --conversions
-0,2,EAGER . The mapping is this:\n{string_rep_of_conv_options}""",
-    )
+        help=f"""The model options you would like to benchmark. These can be integers that correspond 
+        to different transforms or their string names. Multiple options can be selected, e.g., --conversions
+        0,2,EAGER. The mapping is this:\n{string_rep_of_conv_options}""",
+    ),
     parser.add_argument(
         "--ipdb",
         action="store_true",
         default=False,
-        help="Enable the ipdb system exception hook",
+        help="Enable the ipdb system exception hook.",
     )
 
     args = parser.parse_args()
 
+    # Enable ipdb system exception hook if requested
     if args.ipdb:
-        # Add an ipdb hook to the sys.excepthook, which will throw one into an ipdb shell when an
-        # exception is raised.
         ipdb_sys_excepthook()
 
+    # Convert model path to a Path object if provided
     if args.model_path is not None:
         args.model_path = Path(args.model_path)
 
-    use_cuda = not args.no_cuda and torch.cuda.is_available()
-    use_mps = not args.no_mps and torch.backends.mps.is_available()
-
-    # If no conversion options are provided, we use all available options
+    # If no conversions are provided, select all available options
     if not args.conversions:
-        conversions = valid_conversion_options
+        conversions = list(MODEL_CONVERSION_OPTIONS.keys())
     else:
         conversions = args.conversions
 
-    # Checks on the model conversion options
-    assert isinstance(
-        conversions, (list, int, str)
-    ), "Please select a valid option for the model conversion"
-    if not isinstance(conversions, list):
-        conversions = [conversions]
+    # Resolve the selected conversions into ConversionOption instances
+    selected_conversions: List[ConversionOption] = []
 
-    error_msg = (
-        lambda conversion: f"Please select a valid option for the model conversion, {conversion} not in {valid_conversion_options}. Call `-h` for help."
-    )
-    # Convert all selected conversion options to a list of strings. I.e., all ints become strings
-    # We also check that the provided conversion options are valid
-    selected_conversions = []
     for conversion in conversions:
-        if isinstance(conversion, str) and conversion.isnumeric():
-            conversion = int(conversion)
-            assert conversion in valid_conversion_options, error_msg(conversion)
-            selected_conversions.append(MODEL_CONVERSION_OPTIONS[conversion])
-        elif isinstance(conversion, str) and not conversion.isnumeric():
-            assert conversion in valid_conversion_options, error_msg(conversion)
-            selected_conversions.append(conversion)
+        if isinstance(conversion, str):
+            # Handle numeric strings
+            if conversion.isdigit():
+                conversion_int = int(conversion)
+                if conversion_int in MODEL_CONVERSION_OPTIONS:
+                    selected_conversions.append(
+                        MODEL_CONVERSION_OPTIONS[conversion_int]
+                    )
+                else:
+                    raise ValueError(f"Invalid conversion key: {conversion_int}")
+            # Handle mode string inputs
+            elif conversion in mode_to_key:
+                selected_conversions.append(
+                    MODEL_CONVERSION_OPTIONS[mode_to_key[conversion]]
+                )
+            else:
+                raise ValueError(f"Invalid conversion mode: '{conversion}'.")
         elif isinstance(conversion, int):
-            assert conversion in valid_conversion_options, error_msg(conversion)
-            selected_conversions.append(MODEL_CONVERSION_OPTIONS[conversion])
+            # Handle integer keys directly
+            if conversion in MODEL_CONVERSION_OPTIONS:
+                selected_conversions.append(MODEL_CONVERSION_OPTIONS[conversion])
+            else:
+                raise ValueError(f"Invalid conversion key: {conversion}.")
         else:
-            raise ValueError(error_msg(conversion))
+            raise ValueError(f"Unexpected conversion type: {type(conversion)}")
 
-    # Convert the list of selected conversions to a "pretty" string for logging
-    format_list = lambda lst: ", ".join(lst[:-1]) + (
-        " and " + lst[-1] if len(lst) > 1 else lst[0] if lst else ""
-    )
+    # Logging the selected conversions
+    def format_list(conversions: List[ConversionOption]) -> str:
+        """Formats a list of ConversionOption objects for logging."""
+        modes = [c.mode for c in conversions]
+        return (
+            ", ".join(modes[:-1]) + " and " + modes[-1] if len(modes) > 1 else modes[0]
+        )
+
     logger.info(
-        f"{format_list(selected_conversions)} model conversions selected for benchmarking\n"
+        f"Selected model conversions for benchmarking: {format_list(selected_conversions)}"
     )
 
     args.conversions = selected_conversions
-
-    if use_cuda:
-        device = torch.device("cuda")
-    elif use_mps:
-        device = torch.device("mps")
-    else:
-        device = torch.device("cpu")
-
-    return args, device
+    return args, selected_conversions

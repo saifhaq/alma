@@ -10,6 +10,7 @@ from torchvision.io import read_image
 
 class BenchmarkCustomImageDataset(Dataset):
     def __init__(self, img_dir: str, transform: transforms.Compose = None):
+        assert os.path.isdir(img_dir), f"{img_dir} is not a valid directory"
         self.img_dir = img_dir
         self.transform = transform
         self.img_paths = []

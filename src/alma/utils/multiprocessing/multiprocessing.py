@@ -29,6 +29,15 @@ def run_benchmark_process(
     - kwargs (dict): keyword arguments for the benchmark function
     - result_queue (Queue): queue to store the results or errors
     """
+    try:
+        # Initialize the XLA environment if device is XLA
+        if device.type == "xla":
+            import torch_xla.core.xla_model as xm
+
+            device = xm.xla_device()
+    except Exception as e:
+        formatted_stacktrace += f"\n{traceback.format_exc()}"
+
     # Get the next line to include in the traceback
     next_cmd_multi = get_next_line_info()
     result = benchmark_func(device, *args, **kwargs)
@@ -89,9 +98,8 @@ def benchmark_process_wrapper(
         next_cmd_single = get_next_line_info()
         result = benchmark_func(device, *args, **kwargs)
         return result, formatted_stacktrace + next_cmd_single
-
     # If the device to benchmark on is CUDA, we need to set the start method to 'spawn'
-    if device.type == "cuda":
+    if device.type in ["cuda", "xla"]:
         # This is required for CUDA, as the default 'fork' method does not work with CUDA
         mp.set_start_method("spawn", force=True)
 

@@ -1,6 +1,7 @@
 docker run -itd \
---name alma2 \
+--name alma \
 --gpus=all \
+--shm-size=16g \
 -v /home:/home \
 --entrypoint=/bin/bash \
 alma:latest

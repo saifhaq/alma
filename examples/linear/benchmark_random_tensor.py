@@ -4,6 +4,7 @@ from typing import Any, Dict
 import torch
 
 from alma.arguments.benchmark_args import parse_benchmark_args
+from alma.benchmark import BenchmarkConfig
 from alma.benchmark.log import display_all_results
 from alma.benchmark_model import benchmark_model
 from alma.utils.setup_logging import setup_logging
@@ -19,7 +20,10 @@ def main() -> None:
     setup_logging(log_file=None, level="INFO")
 
     # Parse the benchmarking arguments
-    args, device = parse_benchmark_args()
+    args, conversions = parse_benchmark_args()
+
+    # Set the device one wants to benchmark on
+    device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
 
     # Create a random model
     model = torch.nn.Sequential(
@@ -30,15 +34,15 @@ def main() -> None:
     # Create a random tensor
     data = torch.rand(1, 512, 3)
 
-    # Configuration for the benchmarking
-    config = {
-        "n_samples": args.n_samples,
-        "batch_size": args.batch_size,
-        "device": device,  # The device to benchmark on
-        "multiprocessing": True,  # If True, we test each method in its own isolated environment,
+    # Set up the benchmarking configuration
+    config = BenchmarkConfig(
+        n_samples=args.n_samples,
+        batch_size=args.batch_size,
+        device=device,
+        multiprocessing=True,  # If True, we test each method in its own isolated environment,
         # which helps keep methods from contaminating the global torch state
-        "fail_on_error": False,  # If False, we fail gracefully and keep testing other methods
-    }
+        fail_on_error=False,  # If False, we fail gracefully and keep testing other methods
+    )
 
     # Benchmark the model
     # Feeding in a tensor, and no dataloader, will cause the benchmark_model function to generate a
@@ -47,7 +51,7 @@ def main() -> None:
     # at a DEBUG level.
     logging.info("Benchmarking model using random data")
     results: Dict[str, Dict[str, Any]] = benchmark_model(
-        model, config, args.conversions, data=data.squeeze()
+        model, config, conversions, data=data.squeeze()
     )
 
     # Display the results

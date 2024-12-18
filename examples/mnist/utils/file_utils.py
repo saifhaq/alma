@@ -26,7 +26,8 @@ def make_serializable(data):
 def save_dict_to_json(data: dict, file_name: str, dir_path: str = "results/") -> None:
     """
     Saves a dictionary as a JSON file to the specified directory,
-    handling non-serializable fields by converting them to strings.
+    handling non-serializable fields by converting them to strings,
+    and sorting by 'throughput' if it exists.
 
     Args:
         data (dict): The dictionary to save.
@@ -42,6 +43,17 @@ def save_dict_to_json(data: dict, file_name: str, dir_path: str = "results/") ->
 
     # Ensure the directory exists
     os.makedirs(dir_path, exist_ok=True)
+
+    # Sort data by 'throughput' if it exists
+    if isinstance(data, dict):
+        data = {
+            k: v
+            for k, v in sorted(
+                data.items(),
+                key=lambda item: item[1].get("throughput", 0),
+                reverse=True,
+            )
+        }
 
     # Convert non-serializable fields
     serializable_data = make_serializable(data)

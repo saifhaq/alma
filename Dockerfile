@@ -96,10 +96,11 @@ RUN if [ "$INSTALL_TVM" = "true" ]; then \
     /tmp/llvm.sh 18 && \
     rm -rf /tmp/llvm.sh && \
     apt-get install -y --no-install-recommends \
-    llvm-18 llvm-18-dev llvm-18-tools libpolly-18-dev && \
+    llvm-18 llvm-18-dev llvm-18-tools libpolly-18-dev clang-18 && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* && \
-    ln -s /usr/bin/llvm-config-18 /usr/bin/llvm-config; \
+    ln -s /usr/bin/llvm-config-18 /usr/bin/llvm-config && \
+    ln -s /usr/bin/clang-18 /usr/bin/clang; \
 fi
 
 # apache-tvm
@@ -114,7 +115,7 @@ RUN if [ "$INSTALL_TVM" = "true" ]; then \
     echo "set(USE_CUDA   ON)" >> config.cmake && \
     echo "set(USE_METAL  OFF)" >> config.cmake && \
     echo "set(USE_VULKAN OFF)" >> config.cmake && \
-    echo "set(USE_OPENCL OFF)" >> config.cmake && \
+    echo "set(USE_OPENCL ON)" >> config.cmake && \
     echo "set(USE_CUBLAS ON)" >> config.cmake && \
     echo "set(USE_CUDNN  ON)" >> config.cmake && \
     echo "set(USE_CUTLASS OFF)" >> config.cmake && \
@@ -151,21 +152,25 @@ uv pip install --system "nvidia-modelopt[torch,onnx]" -U && \
     python -c "import modelopt.torch.quantization.extensions as ext; ext.precompile()"; \
 fi
 
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    gnupg2 \
+    zip \
+    g++ \
+    openjdk-11-jdk \
+    ca-certificates \
+    sudo
 
-RUN mkdir -p /build/tensorrt && \
-    cd /build/tensorrt && \ 
-    wget -q -O tensorrt.tar.gz $TENSORRT_URL && \
-    tar -xf tensorrt.tar.gz && \
-    cp TensorRT-*/bin/trtexec /usr/local/bin && \
-    cp TensorRT-*/include/* /usr/include/x86_64-linux-gnu && \
-    python -m pip install TensorRT-*/python/tensorrt-*-cp310-none-linux_x86_64.whl && \ 
-    cd /build/tensorrt && \
-    mkdir -p /usr/local/lib/python3.10/dist-packages/tensorrt_libs && \
-    cp -a TensorRT-*/targets/x86_64-linux-gnu/lib/* /usr/local/lib/python3.10/dist-packages/tensorrt_libs && \
-    rm -rf TensorRT-*.Linux.x86_64-gnu.cuda-*.tar.gz TensorRT-* tensorrt.tar.gz
-ENV TRT_LIB_PATH=/usr/local/lib/python3.10/dist-packages/tensorrt_libs
-ENV LD_LIBRARY_PATH=$TRT_LIB_PATH:$LD_LIBRARY_PATH
 
+RUN curl -sSL "https://github.com/bazelbuild/bazelisk/releases/download/v1.25.0/bazelisk-linux-amd64" \
+  -o /usr/local/bin/bazelisk && \
+  chmod +x /usr/local/bin/bazelisk && \
+  ln -s /usr/local/bin/bazelisk /usr/local/bin/bazel && \
+  bazel
+
+RUN uv pip install --system torch~=2.5.1 torch_xla~=2.5.1 https://storage.googleapis.com/pytorch-xla-releases/wheels/cuda/12.4/torch_xla_cuda_plugin-2.5.0-py3-none-any.whl
+
+RUN cd /build && \
+    git clone https://github.com/openxla/xla.git
 
 ADD . /build/alma
 

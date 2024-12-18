@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "alma-torch"
-version = "0.0.1"
+dynamic = ["version"]
 authors = [
   { name="Saif Haq", email="saif.haq99@gmail.com" },
   { name="Oscar Savolainen", email="oscar.savolainen@hotmail.com" },
