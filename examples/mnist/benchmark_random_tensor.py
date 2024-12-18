@@ -6,7 +6,7 @@ from model.model import Net
 from utils.file_utils import save_dict_to_json
 
 from alma.arguments.benchmark_args import parse_benchmark_args
-from alma.benchmark.benchmark_config import BenchmarkConfig
+from alma.benchmark import BenchmarkConfig
 from alma.benchmark.log import display_all_results
 from alma.benchmark_model import benchmark_model
 from alma.conversions.conversion_options import conversions_to_modes
@@ -37,6 +37,7 @@ def main() -> None:
         n_samples=args.n_samples,
         batch_size=args.batch_size,
         multiprocessing=True,  # If True, we test each method in its own isolated environment,
+        # which helps keep methods from contaminating the global torch state
         fail_on_error=False,  # If False, we fail gracefully and keep testing other methods
     )
 

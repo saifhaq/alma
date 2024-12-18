@@ -14,7 +14,7 @@ class BenchmarkConfig(BaseModel):
         n_samples (int): Number of samples to benchmark. Defaults to 128.
         batch_size (int): Batch size for benchmarking. Defaults to 128.
         multiprocessing (bool): Enables multiprocessing during benchmarking. Defaults to True.
-        fail_on_error (bool): Fails benchmarking on any error. Defaults to False.
+        fail_on_error (bool): Fails benchmarking on any error. Defaults to True.
         allow_device_override (bool): Allows automatic device selection override. Defaults to True.
         allow_cuda (bool): Allows CUDA usage if available. Defaults to True.
         allow_mps (bool): Allows MPS usage if available. Defaults to True.
@@ -31,7 +31,7 @@ class BenchmarkConfig(BaseModel):
         default=True, description="Enable multiprocessing support."
     )
     fail_on_error: bool = Field(
-        default=False, description="Fail immediately on any error."
+        default=True, description="Fail immediately on any error."
     )
     allow_device_override: bool = Field(
         default=True, description="Allow device override selection."

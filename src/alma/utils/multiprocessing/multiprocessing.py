@@ -29,8 +29,6 @@ def run_benchmark_process(
     - kwargs (dict): keyword arguments for the benchmark function
     - result_queue (Queue): queue to store the results or errors
     """
-    # Get the next line to include in the traceback
-
     try:
         # Initialize the XLA environment if device is XLA
         if device.type == "xla":
@@ -40,6 +38,7 @@ def run_benchmark_process(
     except Exception as e:
         formatted_stacktrace += f"\n{traceback.format_exc()}"
 
+    # Get the next line to include in the traceback
     next_cmd_multi = get_next_line_info()
     result = benchmark_func(device, *args, **kwargs)
     result_queue.put((result, formatted_stacktrace + next_cmd_multi))
