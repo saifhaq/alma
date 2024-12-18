@@ -6,7 +6,11 @@ from torch.utils.data import DataLoader
 
 from .benchmark import benchmark
 from .benchmark.benchmark_config import BenchmarkConfig
-from .conversions.conversion_options import MODEL_CONVERSION_OPTIONS, ConversionOption, mode_str_to_conversions
+from .conversions.conversion_options import (
+    MODEL_CONVERSION_OPTIONS,
+    ConversionOption,
+    mode_str_to_conversions,
+)
 from .dataloader.create import create_single_tensor_dataloader
 from .utils.checks import check_consistent_batch_size, check_inputs
 from .utils.device import setup_device
@@ -46,7 +50,7 @@ def benchmark_model(
             can be instantiated inside isolated child processes.
         config (Union[BenchmarkConfig, Dict[str, Any]]): A validated Pydantic configuration for benchmarking.
             One can also pass in a dictionary, which will be converted to a `BenchmarkConfig` object.
-        conversions (Optional[Union[List[ConversionOption], List[str]]]): List of 
+        conversions (Optional[Union[List[ConversionOption], List[str]]]): List of
             `ConversionOption` objects to benchmark. Can also be a list of strings, where each string
             is a conversion method. If None, all available conversion methods will be used.
         data (Optional[torch.Tensor]): Input data for benchmarking, required if no `data_loader` is provided.

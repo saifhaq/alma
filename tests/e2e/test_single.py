@@ -1,4 +1,5 @@
 import pytest
+
 from .utils import simple_model_for_testing
 
 
@@ -24,7 +25,6 @@ def test_jit_success():
     assert (
         results["JIT_TRACE"]["status"] == "success"
     ), "Expected JIT_TRACE conversion to succeed"
-
 
 
 def test_torchscript_success():

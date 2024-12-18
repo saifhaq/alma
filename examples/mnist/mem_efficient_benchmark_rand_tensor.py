@@ -8,8 +8,8 @@ from alma.arguments.benchmark_args import parse_benchmark_args
 from alma.benchmark import BenchmarkConfig
 from alma.benchmark.log import display_all_results
 from alma.benchmark_model import benchmark_model
-from alma.utils.setup_logging import setup_logging
 from alma.utils.device import setup_device
+from alma.utils.setup_logging import setup_logging
 
 # One needs to set their quantization backend engine to what is appropriate for their system.
 # torch.backends.quantized.engine = 'x86'

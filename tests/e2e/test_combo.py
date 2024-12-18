@@ -1,5 +1,7 @@
 import pytest
+
 from .utils import simple_model_for_testing
+
 
 def test_eager_jit_torchscript():
     """
@@ -17,4 +19,3 @@ def test_eager_jit_torchscript():
         assert (
             results[key]["status"] == "success"
         ), f"Expected {key} conversion to succeed"
-

@@ -44,11 +44,7 @@ def return_unpicklable_function():
 @pytest.fixture
 def base_config():
     """Fixture for creating a base BenchmarkConfig"""
-    return BenchmarkConfig(
-        n_samples=64,
-        batch_size=32,
-        device=torch.device("cpu")
-    )
+    return BenchmarkConfig(n_samples=64, batch_size=32, device=torch.device("cpu"))
 
 
 # Tests for check_model
@@ -100,7 +96,9 @@ def test_check_model_multiprocessing_disabled(base_config):
 # Tests for check_is_local_function
 def test_check_is_local_function_valid():
     """Test check_is_local_function with valid function."""
-    check_is_local_function(module_level_function, "error")  # Should not raise any exceptions
+    check_is_local_function(
+        module_level_function, "error"
+    )  # Should not raise any exceptions
 
 
 def test_check_is_local_function_invalid():
@@ -156,7 +154,7 @@ def test_check_model_default_config():
     """Test check_model with default config values."""
     model = DummyModule()
     config = BenchmarkConfig()  # Uses all default values
-    
+
     with patch("logging.Logger.warning") as mock_warning:
         check_model(model, config)
         assert mock_warning.called

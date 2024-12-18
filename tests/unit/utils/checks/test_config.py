@@ -70,10 +70,7 @@ def test_benchmark_config_defaults():
 def test_benchmark_config_custom_values():
     """Test BenchmarkConfig with custom values"""
     config = BenchmarkConfig(
-        n_samples=64,
-        batch_size=32,
-        multiprocessing=False,
-        device=torch.device("cpu")
+        n_samples=64, batch_size=32, multiprocessing=False, device=torch.device("cpu")
     )
     assert config.n_samples == 64
     assert config.batch_size == 32
@@ -112,19 +109,15 @@ def test_check_config():
     """Test check_config function with valid and invalid inputs"""
     # Valid config should not raise
     valid_config = BenchmarkConfig(
-        n_samples=64,
-        batch_size=32,
-        device=torch.device("cpu")
+        n_samples=64, batch_size=32, device=torch.device("cpu")
     )
     check_config(valid_config)
 
     # Invalid config should raise ValidationError
     with pytest.raises(ValidationError):
-        check_config({
-            "n_samples": -1,  # Invalid value
-            "batch_size": 32,
-            "device": "cpu"
-        })
+        check_config(
+            {"n_samples": -1, "batch_size": 32, "device": "cpu"}  # Invalid value
+        )
 
 
 @pytest.fixture
@@ -135,5 +128,5 @@ def valid_config():
         batch_size=32,
         device=torch.device("cpu"),
         multiprocessing=True,
-        fail_on_error=False
+        fail_on_error=False,
     )

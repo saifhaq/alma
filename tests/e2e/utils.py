@@ -1,7 +1,7 @@
 import torch
 
-from alma.benchmark_model import benchmark_model
 from alma.benchmark.benchmark_config import BenchmarkConfig
+from alma.benchmark_model import benchmark_model
 from alma.conversions.conversion_options import mode_str_to_conversions
 
 

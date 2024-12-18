@@ -2,9 +2,9 @@ import pytest
 import torch
 from torch.utils.data import DataLoader, TensorDataset
 
-from alma.utils.checks.inputs import check_input_type
 from alma.benchmark.benchmark_config import BenchmarkConfig
 from alma.conversions.conversion_options import ConversionOption
+from alma.utils.checks.inputs import check_input_type
 
 
 def dummy_callable(x):
@@ -59,7 +59,9 @@ def test_invalid_config():
     invalid_configs = ["string_config", 123, [1, 2, 3], torch.nn.Linear(10, 10)]
 
     for config in invalid_configs:
-        with pytest.raises(AssertionError, match="The config must be of type BenchmarkConfig"):
+        with pytest.raises(
+            AssertionError, match="The config must be of type BenchmarkConfig"
+        ):
             check_input_type(
                 model=torch.nn.Linear(10, 10),
                 config=config,
