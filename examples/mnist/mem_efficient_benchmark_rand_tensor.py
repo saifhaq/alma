@@ -9,6 +9,7 @@ from alma.benchmark import BenchmarkConfig
 from alma.benchmark.log import display_all_results
 from alma.benchmark_model import benchmark_model
 from alma.utils.setup_logging import setup_logging
+from alma.utils.device import setup_device
 
 # One needs to set their quantization backend engine to what is appropriate for their system.
 # torch.backends.quantized.engine = 'x86'
@@ -46,8 +47,8 @@ def main() -> None:
     # Parse arguments and get conversions along with the default device
     args, conversions = parse_benchmark_args()
 
-    # Set the device one wants to benchmark on
-    device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
+    # A provided util that will detect one's device and provide the appropriate torch.device object
+    device = setup_device()
 
     # Configuration for the benchmarking. Here we show of all of the options, including for device.
     # With `allow_device_override` we allow a device-specific conversion method to automtically assign
