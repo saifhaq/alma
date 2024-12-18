@@ -4,10 +4,9 @@ from typing import Any, Dict
 import torch
 
 from alma.arguments.benchmark_args import parse_benchmark_args
+from alma.benchmark.benchmark_config import BenchmarkConfig
 from alma.benchmark.log import display_all_results
 from alma.benchmark_model import benchmark_model
-from alma.conversions.conversion_options import conversions_to_modes
-from alma.utils.device import select_device
 from alma.utils.setup_logging import setup_logging
 
 logger = logging.getLogger(__name__)
@@ -32,16 +31,13 @@ def main() -> None:
     # Create a random tensor
     data = torch.rand(1, 512, 3)
 
-    device = select_device(not args.no_cuda, not args.no_mps)
-    # Configuration for the benchmarking
-    config = {
-        "n_samples": args.n_samples,
-        "batch_size": args.batch_size,
-        "device": device,  # The device to benchmark on
-        "multiprocessing": True,  # If True, we test each method in its own isolated environment,
-        # which helps keep methods from contaminating the global torch state
-        "fail_on_error": False,  # If False, we fail gracefully and keep testing other methods
-    }
+    # Set up the benchmarking configuration
+    config = BenchmarkConfig(
+        n_samples=args.n_samples,
+        batch_size=args.batch_size,
+        multiprocessing=True,
+        fail_on_error=False,
+    )
 
     # Benchmark the model
     # Feeding in a tensor, and no dataloader, will cause the benchmark_model function to generate a
@@ -50,7 +46,7 @@ def main() -> None:
     # at a DEBUG level.
     logging.info("Benchmarking model using random data")
     results: Dict[str, Dict[str, Any]] = benchmark_model(
-        model, config, conversions_to_modes(conversions), data=data.squeeze()
+        model, config, conversions, data=data.squeeze()
     )
 
     # Display the results
