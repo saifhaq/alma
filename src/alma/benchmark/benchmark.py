@@ -76,8 +76,6 @@ def benchmark(
     # PyTorch native quantized conversions requires CPU
     forward_call = select_forward_call_function(model, conversion, data, device)
 
-    logger.info(f"Benchmarking {conversion} on {device}")
-
     # Clear all caches, etc.
     torch._dynamo.reset()
 

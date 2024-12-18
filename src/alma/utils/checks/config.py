@@ -4,7 +4,7 @@ from typing import Any, Optional, Union
 import torch
 from pydantic import BaseModel
 
-from alma.utils.types.benchmark_config import BenchmarkConfig
+from alma.benchmark.benchmark_config import BenchmarkConfig
 
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())

@@ -5,10 +5,10 @@ import torch
 from model.model import Net
 
 from alma.arguments.benchmark_args import parse_benchmark_args
+from alma.benchmark.benchmark_config import BenchmarkConfig
 from alma.benchmark.log import display_all_results
 from alma.benchmark_model import benchmark_model
 from alma.conversions.conversion_options import conversions_to_modes
-from alma.utils.device import select_device
 from alma.utils.setup_logging import setup_logging
 
 # One needs to set their quantization backend engine to what is appropriate for their system.
@@ -24,7 +24,6 @@ def main() -> None:
 
     # Parse the benchmarking arguments
     args, conversions = parse_benchmark_args()
-    device = select_device(not args.no_cuda, not args.no_mps)
 
     # Create random tensor (of MNIST image size)
     data = torch.rand(1, 3, 28, 28)
@@ -33,14 +32,12 @@ def main() -> None:
     model = Net()
 
     # Configuration for the benchmarking
-    config = {
-        "n_samples": args.n_samples,
-        "batch_size": args.batch_size,
-        "device": device,  # The device to benchmark on
-        "multiprocessing": True,  # If True, we test each method in its own isolated environment,
-        # which helps keep methods from contaminating the global torch state
-        "fail_on_error": True,  # If False, we fail gracefully and keep testing other methods
-    }
+    config = BenchmarkConfig(
+        n_samples=args.n_samples,
+        batch_size=args.batch_size,
+        multiprocessing=True,  # If True, we test each method in its own isolated environment,
+        fail_on_error=True,  # If False, we fail gracefully and keep testing other methods
+    )
 
     # Benchmark the model
     # Feeding in a tensor, and no dataloader, will cause the benchmark_model function to generate a
@@ -49,7 +46,7 @@ def main() -> None:
     # NOTE: one needs to squeeze the data tensor to remove the batch dimension
     logging.info("Benchmarking model using random data")
     results: Dict[str, Dict[str, Any]] = benchmark_model(
-        model, config, conversions_to_modes(conversions), data=data.squeeze()
+        model, config, conversions, data=data.squeeze()
     )
 
     # Display the results

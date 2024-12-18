@@ -3,7 +3,7 @@ from typing import Callable, List, Union
 import torch
 from torch.utils.data import DataLoader
 
-from alma.utils.types.benchmark_config import BenchmarkConfig
+from alma.benchmark.benchmark_config import BenchmarkConfig
 
 from .config import check_config
 from .data import check_data_or_dataloader

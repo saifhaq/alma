@@ -3,7 +3,7 @@ from typing import Callable, List
 import torch
 from torch.utils.data import DataLoader
 
-from alma.utils.types.benchmark_config import BenchmarkConfig
+from alma.benchmark.benchmark_config import BenchmarkConfig
 
 
 def check_input_type(model, config, conversions, data, data_loader) -> None:

@@ -62,8 +62,8 @@ class BenchmarkConfig(BaseModel):
             allow_override = values.get("allow_device_override", True)
 
             values["device"] = setup_device(
-                no_cuda=not allow_cuda,
-                no_mps=not allow_mps,
+                allow_cuda=allow_cuda,
+                allow_mps=allow_mps,
                 allow_device_override=allow_override,
             )
         return values

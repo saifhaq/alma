@@ -6,12 +6,12 @@ import torch
 from torch.utils.data import DataLoader
 
 from .benchmark import benchmark
+from .benchmark.benchmark_config import BenchmarkConfig
 from .conversions.conversion_options import MODEL_CONVERSION_OPTIONS, ConversionOption
 from .dataloader.create import create_single_tensor_dataloader
 from .utils.checks import check_consistent_batch_size, check_inputs
 from .utils.device import setup_device
 from .utils.multiprocessing import benchmark_process_wrapper
-from .utils.types.benchmark_config import BenchmarkConfig
 
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())
@@ -89,7 +89,6 @@ def benchmark_model(
     all_results: Dict[str, Dict[str, Any]] = {}
 
     for conversion_option in conversions:
-        # Step 5.1: Extract mode and device override from the ConversionOption
         conversion_mode = conversion_option.mode
         device_override = conversion_option.device_override
 
@@ -107,44 +106,32 @@ def benchmark_model(
         )
         data = data.to(device)
 
-        try:
-            result, stacktrace = benchmark_process_wrapper(
-                multiprocessing,
-                benchmark,
-                device,
-                model,
-                conversion_mode,
-                data_loader,
-                n_samples,
-            )
+        # try:
+        result, stacktrace = benchmark_process_wrapper(
+            multiprocessing,
+            benchmark,
+            device,
+            model,
+            conversion_mode,
+            data_loader,
+            n_samples,
+        )
+        all_results[conversion_mode] = result
 
-            all_results[conversion_mode] = result
-
-            # If the conversion failed, we raise an exception if we are failing fast
-            if result["status"] == "error":
-                logger.error(f"Benchmark failed for conversion: {conversion_mode}")
-
-                # We combine the stacktrace from the child process with the stacktrace from the parent process
-
-                result["traceback"] = stacktrace + result["traceback"]
-                if fail_on_error:
-                    raise RuntimeError(result["traceback"])
-
-        except Exception as e:
-            logger.error(f"Exception during benchmarking for {conversion_mode}: {e}")
+        # If the conversion failed, we raise an exception if we are failing fast
+        if result["status"] == "error":
+            logger.error(f"Benchmark failed for conversion: {conversion_mode}")
+            # We combine the stacktrace from the child process with the stacktrace from the parent process
+            result["traceback"] = stacktrace + result["traceback"]
             if fail_on_error:
-                raise
-            all_results[conversion_mode] = {
-                "status": "error",
-                "traceback": traceback.format_exc(),
-            }
+                raise RuntimeError(result["traceback"])
 
     return all_results
 
 
 # Example Usage
 if __name__ == "__main__":
-    from .utils.types.benchmark_config import BenchmarkConfig
+    from .benchmark.benchmark_config import BenchmarkConfig
 
     model = torch.nn.Linear(10, 1)
     config = BenchmarkConfig(

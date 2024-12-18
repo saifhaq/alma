@@ -14,6 +14,15 @@ def check_data_or_dataloader(data: torch.Tensor, data_loader: DataLoader) -> Non
     None
     """
 
+    # Validate that data is a torch.Tensor if it's not None
+    if data is not None and not isinstance(data, torch.Tensor):
+        raise TypeError("The 'data' parameter must be of type torch.Tensor.")
+
+    if data_loader is not None and not isinstance(data_loader, DataLoader):
+        raise TypeError(
+            "The 'data_loader' parameter must be of type torch.utils.data.DataLoader."
+        )
+
     # Either the `data` Tensor must be provided, or a data loader
     if data is None:
         error_msg = "If data is not provided, the data_loader must be provided"

@@ -5,11 +5,11 @@ import torch
 from model.model import Net
 
 from alma.arguments.benchmark_args import parse_benchmark_args
+from alma.benchmark.benchmark_config import BenchmarkConfig
 from alma.benchmark.log import display_all_results
 from alma.benchmark_model import benchmark_model
 from alma.utils.device import setup_device
 from alma.utils.setup_logging import setup_logging
-from alma.utils.types.benchmark_config import BenchmarkConfig
 
 # One needs to set their quantization backend engine to what is appropriate for their system.
 # torch.backends.quantized.engine = 'x86'
@@ -73,7 +73,6 @@ def main() -> None:
         # benchmark the model.
         # NOTE: one needs to squeeze the data tensor to remove the batch dimension
 
-        # logging.info(f"Benchmarking {mode} on {device} using random data")
         data = torch.rand(1, 3, 28, 28)
         # Prepare random data on the selected device for this conversion
         random_data = data

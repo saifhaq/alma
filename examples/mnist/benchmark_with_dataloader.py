@@ -10,8 +10,10 @@ from utils.data.transforms import InferenceTransform
 from utils.file_utils import save_dict_to_json
 
 from alma.arguments.benchmark_args import parse_benchmark_args
+from alma.benchmark.benchmark_config import BenchmarkConfig
 from alma.benchmark.log import display_all_results
 from alma.benchmark_model import benchmark_model
+from alma.utils.device import setup_device
 from alma.utils.load_model import load_model
 from alma.utils.setup_logging import setup_logging
 
@@ -26,15 +28,15 @@ def main() -> None:
     # whatever logging one wishes, or none.
     setup_logging(log_file=None, level="ERROR")
 
-    args, device = parse_benchmark_args()
+    args, conversions = parse_benchmark_args()
 
     # Create dataset and data loader
     assert args.data_dir is not None, "Please provide a data directory"
     dataset = BenchmarkCustomImageDataset(
         img_dir=args.data_dir, transform=InferenceTransform
     )
-    data_loader = CircularDataLoader(dataset, batch_size=args.batch_size, shuffle=False)
 
+    device = setup_device()
     # Load model
     assert args.model_path is not None, "Please provide a model path"
     load_start_time = time.perf_counter()
@@ -43,20 +45,24 @@ def main() -> None:
     logging.info(f"Model loading time: {load_end_time - load_start_time:.4f} seconds")
 
     # Configuration for the benchmarking
-    config = {
-        "n_samples": args.n_samples,
-        "batch_size": args.batch_size,
-        "device": device,  # The device to benchmark on
-        "multiprocessing": True,  # If True, we test each method in its own isolated environment,
-        # which helps keep methods from contaminating the global torch state
-        "fail_on_error": False,  # If False, we fail gracefully and keep testing other methods
-    }
+    config = BenchmarkConfig(
+        n_samples=args.n_samples,
+        batch_size=args.batch_size,
+        device=device,
+        multiprocessing=True,
+        fail_on_error=False,
+    )
 
     # Benchmark the model using the provided data loader.
     logging.info("Benchmarking model using provided data loader")
+    data_loader = CircularDataLoader(dataset, batch_size=args.batch_size, shuffle=False)
 
     results: Dict[str, Dict[str, Any]] = benchmark_model(
-        model, config, args.conversions, data_loader=data_loader
+        model=model,
+        config=config,
+        conversions=conversions,
+        data=None,
+        data_loader=data_loader,
     )
 
     # Display the results
