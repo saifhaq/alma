@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "alma-torch"
-dynamic = ["version"]
+version = "0.0.0"  # This will be updated by sed in the GitHub Actions workflow
 authors = [
   { name="Saif Haq", email="saif.haq99@gmail.com" },
   { name="Oscar Savolainen", email="oscar.savolainen@hotmail.com" },
