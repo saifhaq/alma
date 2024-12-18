@@ -28,7 +28,7 @@ jobs:
               id: semver
               uses: ietf-tools/semver-action@v1
               with:
-                  majorList: major,breaking
+                  majorList: major,release,breaking,MAJOR,RELEASE,BREAKING
                   minorList: minor,feat,feature
                   noVersionBumpBehavior: patch
                   token: ${{ github.token }}

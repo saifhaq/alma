@@ -1,0 +1,23 @@
+name: Runs unit tests
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  unit-tests:
+    runs-on: titan
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Install pytest
+      run: pip install pytest
+      
+    - name: Install alma package
+      run: pip install . 
+
+    - name: PyTest
+      run: |
+        pytest 
