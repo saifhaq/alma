@@ -1,24 +1,24 @@
 from typing import Iterator
 
 import torch
-from torch.utils.data import Dataset
+from torch.utils.data import DataLoader, Dataset, Sampler
 
 
-class CircularSampler(torch.utils.data.Sampler):
+class CircularSampler(Sampler):
     """A sampler that provides an infinite stream of indices."""
 
     def __init__(self, data_source: Dataset):
         self.data_source = data_source
 
     def __iter__(self) -> Iterator[int]:
-        while True:  # Infinite loop
+        while True:
             yield from torch.randperm(len(self.data_source)).tolist()
 
     def __len__(self) -> int:
         return len(self.data_source)
 
 
-class CircularDataLoader(torch.utils.data.DataLoader):
+class CircularDataLoader(DataLoader):
     """A DataLoader that uses CircularSampler for infinite data streams."""
 
     def __init__(
