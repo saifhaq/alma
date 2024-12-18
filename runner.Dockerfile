@@ -68,6 +68,8 @@ RUN install -o root -g root -m 755 docker/* /usr/bin/ && rm -rf docker
 
 USER runner
 
+RUN sudo chown -R runner:runner /usr/local/lib/python3.10/site-packages/optimum
+
 ADD docker/entrypoint.sh /home/runner/entrypoint.sh
 RUN sudo chmod +x /home/runner/entrypoint.sh 
 ENTRYPOINT ["/home/runner/entrypoint.sh"]
