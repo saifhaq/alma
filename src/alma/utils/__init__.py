@@ -1,1 +1,1 @@
-from .device import setup_device
+from .device import override_device

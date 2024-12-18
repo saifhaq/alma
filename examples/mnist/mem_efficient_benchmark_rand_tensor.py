@@ -8,7 +8,6 @@ from alma.arguments.benchmark_args import parse_benchmark_args
 from alma.benchmark import BenchmarkConfig
 from alma.benchmark.log import display_all_results
 from alma.benchmark_model import benchmark_model
-from alma.utils.device import setup_device
 from alma.utils.setup_logging import setup_logging
 
 # One needs to set their quantization backend engine to what is appropriate for their system.
@@ -22,8 +21,6 @@ torch.backends.quantized.engine = "qnnpack"
 # require the program to sotre the model in memory twice), but rather created in the child
 # process. This is especially important if the model is large and two instances would not fit
 # on device.
-
-
 def model_init() -> torch.nn.Module:
     """
     A callable that returns the model to be benchmarked. This allows us to initialise the model
@@ -48,23 +45,24 @@ def main() -> None:
     # Parse arguments and get conversions along with the default device
     args, conversions = parse_benchmark_args()
 
-    # Get the current device
-    current_device = setup_device(
-        None, allow_cuda=(not args.no_cuda), allow_mps=(not args.no_mps)
-    )
+    # Set the device one wants to benchmark on
+    device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
 
-    # Configuration for the benchmarking
+    # Configuration for the benchmarking. Here we show of all of the options, including for device.
+    # With `allow_device_override` we allow a device-specific conversion method to automtically assign
+    # itself to that device, e.g. ONNX_CPU will automatically run on CPU even if device is CUDA.
     config = BenchmarkConfig(
         n_samples=args.n_samples,
         batch_size=args.batch_size,
         multiprocessing=True,  # If True, we test each method in its own isolated environment,
         # which helps keep methods from contaminating the global torch state
         fail_on_error=False,  # If False, we fail gracefully and keep testing other methods
-        allow_device_override=not args.no_device_override,  # Allow device override for
-        # specific conversions, ie ONNX_CPU
-        allow_cuda=not args.no_cuda,  # Allow CUDA if not disabled
-        allow_mps=not args.no_mps,  # Allow MPS if not disabled
-        device=current_device,
+
+        # Device options:
+        allow_device_override=not args.no_device_override,  # Allow device override for device-specific conversions
+        allow_cuda=not args.no_cuda,  # True allows CUDA as an override option
+        allow_mps=not args.no_mps,  # True allows MPS as an override option
+        device=device,
     )
 
     # Iterate through each selected conversion. we do this just tp show that this is an alternate

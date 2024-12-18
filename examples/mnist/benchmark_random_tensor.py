@@ -10,7 +10,6 @@ from alma.benchmark import BenchmarkConfig
 from alma.benchmark.log import display_all_results
 from alma.benchmark_model import benchmark_model
 from alma.conversions.conversion_options import conversions_to_modes
-from alma.utils.setup_logging import setup_logging
 
 # One needs to set their quantization backend engine to what is appropriate for their system.
 # torch.backends.quantized.engine = 'x86'
@@ -26,6 +25,9 @@ def main() -> None:
     # Parse the benchmarking arguments
     args, conversions = parse_benchmark_args()
 
+    # Set the device one wants to benchmark on
+    device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
+
     # Create random tensor (of MNIST image size)
     data = torch.rand(1, 3, 28, 28)
 
@@ -36,6 +38,7 @@ def main() -> None:
     config = BenchmarkConfig(
         n_samples=args.n_samples,
         batch_size=args.batch_size,
+        device=device,
         multiprocessing=True,  # If True, we test each method in its own isolated environment,
         # which helps keep methods from contaminating the global torch state
         fail_on_error=False,  # If False, we fail gracefully and keep testing other methods

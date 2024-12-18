@@ -10,7 +10,7 @@ from .benchmark.benchmark_config import BenchmarkConfig
 from .conversions.conversion_options import MODEL_CONVERSION_OPTIONS, ConversionOption
 from .dataloader.create import create_single_tensor_dataloader
 from .utils.checks import check_consistent_batch_size, check_inputs
-from .utils.device import setup_device
+from .utils.device import override_device
 from .utils.multiprocessing import benchmark_process_wrapper
 
 logger = logging.getLogger(__name__)
@@ -96,16 +96,17 @@ def benchmark_model(
         torch.cuda.empty_cache()
         logger.info(f"Benchmarking model using conversion: {conversion_mode}")
 
-        device = setup_device(
+        # Potential device override, depending on if the conversion method is device-specific and 
+        # the provided override options
+        device = override_device(
             device,
             allow_cuda=config.allow_cuda,
             allow_mps=config.allow_mps,
             allow_device_override=config.allow_device_override,
             selected_conversion=conversion_option,
         )
-        # data = data.to(device)
 
-        # try:
+        # Benchmark the model
         result, stacktrace = benchmark_process_wrapper(
             multiprocessing,
             benchmark,

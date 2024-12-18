@@ -1,4 +1,3 @@
-import argparse
 import logging
 import os
 from typing import Optional
@@ -8,6 +7,7 @@ import torch
 from alma.conversions.conversion_options import ConversionOption
 
 logger = logging.getLogger(__name__)
+logger.addHandler(logging.NullHandler())
 
 
 def handle_xla_device(mode: str, allow_cuda: bool = True) -> torch.device:
@@ -111,7 +111,7 @@ def fallback_device_selection(use_cuda: bool, use_mps: bool) -> torch.device:
     return torch.device("cpu")
 
 
-def setup_device(
+def override_device(
     current_device: Optional[torch.device] = None,
     allow_cuda: Optional[bool] = True,
     allow_mps: Optional[bool] = True,
