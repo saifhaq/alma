@@ -6,7 +6,7 @@ on:
       - main
 
 jobs:
-  train-and-benchmark:
+  train-and-benchmark-mnist:
     runs-on: titan
 
     steps:
@@ -32,7 +32,7 @@ jobs:
       run: |
         cd examples/mnist
         mkdir -p ../results
-        python benchmark_random_tensor.py --conversions=1,2,3,4,11,12
+        python benchmark_random_tensor.py
 
     - name: Display benchmark results
       run: |
@@ -45,4 +45,4 @@ jobs:
       uses: actions/upload-artifact@v3
       with:
         name: benchmark-results
-        path: examples/mnist/results/results.json
+        path: examples/mnist/results/result.json
