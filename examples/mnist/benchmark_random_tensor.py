@@ -5,11 +5,9 @@ import torch
 from model.model import Net
 from utils.file_utils import save_dict_to_json
 
-from alma.arguments.benchmark_args import parse_benchmark_args
 from alma.benchmark import BenchmarkConfig
 from alma.benchmark.log import display_all_results
 from alma.benchmark_model import benchmark_model
-from alma.conversions.conversion_options import conversions_to_modes
 from alma.utils.setup_logging import setup_logging
 
 # One needs to set their quantization backend engine to what is appropriate for their system.
@@ -23,9 +21,6 @@ def main() -> None:
     # whatever logging one wishes, or none.
     setup_logging(log_file=None, level="INFO")
 
-    # Parse the benchmarking arguments
-    args, conversions = parse_benchmark_args()
-
     # Set the device one wants to benchmark on
     device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
 
@@ -37,13 +32,17 @@ def main() -> None:
 
     # Configuration for the benchmarking
     config = BenchmarkConfig(
-        n_samples=args.n_samples,
-        batch_size=args.batch_size,
+        n_samples=4,
+        batch_size=2,
         device=device,
         multiprocessing=True,  # If True, we test each method in its own isolated environment,
         # which helps keep methods from contaminating the global torch state
         fail_on_error=False,  # If False, we fail gracefully and keep testing other methods
     )
+
+    # Hard-code a list of options. These can be provided as a list of strings, or a list of ConversionOption objects
+    conversions = ["EAGER", "JIT_TRACE", "TORCH_SCRIPT", "COMPILE_INDUCTOR_DEFAULT"]
+    # conversions = [ConversionOption["EAGER"], ConversionOption["JIT_TRACE"], ConversionOption["TORCH_SCRIPT"], ConversionOption["COMPILE_INDUCTOR_DEFAULT"]]
 
     # Benchmark the model
     # Feeding in a tensor, and no dataloader, will cause the benchmark_model function to generate a

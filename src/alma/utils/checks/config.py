@@ -1,8 +1,7 @@
 import logging
-from typing import Any, Optional, Union
+from typing import Union
 
 import torch
-from pydantic import BaseModel
 
 from alma.benchmark.benchmark_config import BenchmarkConfig
 

@@ -288,6 +288,17 @@ Below is a table summarizing the currently supported conversion options and thei
 These conversion options are also all hard-coded in the `alma/conversions/select.py` file, which 
 is the source of truth.
 
+
+## Testing
+
+We use pytest for testing. Simply run:
+```bash
+pytest
+```
+
+We currently don't have extensive tests, but we are working on adding more tests to ensure that
+the conversion options are working as expected in known environments (e.g. the Docker container).
+
 ## Future work:
 
 - Add more conversion options. This is a work in progress, and we are always looking for more conversion options.

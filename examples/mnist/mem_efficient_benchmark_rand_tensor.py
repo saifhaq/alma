@@ -8,8 +8,8 @@ from alma.arguments.benchmark_args import parse_benchmark_args
 from alma.benchmark import BenchmarkConfig
 from alma.benchmark.log import display_all_results
 from alma.benchmark_model import benchmark_model
-from alma.utils.setup_logging import setup_logging
 from alma.utils.device import setup_device
+from alma.utils.setup_logging import setup_logging
 
 # One needs to set their quantization backend engine to what is appropriate for their system.
 # torch.backends.quantized.engine = 'x86'
@@ -68,12 +68,13 @@ def main() -> None:
         device=device,
     )
 
-    # Iterate through each selected conversion. we do this just tp show that this is an alternate
-    # way to benchmark across multiple converisons, rather than passing in a list of conversions
-    for conversion in conversions:
+    # Prepare random data on the selected device for this conversion
+    data = torch.rand(1, 3, 28, 28)
 
-        # Prepare random data on the selected device for this conversion
-        data = torch.rand(1, 3, 28, 28)
+    # Iterate through each selected conversion. We do this just to show that this is an alternate
+    # way to benchmark across multiple converisons, rather than passing in a list of conversions.
+    # Up to you how to to do it!
+    for conversion in conversions:
 
         # Benchmark the model, fed in as a callable
         # Feeding in a tensor, and no dataloader, will cause the benchmark_model function to generate a
