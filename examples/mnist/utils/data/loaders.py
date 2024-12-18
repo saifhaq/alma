@@ -1,7 +1,7 @@
 from typing import Iterator
 
 import torch
-from torch.utils.data import Dataset, Sampler, DataLoader
+from torch.utils.data import DataLoader, Dataset, Sampler
 
 
 class CircularSampler(Sampler):

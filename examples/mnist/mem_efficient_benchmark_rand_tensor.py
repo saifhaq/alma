@@ -79,7 +79,9 @@ def main() -> None:
         # dataloader that provides random tensors of the same shape as `data`, which is used to
         # benchmark the model.
         # NOTE: one needs to squeeze the data tensor to remove the batch dimension
-        logging.info("Benchmarking model using random data, passing in a callable to initialise the model")
+        logging.info(
+            "Benchmarking model using random data, passing in a callable to initialise the model"
+        )
         results: Dict[str, Dict[str, Any]] = benchmark_model(
             model_init,
             config,
