@@ -32,7 +32,7 @@ jobs:
       run: |
         cd examples/mnist
         mkdir -p ../results
-        python benchmark_random_tensor.py > ../results/benchmark.json
+        python benchmark_random_tensor.py --conversions=1,2,3,4,11,12
 
     - name: Display benchmark results
       run: |

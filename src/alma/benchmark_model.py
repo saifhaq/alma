@@ -104,7 +104,7 @@ def benchmark_model(
             allow_device_override=config.allow_device_override,
             selected_conversion=conversion_option,
         )
-        data = data.to(device)
+        # data = data.to(device)
 
         # try:
         result, stacktrace = benchmark_process_wrapper(
