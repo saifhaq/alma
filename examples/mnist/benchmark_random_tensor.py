@@ -10,6 +10,7 @@ from alma.benchmark import BenchmarkConfig
 from alma.benchmark.log import display_all_results
 from alma.benchmark_model import benchmark_model
 from alma.conversions.conversion_options import conversions_to_modes
+from alma.utils.setup_logging import setup_logging
 
 # One needs to set their quantization backend engine to what is appropriate for their system.
 # torch.backends.quantized.engine = 'x86'
@@ -58,6 +59,8 @@ def main() -> None:
     display_all_results(
         results, display_function=print, include_traceback_for_errors=False
     )
+
+    # Save the results to JSON for easy CI integration
     save_dict_to_json(results, "result.json")
 
 

@@ -10,7 +10,7 @@ from .benchmark.benchmark_config import BenchmarkConfig
 from .conversions.conversion_options import MODEL_CONVERSION_OPTIONS, ConversionOption
 from .dataloader.create import create_single_tensor_dataloader
 from .utils.checks import check_consistent_batch_size, check_inputs
-from .utils.device import override_device
+from .utils.device import setup_device
 from .utils.multiprocessing import benchmark_process_wrapper
 
 logger = logging.getLogger(__name__)
@@ -98,7 +98,7 @@ def benchmark_model(
 
         # Potential device override, depending on if the conversion method is device-specific and 
         # the provided override options
-        device = override_device(
+        device = setup_device(
             device,
             allow_cuda=config.allow_cuda,
             allow_mps=config.allow_mps,

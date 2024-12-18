@@ -111,7 +111,7 @@ def fallback_device_selection(use_cuda: bool, use_mps: bool) -> torch.device:
     return torch.device("cpu")
 
 
-def override_device(
+def setup_device(
     current_device: Optional[torch.device] = None,
     allow_cuda: Optional[bool] = True,
     allow_mps: Optional[bool] = True,
