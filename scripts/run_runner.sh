@@ -1,6 +1,7 @@
 docker run -itd \
 --restart=always \
 --gpus=all \
+--shm-size=16g \
 -e RUNNER_TOKEN=$(cat ~/.ssh/alma_runner_token) \
 -e REPO=saifhaq/alma \
 -e LABELS=titan \
