@@ -16,4 +16,6 @@ different ways to use `alma`. Overall, it has a full example of:
     using PTQ and QAT.
 - [`linear`](./linear/README.md#simple-linear-example): A barebones example of a linear layer and 
     ReLU activation, where we demonstrate
-    just the benchmarking without any training. We only showcase the no-dataloader example.
+    just the benchmarking without any training. We only showcase the no-dataloader example in a script.
+    Hoewever, we do have a [Jupyter notebook](./linear/notebook.ipynb) that walks through a lot of ways on how to use `alma` and 
+    tailor it to one's use case.
