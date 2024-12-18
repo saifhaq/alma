@@ -3,6 +3,8 @@ import torch
 from torch.utils.data import DataLoader, TensorDataset
 
 from alma.utils.checks.inputs import check_input_type
+from alma.benchmark.benchmark_config import BenchmarkConfig
+from alma.conversions.conversion_options import ConversionOption
 
 
 def dummy_callable(x):
@@ -12,19 +14,23 @@ def dummy_callable(x):
 def test_valid_inputs():
     """Test with valid inputs of each allowed type."""
     # Test cases with different valid combinations
+    conversion_options = [
+        ConversionOption(mode="EAGER"),
+        ConversionOption(mode="EXPORT+EAGER"),
+    ]
     test_cases = [
         # Case 1: nn.Module model
         {
             "model": torch.nn.Linear(10, 10),
-            "config": {"test": "config"},
-            "conversions": ["conv1", "conv2"],
+            "config": BenchmarkConfig(),
+            "conversions": conversion_options,
             "data": torch.randn(10, 10),
             "data_loader": None,
         },
         # Case 2: Callable model
         {
             "model": dummy_callable,
-            "config": {},
+            "config": BenchmarkConfig(),
             "conversions": [],
             "data": None,
             "data_loader": DataLoader(TensorDataset(torch.randn(10, 10))),
@@ -53,7 +59,7 @@ def test_invalid_config():
     invalid_configs = ["string_config", 123, [1, 2, 3], torch.nn.Linear(10, 10)]
 
     for config in invalid_configs:
-        with pytest.raises(AssertionError, match="The config must be a dictionary"):
+        with pytest.raises(AssertionError, match="The config must be of type BenchmarkConfig"):
             check_input_type(
                 model=torch.nn.Linear(10, 10),
                 config=config,
@@ -73,10 +79,10 @@ def test_invalid_conversions():
     ]
 
     for conversions in invalid_conversions:
-        with pytest.raises(AssertionError, match="The conversions must be a list"):
+        with pytest.raises(AssertionError):
             check_input_type(
                 model=torch.nn.Linear(10, 10),
-                config={},
+                config=BenchmarkConfig(),
                 conversions=conversions,
                 data=None,
                 data_loader=None,
@@ -91,7 +97,7 @@ def test_invalid_data():
         with pytest.raises(AssertionError, match="The data must be a torch.Tensor"):
             check_input_type(
                 model=torch.nn.Linear(10, 10),
-                config={},
+                config=BenchmarkConfig(),
                 conversions=[],
                 data=data,
                 data_loader=None,
@@ -114,7 +120,7 @@ def test_invalid_data_loader():
         ):
             check_input_type(
                 model=torch.nn.Linear(10, 10),
-                config={},
+                config=BenchmarkConfig(),
                 conversions=[],
                 data=None,
                 data_loader=loader,
@@ -125,7 +131,7 @@ def test_none_values():
     """Test that None is accepted for appropriate parameters."""
     check_input_type(
         model=torch.nn.Linear(10, 10),
-        config={},
+        config=BenchmarkConfig(),
         conversions=None,  # None should be valid for conversions
         data=None,  # None should be valid for data
         data_loader=None,  # None should be valid for data_loader

@@ -24,7 +24,7 @@ def main() -> None:
     setup_logging(log_file=None, level="INFO")
 
     # Parse the benchmarking arguments
-    args, conversions = parse_benchmark_args()
+    args, _ = parse_benchmark_args()
 
     # Set the device one wants to benchmark on
     device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
@@ -44,6 +44,10 @@ def main() -> None:
         # which helps keep methods from contaminating the global torch state
         fail_on_error=False,  # If False, we fail gracefully and keep testing other methods
     )
+
+    # Hard-code a list of options. These can be provided as a list of strings, or a list of ConversionOption objects
+    conversions = ["EAGER", "JIT_TRACE", "TORCH_SCRIPT", "COMPILE_INDUCTOR_DEFAULT"]
+    # conversions = [ConversionOption["EAGER"], ConversionOption["JIT_TRACE"], ConversionOption["TORCH_SCRIPT"], ConversionOption["COMPILE_INDUCTOR_DEFAULT"]]
 
     # Benchmark the model
     # Feeding in a tensor, and no dataloader, will cause the benchmark_model function to generate a

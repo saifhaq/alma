@@ -1,5 +1,4 @@
 import logging
-import traceback
 from typing import Any, Callable, Dict, List, Optional, Union
 
 import torch
@@ -7,7 +6,7 @@ from torch.utils.data import DataLoader
 
 from .benchmark import benchmark
 from .benchmark.benchmark_config import BenchmarkConfig
-from .conversions.conversion_options import MODEL_CONVERSION_OPTIONS, ConversionOption
+from .conversions.conversion_options import MODEL_CONVERSION_OPTIONS, ConversionOption, mode_str_to_conversions
 from .dataloader.create import create_single_tensor_dataloader
 from .utils.checks import check_consistent_batch_size, check_inputs
 from .utils.device import setup_device
@@ -19,8 +18,8 @@ logger.addHandler(logging.NullHandler())
 
 def benchmark_model(
     model: Union[torch.nn.Module, Callable],
-    config: BenchmarkConfig,
-    conversions: Optional[List[ConversionOption]] = None,
+    config: Union[BenchmarkConfig, Dict[str, Any]],
+    conversions: Optional[Union[List[ConversionOption], List[str]]] = None,
     data: Optional[torch.Tensor] = None,
     data_loader: Optional[DataLoader] = None,
 ) -> Dict[str, Dict[str, Any]]:
@@ -45,9 +44,11 @@ def benchmark_model(
         model (Union[torch.nn.Module, Callable]): The model to benchmark. If a callable is provided,
             it should return the model instance. This helps when using multiprocessing, as the model
             can be instantiated inside isolated child processes.
-        config (BenchmarkConfig): A validated Pydantic configuration for benchmarking.
-        conversions (Optional[List[ConversionOption]]): List of `ConversionOption` objects to benchmark.
-            If None, all available conversion methods will be used.
+        config (Union[BenchmarkConfig, Dict[str, Any]]): A validated Pydantic configuration for benchmarking.
+            One can also pass in a dictionary, which will be converted to a `BenchmarkConfig` object.
+        conversions (Optional[Union[List[ConversionOption], List[str]]]): List of 
+            `ConversionOption` objects to benchmark. Can also be a list of strings, where each string
+            is a conversion method. If None, all available conversion methods will be used.
         data (Optional[torch.Tensor]): Input data for benchmarking, required if no `data_loader` is provided.
         data_loader (Optional[DataLoader]): DataLoader for data samples. If provided, it takes precedence.
 
@@ -58,6 +59,14 @@ def benchmark_model(
         If the conversion method failed and we fail gracefully, the value will be a dictionary
         containing the error and traceback.            If a method fails, its value contains the error message and traceback.
     """
+    # If the config is a dictionary, we convert it to a BenchmarkConfig object
+    if isinstance(config, dict):
+        config = BenchmarkConfig(**config)
+
+    # If the conversions is a list of strings, we convert it to a list of ConversionOption objects
+    if isinstance(conversions, list) and all(isinstance(c, str) for c in conversions):
+        conversions = mode_str_to_conversions(conversions)
+
     # Check the inputs
     check_inputs(model, config, conversions, data, data_loader)
 

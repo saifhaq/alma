@@ -3,6 +3,7 @@ from unittest.mock import patch
 import pytest
 import torch
 
+from alma.benchmark.benchmark_config import BenchmarkConfig
 from alma.utils.checks.model import (
     check_is_local_function,
     check_model,
@@ -33,7 +34,6 @@ def create_local_function():
 
 
 def return_unpicklable_function():
-    # Create an unpicklable attribute
     def unpicklable_function():
         """This function is not picklable as it is locally scoped"""
         pass
@@ -41,11 +41,21 @@ def return_unpicklable_function():
     return unpicklable_function
 
 
+@pytest.fixture
+def base_config():
+    """Fixture for creating a base BenchmarkConfig"""
+    return BenchmarkConfig(
+        n_samples=64,
+        batch_size=32,
+        device=torch.device("cpu")
+    )
+
+
 # Tests for check_model
-def test_check_model_with_nn_module():
+def test_check_model_with_nn_module(base_config):
     """Test check_model with torch.nn.Module."""
     model = DummyModule()
-    config = {"multiprocessing": True}
+    config = base_config.model_copy(update={"multiprocessing": True})
 
     with patch("logging.Logger.warning") as mock_warning:
         check_model(model, config)
@@ -54,32 +64,32 @@ def test_check_model_with_nn_module():
         assert "not memory efficient" in mock_warning.call_args[0][0]
 
 
-def test_check_model_with_callable():
+def test_check_model_with_callable(base_config):
     """Test check_model with a valid callable."""
-    config = {"multiprocessing": True}
+    config = base_config.model_copy(update={"multiprocessing": True})
     check_model(module_level_function, config)  # Should not raise any exceptions
 
 
-def test_check_model_with_local_function():
+def test_check_model_with_local_function(base_config):
     """Test check_model with a local function (should fail)."""
     local_func = create_local_function()
-    config = {"multiprocessing": True}
+    config = base_config.model_copy(update={"multiprocessing": True})
 
     with pytest.raises(AssertionError):
         check_model(local_func, config)
 
 
-def test_check_model_with_invalid_type():
+def test_check_model_with_invalid_type(base_config):
     """Test check_model with invalid type."""
-    config = {"multiprocessing": True}
+    config = base_config.model_copy(update={"multiprocessing": True})
     with pytest.raises(AssertionError):
         check_model("not_a_model", config)
 
 
-def test_check_model_multiprocessing_disabled():
+def test_check_model_multiprocessing_disabled(base_config):
     """Test check_model with multiprocessing disabled."""
     model = DummyModule()
-    config = {"multiprocessing": False}
+    config = base_config.model_copy(update={"multiprocessing": False})
 
     with patch("logging.Logger.warning") as mock_warning:
         check_model(model, config)
@@ -90,9 +100,7 @@ def test_check_model_multiprocessing_disabled():
 # Tests for check_is_local_function
 def test_check_is_local_function_valid():
     """Test check_is_local_function with valid function."""
-    check_is_local_function(
-        module_level_function, "error"
-    )  # Should not raise any exceptions
+    check_is_local_function(module_level_function, "error")  # Should not raise any exceptions
 
 
 def test_check_is_local_function_invalid():
@@ -145,8 +153,10 @@ def test_is_picklable_local():
 
 # Test default config behavior
 def test_check_model_default_config():
-    """Test check_model with empty config (should default to multiprocessing=True)."""
+    """Test check_model with default config values."""
     model = DummyModule()
+    config = BenchmarkConfig()  # Uses all default values
+    
     with patch("logging.Logger.warning") as mock_warning:
-        check_model(model, {})
+        check_model(model, config)
         assert mock_warning.called

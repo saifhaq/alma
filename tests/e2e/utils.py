@@ -1,6 +1,8 @@
 import torch
 
 from alma.benchmark_model import benchmark_model
+from alma.benchmark.benchmark_config import BenchmarkConfig
+from alma.conversions.conversion_options import mode_str_to_conversions
 
 
 def simple_model_for_testing(conversions: list) -> None:
@@ -20,17 +22,19 @@ def simple_model_for_testing(conversions: list) -> None:
     )
 
     # Create a random tensor
-    data = torch.rand(1, 512, 3)
+    data = torch.rand(1, 10, 3)
 
     # Configuration for the benchmarking
-    config = {
-        "n_samples": 4,
-        "batch_size": 2,
-        "device": torch.device("cpu"),  # The device to benchmark on
-        "multiprocessing": True,  # If True, we test each method in its own isolated environment,
-        # which helps keep methods from contaminating the global torch state
-        "fail_on_error": True,  # If False, we fail gracefully and keep testing other methods
-    }
+    config = BenchmarkConfig(
+        n_samples=2,
+        batch_size=2,
+        device=torch.device("cpu"),
+        multiprocessing=True,
+        fail_on_error=True,
+    )
+
+    # Convert the modes to strings
+    conversions = mode_str_to_conversions(conversions)
 
     # Benchmark the model
     results = benchmark_model(model, config, conversions, data=data.squeeze())

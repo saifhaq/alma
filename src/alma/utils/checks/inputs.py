@@ -21,11 +21,12 @@ def check_input_type(model, config, conversions, data, data_loader) -> None:
     assert isinstance(
         conversions, (list, type(None))
     ), f"Expected conversions to be a list or None, got {type(conversions)}."
-    for conv in conversions:
-        assert isinstance(conv, ConversionOption), (
-            f"Expected each element of conversions to be of type ConversionOption, "
-            f"but got {type(conv)}."
-        )
+    if conversions is not None:
+        for conv in conversions:
+            assert isinstance(conv, ConversionOption), (
+                f"Expected each element of conversions to be of type ConversionOption, "
+                f"but got {type(conv)}."
+            )
 
     assert isinstance(
         data, (torch.Tensor, type(None))
