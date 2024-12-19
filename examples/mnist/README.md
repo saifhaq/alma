@@ -54,12 +54,16 @@ The API is used as follows (see `benchmark_with_dataloader.py`):
 ```python
 from alma import benchmark_model
 from alma.arguments.benchmark_args import parse_benchmark_args
+from alma.benchmark import BenchmarkConfig
 from alma.benchmark.log import display_all_results
 
 # Parse the arguments, e.g. the model path, device, and conversion options
 # This is provided for convenience, but one can also just pass in the arguments directly to the
 # `benchmark_model` API.
-args, device = parse_benchmark_args()
+args, conversions = parse_benchmark_args()
+
+# Get the device
+device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 # Load the model
 model = ...
@@ -68,15 +72,15 @@ model = ...
 data_loader = ...
 
 # Set the configuration
-config = {
-    "batch_size": args.batch_size,
-    "n_samples": args.n_samples,
-    "device": device,  # The device to run the model on
-}
+config = BenchmarkConfig(
+    n_samples=args.n_samples,
+    batch_size=args.batch_size,
+    device=device,  # The device to run the model on
+)
 
 # Benchmark the model
 results = benchmark_model(
-   model, config, args.conversions, data_loader=data_loader
+   model, config, conversions, data_loader=data_loader
 )
 
 # Display the results
@@ -188,6 +192,7 @@ controlled via the `batch_size` argument.
 ```python
 from alma import benchmark_model
 from alma.arguments.benchmark_args import parse_benchmark_args
+from alma.benchmark import BenchmarkConfig
 from alma.benchmark.log import display_all_results
 from alma.utils.setup_logging import setup_logging
 from typing import Dict
@@ -200,22 +205,26 @@ setup_logging(log_file=None, level="INFO")
 # Parse the arguments, e.g. the model path, device, and conversion options
 # This is provided for convenience, but one can also just pass in the arguments directly to the
 # `benchmark_model` API.
-args, device = parse_benchmark_args()
+args, conversions = parse_benchmark_args()
+
+# Get the device
+device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 # Load the model
 model = ...
 
-config = {
-    "batch_size": args.batch_size,
-    "n_samples": args.n_samples,
-    "device": device,  # The device to run the model on
-}
+# Set the configuration
+config = BenchmarkConfig(
+    n_samples=args.n_samples,
+    batch_size=args.batch_size,
+    device=device,  # The device to run the model on
+)
 
 # Benchmark the model
 # We squeeze the data tensor's dimensions prior to feeding it in, as the batch size of the generated
 # data loader is controlled via the `batch_size` argument.
 results: Dict[str, Dict[str, float]] = benchmark_model(
-   model, config, args.conversions, data=torch.randn(1, 3, 28, 28).squeeze()
+   model, config, conversions, data=torch.randn(1, 3, 28, 28).squeeze()
 )
 
 # Display the results
@@ -251,12 +260,13 @@ silicon, one's code with `fail_on_error=False`, may look like this:
 ```python
 ...
 
-config = {
-    "batch_size": 64,
-    "n_samples": 2048,
-    "device": device,  # The device to run the model on
-    "fail_on_error": False,  # If True, the script will fail if a conversion fails
-}
+# Set the configuration
+config = BenchmarkConfig(
+    n_samples=args.n_samples,
+    batch_size=args.batch_size,
+    device=device,  # The device to run the model on
+    fail_on_error=False,  # If True, the benchmark will fail fast if a conversion method fails
+)
 
 conversions = ["EAGER", "NATIVE_FAKE_QUANTIZED_AI8WI8_STATIC"]
 
@@ -354,14 +364,17 @@ To disable this, one can set `multiprocessing` to False in the config dictionary
 E.g.
 
 ```python
-config = {
-    "batch_size": 64,
-    "n_samples": 2048,
-    "device": device, 
-    "multiprocessing": False,  # If True, each conversion option will be run in a separate process
-    "fail_on_error": False, 
-}
+# Set the configuration
+config = BenchmarkConfig(
+    n_samples=args.n_samples,
+    batch_size=args.batch_size,
+    device=device,  # The device to run the model on
+    multiprocessing=False,  # If True, each conversion option will be run in a separate process.
+    fail_on_error=False,  # If True, the benchmark will fail fast if a conversion method fails.
+)
 ```
+
+
 
 ### Effect on model memory
 A consequence of running in multiple processes is that the model, if initialized naively, will be copied
@@ -380,12 +393,12 @@ E.g.
 def get_model():
     return Net()
 
-config = {
-    "batch_size": 64,
-    "n_samples": 2048,
-    "device": device, 
-    "multiprocessing": True,  # If True, each conversion option will be run in a separate process
-}
+config = BenchmarkConfig(
+    n_samples=args.n_samples,
+    batch_size=args.batch_size,
+    device=device,  # The device to run the model on
+    multiprocessing=False,  # If True, each conversion option will be run in a separate process.
+)
 
 # Feed in `get_model` instead of the model directly
 results: Dict[str, Dict[str, float]] = benchmark_model(
@@ -400,6 +413,55 @@ but continue.
 
 A full working example can be found in `examples/mnist/mem_efficient_benchmark_rand_tensor.py` where
 a callable function is fed in that returns the model. 
+
+
+## Using a dict for the config
+One is not required to use `BenchmarkConfig` to set the configuration. In the spirit of reducing the
+amount of code one needs to write, one can also just pass in a dictionary. E.g.
+
+```python
+config = {
+    "n_samples": args.n_samples,
+    "batch_size": args.batch_size,
+    "device": device,  # The device to run the model on
+    "multiprocessing": False,  # If True, each conversion option will be run in a separate process.
+    "fail_on_error": False,  # If True, the benchmark will fail fast if a conversion method fails.
+}
+```
+This will throw an error if any of the required keys are missing or if the types are incorrect.
+
+## Device fallbacks
+`BenchmarkConfig` exposes a few more options, related to device fallbacks. These are:
+- allow_device_override
+- allow_cuda
+- allow_mps
+
+`allow_device_override` is a boolean that defines whether or not we will allow `alma` to move 
+conversion methods to specific devices, if the conversion method in question only works on that 
+device. E.g. `ONNX_CPU` will fail on GPU, as will PyTorch's native converted quantized models 
+which are CPU only: `NATIVE_CONVERT_AI8WI8_STATIC_QUANTIZED`. This is `True` by default, but it is 
+very much up to the user. If you want the methods to fail if not compatiblewith `device`, then set 
+this to `False`. If you want `alma` to automatically move the method to the appropriate device, 
+leave it as `True`.
+
+`allow_cuda` and `allow_mps` are guides on which device to fallback to in case `device` fails to 
+run the conversion method in question. If `allow_cuda=True` and CUDA is available, then it will 
+default to cuda. If not, then it will similarly check `mps`.
+
+As such, a "complete" config looks like this:
+```python
+
+config = BenchmarkConfig(
+    n_samples=args.n_samples,
+    batch_size=args.batch_size,
+    device=device,
+    multiprocessing=True,
+    fail_on_error=False,
+    allow_device_override=True,  # Allow device override for device-specific conversions
+    allow_cuda=True,  # True allows CUDA as an override option
+    allow_mps=True,  # True allows MPS as an override option
+)
+```
 
 ## Logging and CI integration
 
