@@ -26,6 +26,7 @@ from .options.export_compile import (
 from .options.export_eager import get_export_eager_forward_call
 from .options.export_quant import get_quant_exported_forward_call
 from .options.fake_quant import get_fake_quantized_model_forward_call
+from .options.fp16 import get_fp16_eager_forward_call
 from .options.jit_trace import get_jit_traced_model_forward_call
 from .options.onnx import get_onnx_dynamo_forward_call, get_onnx_forward_call
 from .options.optimum_quanto import (
@@ -283,6 +284,9 @@ def select_forward_call_function(
                 activations=None,
                 backend="cudagraphs",
             )
+
+        case "FP16+EAGER":
+            forward = get_fp16_eager_forward_call(model)
 
         case _:
             error_msg = f"The option {conversion} is not supported"

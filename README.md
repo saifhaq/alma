@@ -293,16 +293,18 @@ Below is a table summarizing the currently supported conversion options and thei
   | 29  |  EXPORT+COMPILE_TENSORRT                          |
   | 30  |  JIT_TRACE                                        |
   | 31  |  TORCH_SCRIPT                                     |
-  | 32  |  OPTIMUM_QUANTO_AI8WI8                            |
-  | 33  |  OPTIMUM_QUANTO_AI8WI4                            |
-  | 34  |  OPTIMUM_QUANTO_AI8WI2                            |
-  | 35  |  OPTIMUM_QUANTO_WI8                               |
-  | 36  |  OPTIMUM_QUANTO_WI4                               |
-  | 37  |  OPTIMUM_QUANTO_WI2                               |
-  | 38  |  OPTIMUM_QUANTO_Wf8E4M3N                          |
-  | 39  |  OPTIMUM_QUANTO_Wf8E4M3NUZ                        |
-  | 40  |  OPTIMUM_QUANTO_Wf8E5M2                           |
-  | 41  |  OPTIMUM_QUANTO_Wf8E5M2+COMPILE_CUDAGRAPHS        |
+  | 32  |  OPTIMIM_QUANTO_AI8WI8                            |
+  | 33  |  OPTIMIM_QUANTO_AI8WI4                            |
+  | 34  |  OPTIMIM_QUANTO_AI8WI2                            |
+  | 35  |  OPTIMIM_QUANTO_WI8                               |
+  | 36  |  OPTIMIM_QUANTO_WI4                               |
+  | 37  |  OPTIMIM_QUANTO_WI2                               |
+  | 38  |  OPTIMIM_QUANTO_Wf8E4M3N                          |
+  | 39  |  OPTIMIM_QUANTO_Wf8E4M3NUZ                        |
+  | 40  |  OPTIMIM_QUANTO_Wf8E5M2                           |
+  | 41  |  OPTIMIM_QUANTO_Wf8E5M2+COMPILE_CUDAGRAPHS        |
+  | 42  |  FP16+EAGER                                       |
+
 
 
 These conversion options are also all hard-coded in the `alma/conversions/select.py` file, which 
@@ -316,7 +318,7 @@ We use pytest for testing. Simply run:
 pytest
 ```
 
-We currently don't have extensive tests, but we are working on adding more tests to ensure that
+We currently don't have comprehensive tests, but we are working on adding more tests to ensure that
 the conversion options are working as expected in known environments (e.g. the Docker container).
 
 ## Future work:
