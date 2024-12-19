@@ -296,7 +296,7 @@ We use pytest for testing. Simply run:
 pytest
 ```
 
-We currently don't have extensive tests, but we are working on adding more tests to ensure that
+We currently don't have comprehensive tests, but we are working on adding more tests to ensure that
 the conversion options are working as expected in known environments (e.g. the Docker container).
 
 ## Future work:

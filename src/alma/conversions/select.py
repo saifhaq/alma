@@ -40,6 +40,7 @@ from .options.utils.checks.imports import (
     check_tensort,
     check_tvm,
 )
+from .options.fp16 import get_fp16_eager_forward_call
 
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())
@@ -283,6 +284,9 @@ def select_forward_call_function(
                 activations=None,
                 backend="cudagraphs",
             )
+
+        case "FP16+EAGER":
+            forward = get_fp16_eager_forward_call(model)
 
         case _:
             error_msg = f"The option {conversion} is not supported"
