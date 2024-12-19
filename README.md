@@ -85,6 +85,7 @@ conversion options. The usage is as follows:
 
 ```python
 from alma import benchmark_model
+from alma.benchmark import BenchmarkConfig
 from alma.benchmark.log import display_all_results
 
 device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
@@ -95,14 +96,14 @@ model = ...
 # Load the dataloader used in benchmarking
 data_loader = ...
 
-# Set the configuration
-config = {
-    "batch_size": 64,
-    "n_samples": 2048,
-    "device": device,
-}
+# Set the configuration (this can also be passed in as a dict)
+config = BenchmarkConfig(
+    n_samples=2048,
+    batch_size=64,
+    device=device,  # The device to run the model on
+)
 
-# Choose with conversions to benchmark:
+# Choose with conversions to benchmark
 conversions = ["EAGER", "EXPORT+EAGER"]
 
 # Benchmark the model
@@ -140,6 +141,7 @@ code examples for all of the different `alma` features, and is where one can fin
 feature. 
 
 For a short working example on a simple Linear+ReLU, see the [`linear example`](./examples/linear/README.md#overview).
+We also have a Jupyter notebook [here](./examples/linear/notebook.ipynb).
 
 ## Advanced Features and Design Decisions
 
@@ -196,6 +198,24 @@ To disable multiprocessing, set `multiprocessing` to False in the config diction
 
 See <a href="./examples/mnist/README.md#isolated-environments-for-each-conversion-method-via-multi-processing">here</a> for details and discussion.
 </details>
+
+
+<details>
+<summary>Using a dict for the config</summary>
+<br>
+We give the option for users to pass in a dictionary for the config, rather than a BenchmarkConfig object.
+
+See <a href="./examples/mnist/README.md#using-a-dict-for-the-config">here</a> for details.
+</details>
+
+<details>
+<summary>Device fallbacks</summary>
+<br>
+Certain options only work on certain hardware, and so we allow the option to gracefully move to
+the required device. This can be controlled via the config, and is discussed more 
+<a href="./examples/mnist/README.md#device-fallbacks">here</a>. 
+</details>
+
 
 <details>
 <summary>Logging, debugging, and CI integration</summary>
@@ -273,16 +293,16 @@ Below is a table summarizing the currently supported conversion options and thei
   | 29  |  EXPORT+COMPILE_TENSORRT                          |
   | 30  |  JIT_TRACE                                        |
   | 31  |  TORCH_SCRIPT                                     |
-  | 32  |  OPTIMIM_QUANTO_AI8WI8                            |
-  | 33  |  OPTIMIM_QUANTO_AI8WI4                            |
-  | 34  |  OPTIMIM_QUANTO_AI8WI2                            |
-  | 35  |  OPTIMIM_QUANTO_WI8                               |
-  | 36  |  OPTIMIM_QUANTO_WI4                               |
-  | 37  |  OPTIMIM_QUANTO_WI2                               |
-  | 38  |  OPTIMIM_QUANTO_Wf8E4M3N                          |
-  | 39  |  OPTIMIM_QUANTO_Wf8E4M3NUZ                        |
-  | 40  |  OPTIMIM_QUANTO_Wf8E5M2                           |
-  | 41  |  OPTIMIM_QUANTO_Wf8E5M2+COMPILE_CUDAGRAPHS        |
+  | 32  |  OPTIMUM_QUANTO_AI8WI8                            |
+  | 33  |  OPTIMUM_QUANTO_AI8WI4                            |
+  | 34  |  OPTIMUM_QUANTO_AI8WI2                            |
+  | 35  |  OPTIMUM_QUANTO_WI8                               |
+  | 36  |  OPTIMUM_QUANTO_WI4                               |
+  | 37  |  OPTIMUM_QUANTO_WI2                               |
+  | 38  |  OPTIMUM_QUANTO_Wf8E4M3N                          |
+  | 39  |  OPTIMUM_QUANTO_Wf8E4M3NUZ                        |
+  | 40  |  OPTIMUM_QUANTO_Wf8E5M2                           |
+  | 41  |  OPTIMUM_QUANTO_Wf8E5M2+COMPILE_CUDAGRAPHS        |
 
 
 These conversion options are also all hard-coded in the `alma/conversions/select.py` file, which 
