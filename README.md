@@ -141,6 +141,7 @@ code examples for all of the different `alma` features, and is where one can fin
 feature. 
 
 For a short working example on a simple Linear+ReLU, see the [`linear example`](./examples/linear/README.md#overview).
+We also have a Jupyter notebook [here](./examples/linear/notebook.ipynb).
 
 ## Advanced Features and Design Decisions
 
@@ -292,16 +293,16 @@ Below is a table summarizing the currently supported conversion options and thei
   | 29  |  EXPORT+COMPILE_TENSORRT                          |
   | 30  |  JIT_TRACE                                        |
   | 31  |  TORCH_SCRIPT                                     |
-  | 32  |  OPTIMIM_QUANTO_AI8WI8                            |
-  | 33  |  OPTIMIM_QUANTO_AI8WI4                            |
-  | 34  |  OPTIMIM_QUANTO_AI8WI2                            |
-  | 35  |  OPTIMIM_QUANTO_WI8                               |
-  | 36  |  OPTIMIM_QUANTO_WI4                               |
-  | 37  |  OPTIMIM_QUANTO_WI2                               |
-  | 38  |  OPTIMIM_QUANTO_Wf8E4M3N                          |
-  | 39  |  OPTIMIM_QUANTO_Wf8E4M3NUZ                        |
-  | 40  |  OPTIMIM_QUANTO_Wf8E5M2                           |
-  | 41  |  OPTIMIM_QUANTO_Wf8E5M2+COMPILE_CUDAGRAPHS        |
+  | 32  |  OPTIMUM_QUANTO_AI8WI8                            |
+  | 33  |  OPTIMUM_QUANTO_AI8WI4                            |
+  | 34  |  OPTIMUM_QUANTO_AI8WI2                            |
+  | 35  |  OPTIMUM_QUANTO_WI8                               |
+  | 36  |  OPTIMUM_QUANTO_WI4                               |
+  | 37  |  OPTIMUM_QUANTO_WI2                               |
+  | 38  |  OPTIMUM_QUANTO_Wf8E4M3N                          |
+  | 39  |  OPTIMUM_QUANTO_Wf8E4M3NUZ                        |
+  | 40  |  OPTIMUM_QUANTO_Wf8E5M2                           |
+  | 41  |  OPTIMUM_QUANTO_Wf8E5M2+COMPILE_CUDAGRAPHS        |
 
 
 These conversion options are also all hard-coded in the `alma/conversions/select.py` file, which 
