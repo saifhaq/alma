@@ -283,6 +283,7 @@ Below is a table summarizing the currently supported conversion options and thei
   | 39  |  OPTIMIM_QUANTO_Wf8E4M3NUZ                        |
   | 40  |  OPTIMIM_QUANTO_Wf8E5M2                           |
   | 41  |  OPTIMIM_QUANTO_Wf8E5M2+COMPILE_CUDAGRAPHS        |
+  | 42  |  FP16+EAGER                                       |
 
 
 These conversion options are also all hard-coded in the `alma/conversions/select.py` file, which 
