@@ -32,8 +32,8 @@ def main() -> None:
 
     # Configuration for the benchmarking
     config = BenchmarkConfig(
-        n_samples=4,
-        batch_size=2,
+        n_samples=2048,
+        batch_size=64,
         device=device,
         multiprocessing=True,  # If True, we test each method in its own isolated environment,
         # which helps keep methods from contaminating the global torch state
@@ -41,7 +41,7 @@ def main() -> None:
     )
 
     # Hard-code a list of options. These can be provided as a list of strings, or a list of ConversionOption objects
-    conversions = ["EAGER", "JIT_TRACE", "TORCH_SCRIPT", "COMPILE_INDUCTOR_DEFAULT"]
+    conversions = ["EAGER", "JIT_TRACE", "TORCH_SCRIPT", "COMPILE_INDUCTOR_DEFAULT", "COMPILE_OPENXLA", "COMPILE_INDUCTOR_MAX_AUTOTUNE"]
     # conversions = [ConversionOption["EAGER"], ConversionOption["JIT_TRACE"], ConversionOption["TORCH_SCRIPT"], ConversionOption["COMPILE_INDUCTOR_DEFAULT"]]
 
     # Benchmark the model

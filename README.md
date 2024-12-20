@@ -104,7 +104,7 @@ config = BenchmarkConfig(
 )
 
 # Choose with conversions to benchmark
-conversions = ["EAGER", "EXPORT+EAGER"]
+conversions = ["EAGER", "TORCH_SCRIPT", "COMPILE_INDUCTOR_MAX_AUTOTUNE", "COMPILE_OPENXLA"]
 
 # Benchmark the model
 results = benchmark_model(model, config, conversions, data_loader=data_loader)
@@ -118,18 +118,31 @@ The results will look like this, depending on one's model, dataloader, and hardw
 ```bash
 EAGER results:
 Device: cuda
-Total elapsed time: 0.0211 seconds
-Total inference time (model only): 0.0073 seconds
+Total elapsed time: 0.0206 seconds
+Total inference time (model only): 0.0074 seconds
 Total samples: 2048 - Batch size: 64
-Throughput: 282395.70 samples/second
+Throughput: 275643.45 samples/second
 
-
-EXPORT+EAGER results:
+TORCH_SCRIPT results:
 Device: cuda
-Total elapsed time: 0.0209 seconds
-Total inference time (model only): 0.0067 seconds
+Total elapsed time: 0.0203 seconds
+Total inference time (model only): 0.0043 seconds
 Total samples: 2048 - Batch size: 64
-Throughput: 305974.83 samples/second
+Throughput: 477575.34 samples/second
+
+COMPILE_INDUCTOR_MAX_AUTOTUNE results:
+Device: cuda
+Total elapsed time: 0.0159 seconds
+Total inference time (model only): 0.0035 seconds
+Total samples: 2048 - Batch size: 64
+Throughput: 592801.70 samples/second
+
+COMPILE_OPENXLA results:
+Device: xla:0
+Total elapsed time: 0.0146 seconds
+Total inference time (model only): 0.0033 seconds
+Total samples: 2048 - Batch size: 64
+Throughput: 611865.07 samples/second
 ```
 
 
