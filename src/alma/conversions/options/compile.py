@@ -19,7 +19,7 @@ logger.addHandler(logging.NullHandler())
 def get_compiled_model(
     model: Union[torch.nn.Module, fx.GraphModule, ExportedProgram],
     data: torch.Tensor,
-    backend: Literal[str],
+    backend: str,
 ) -> OptimizedModule:
     """
     Compile the model using torch.compile.
@@ -52,8 +52,9 @@ def get_compiled_model(
 
     # Print model graph
     if logger.root.level <= logging.DEBUG:
-        logger.debug("Model graph:")
-        logger.debug(model.graph.print_tabular())
+        if hasattr(model, "graph"):
+            logger.debug("Model graph:")
+            logger.debug(model.graph.print_tabular())
 
     check_model_type(model, OptimizedModule)
 
