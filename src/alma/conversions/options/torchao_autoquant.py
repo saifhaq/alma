@@ -7,12 +7,12 @@ from typing import Callable
 
 import torch
 import torchao
+from torch._dynamo.eval_frame import OptimizedModule
 from torchao.quantization import DEFAULT_INT4_AUTOQUANT_CLASS_LIST
 
-from torch._dynamo.eval_frame import OptimizedModule
 from ...utils.setup_logging import suppress_output
-from .utils.checks.type import check_model_type
 from .compile import get_compiled_model
+from .utils.checks.type import check_model_type
 
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())

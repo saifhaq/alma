@@ -41,7 +41,14 @@ def main() -> None:
     )
 
     # Hard-code a list of options. These can be provided as a list of strings, or a list of ConversionOption objects
-    conversions = ["EAGER", "JIT_TRACE", "TORCH_SCRIPT", "COMPILE_INDUCTOR_DEFAULT", "COMPILE_OPENXLA", "COMPILE_INDUCTOR_MAX_AUTOTUNE"]
+    conversions = [
+        "EAGER",
+        "JIT_TRACE",
+        "TORCH_SCRIPT",
+        "COMPILE_INDUCTOR_DEFAULT",
+        "COMPILE_OPENXLA",
+        "COMPILE_INDUCTOR_MAX_AUTOTUNE",
+    ]
     # conversions = [ConversionOption["EAGER"], ConversionOption["JIT_TRACE"], ConversionOption["TORCH_SCRIPT"], ConversionOption["COMPILE_INDUCTOR_DEFAULT"]]
 
     # Benchmark the model
