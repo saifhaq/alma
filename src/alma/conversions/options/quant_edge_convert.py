@@ -11,13 +11,15 @@ logger = logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())
 
 
-def get_converted_quantized_model_forward_call(
+def get_converted_edge_quantized_model_forward_call(
     model: torch.nn.Module,
     data: torch.Tensor,
 ) -> Tuple[Callable, torch.device]:
     """
     Fake quantizes the model using FX Graph mode, and then converts it to "true" int8.
     It then returns the forward call.
+    This uses the torch.ao.quantization.quantize_fx.convert_fx function, which is mainly for edge
+    devices as it does not support GPU quantization.
 
     Inputs:
     - model (torch.nn.Module): The model to quantize.

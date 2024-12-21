@@ -33,7 +33,7 @@ from .options.optimum_quanto import (
     get_optimum_quant_model_compiled_forward_call,
     get_optimum_quanto_forward_call,
 )
-from .options.quant_convert import get_converted_quantized_model_forward_call
+from .options.quant_edge_convert import get_converted_edge_quantized_model_forward_call
 from .options.torchscript import get_torch_scripted_model_forward_call
 from .options.utils.checks.imports import (
     check_onnxrt,
@@ -41,6 +41,8 @@ from .options.utils.checks.imports import (
     check_tensort,
     check_tvm,
 )
+from .options.torchao_autoquant import get_torchao_autoquant_forward_call
+from .options.torchao_quant import get_torchao_quantize_forward_call, get_compiled_torchao_quantize_forward_call
 
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())
@@ -190,6 +192,32 @@ def select_forward_call_function(
                 model, data, backend="inductor-default"
             )
 
+        # TORCHAO
+        case "COMPILE_INDUCTOR_MAX_AUTOTUNE+TORCHAO_AUTOQUANT_DEFAULT":
+            forward = get_torchao_autoquant_forward_call(
+                model, data, backend="inductor-max-autotune", use_autoquant_default=True
+            )
+
+        case "COMPILE_INDUCTOR_MAX_AUTOTUNE+TORCHAO_AUTOQUANT_NONDEFAULT":
+            forward = get_torchao_autoquant_forward_call(
+                model, data, backend="inductor-max-autotune", use_autoquant_default=False
+            )
+
+        case "COMPILE_CUDAGRAPHS+TORCHAO_AUTOQUANT_DEFAULT":
+            forward = get_torchao_autoquant_forward_call(
+                model, data, backend="cudagraphs", use_autoquant_default=True
+            )
+
+        case "COMPILE_INDUCTOR_MAX_AUTOTUNE+TORCHAO_QUANT_I4_WEIGHT_ONLY":
+            from torchao.quantization.quant_api import int4_weight_only
+            forward = get_compiled_torchao_quantize_forward_call(
+                model, data, backend="inductor-max-autotune", quantization_mode=int4_weight_only
+            )
+
+        case "TORCHAO_QUANT_I4_WEIGHT_ONLY":
+            from torchao.quantization.quant_api import int4_weight_only
+            forward = get_torchao_quantize_forward_call(model, quantization_mode=int4_weight_only)
+
         case "EAGER":
             # Regular eager model forward call
             forward = model.forward
@@ -217,7 +245,7 @@ def select_forward_call_function(
                 logger.warning(
                     "PyTorch native quantized model conversion is only supported for CPUs currently"
                 )
-            forward = get_converted_quantized_model_forward_call(model, data)
+            forward = get_converted_edge_quantized_model_forward_call(model, data)
 
         case "NATIVE_FAKE_QUANTIZED_AI8WI8_STATIC":
             forward = get_fake_quantized_model_forward_call(model, data)
