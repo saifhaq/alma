@@ -66,6 +66,7 @@ MODEL_CONVERSION_OPTIONS: dict[int, ConversionOption] = {
         mode="OPTIMIM_QUANTO_Wf8E5M2+COMPILE_CUDAGRAPHS", device_override="CUDA"
     ),
     42: ConversionOption(mode="FP16+EAGER"),
+    43: ConversionOption(mode="BF16+EAGER"),
 }
 
 
