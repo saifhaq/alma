@@ -11,8 +11,9 @@
   </a>
 </h2>
 
-With one function call, benchnmark your PyTorch model across over 40 conversion options, such as
-tracing, scripting, torch.compile, torch.export, torchao, ONNX, Tensort, etc.
+With one function call, benchmark your PyTorch model inference speed across over 40 conversion options, such as
+tracing, scripting, torch.compile, torch.export, torchao, ONNX, OpenVINO, Tensort, etc. See 
+[here](#conversion-options) for all supported options.
 
 ## Table of Contents
 
