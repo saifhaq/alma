@@ -37,7 +37,7 @@ pip install alma-torch
 ```
 
 Alternatively, it can be installed from the root of this 
-[repository](https://github.com/saifhaq/alma) (save level as this README) by running:
+[repository](https://github.com/saifhaq/alma) by running:
 
 ```bash
 pip install -e .
