@@ -175,7 +175,7 @@ Below is a table summarizing the currently supported conversion options and thei
   | 8   |  COMPILE_INDUCTOR_MAX_AUTOTUNE                    | CPU, MPS, GPU  |
   | 9   |  COMPILE_INDUCTOR_EAGER_FALLBACK                  | CPU, MPS, GPU  |
   | 10  |  COMPILE_ONNXRT                                   | CPU, MPS, GPU  |
-  | 11  |  COMPILE_OPENXLA                                  | XLA            |
+  | 11  |  COMPILE_OPENXLA                                  | XLA_GPU        |
   | 12  |  COMPILE_TVM                                      | CPU, MPS, GPU  |
   | 13  |  EXPORT+AI8WI8_FLOAT_QUANTIZED                    | CPU, MPS, GPU  |
   | 14  |  EXPORT+AI8WI8_FLOAT_QUANTIZED+RUN_DECOMPOSITION  | CPU, MPS, GPU  |
@@ -188,7 +188,7 @@ Below is a table summarizing the currently supported conversion options and thei
   | 21  |  EXPORT+COMPILE_INDUCTOR_MAX_AUTOTUNE             | CPU, MPS, GPU  |
   | 22  |  EXPORT+COMPILE_INDUCTOR_DEFAULT_EAGER_FALLBACK   | CPU, MPS, GPU  |
   | 23  |  EXPORT+COMPILE_ONNXRT                            | CPU, MPS, GPU  |
-  | 24  |  EXPORT+COMPILE_OPENXLA                           | XLA            |
+  | 24  |  EXPORT+COMPILE_OPENXLA                           | XLA_GPU        |
   | 25  |  EXPORT+COMPILE_TVM                               | CPU, MPS, GPU  |
   | 26  |  NATIVE_CONVERT_AI8WI8_STATIC_QUANTIZED           | CPU            |
   | 27  |  NATIVE_FAKE_QUANTIZED_AI8WI8_STATIC              | CPU, GPU       |
