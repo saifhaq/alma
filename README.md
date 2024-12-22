@@ -11,7 +11,7 @@
   </a>
 </h2>
 
-With just one function call, you can a full report on how fast your PyTorch model runs for inference across over 40 conversion options, such as
+With just one function call, you can get a full report on how fast your PyTorch model runs for inference across over 40 conversion options, such as
 JIT tracing, torch.compile, torch.export, torchao, ONNX, OpenVINO, Tensort, and many more! See 
 [here](#conversion-options) for all supported options.
 
@@ -143,23 +143,23 @@ Total samples: 2048 - Batch size: 64
 Throughput: 611865.07 samples/second
 ```
 
-See the [examples](./examples) for discussion and examples of more advanced usage, e.g. controlling the 
-multiproessing setup, controlling graceful failures, setting default devide fallbacks if a conversion
+See the [examples](./examples) for discussion of design choices and for examples of more advanced usage, e.g. controlling the 
+multiprocessing setup, controlling graceful failures, setting default device fallbacks if a conversion
 option is incompatible with your specified device, memory efficient usage of `alma`, etc.
 
 ## Conversion Options
 
 ### Naming conventions
 
-The naming convention for conversion options is to use short but descriptive names, e.g. `EAGER`, 
-`EXPORT+EAGER`, `EXPORT+TENSORRT`, etc. If multiple "techniques" are used in a
-single conversion option, then the names are separated by a `+` sign in chronological order of operation. 
-Underscores `_` are used within each technique name to seperate the words for readability, 
-e.g. `EXPORT+AOT_INDUCTOR`, where `EXPORT` and `AOT_INDUCTOR` are considered seperate steps.
-All conversion options are located in the `src/alma/conversions/` directory. Within this directory:
+The naming convention for conversion options is as follows:
+- Short but descriptive names for each technique, e.g. `EAGER`, `EXPORT`, etc.
+- Underscores `_` are used within each technique name to seperate the words for readability, 
+e.g. `AOT_INDUCTOR`, `COMPILE_CUDAGRAPHS`, etc.
+- If multiple "techniques" are used in a conversion option, then the names are separated by a `+` sign in chronological order of operation. 
+    For example, `EXPORT+EAGER`, `EXPORT+COMPILE_INDUCTOR_MAX_AUTOTUNE`. In both cases, 
+    `EXPORT` is the first operation, followed by `EAGER` or `COMPILE_INDUCTOR_MAX_AUTOTUNE`.
 
-
-### Options Summary
+### Conversio Options Summary
 Below is a table summarizing the currently supported conversion options and their identifiers:
 
   | ID  | Conversion Option                                 | Device Support |
