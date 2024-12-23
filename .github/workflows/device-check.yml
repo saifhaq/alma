@@ -63,7 +63,8 @@ jobs:
         run: |
           echo "Mode: ${{ matrix.mode }}"
           echo "Device: ${{ matrix.device }}"
-
+          
+          cd examples/mnist
           CMD="python mem_efficient_benchmark_rand_tensor.py --conversions \"${{ matrix.mode }}\""
           if [ "${{ matrix.device }}" = "cpu" ]; then
             CMD="$CMD --no-cuda --no-mps --no-device-override"
