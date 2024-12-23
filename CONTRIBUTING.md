@@ -72,9 +72,25 @@ for commit messages for clarity and semantic versioning. Again not strictly enfo
 if you are adding a new converison method, the commit message should be prefixed with `feat:` and the
 PR should be labelled as minor. Breaking changes should be labelled as major.
 
-### Naming Conventions
+### Option Naming Conventions
 If adding new conversion options, please follow the naming conventions outlined in the README [Naming 
 Conventions](#naming-conventions) section.
+
+#### How to introduce a new conversion option
+
+All conversion options are located in the `src/alma/conversions/` directory. In this directory:
+
+- The `src/alma/conversions/options/` [subdirectory](src/alma/conversions/options) contains one 
+Python file per conversion option (or a closely related family of options, e.g. torch.compile backends).  
+- The main selection logic for these options is found in 
+[`select.py`](src/alma/conversions/select.py). This is just a glorified match-case statement that 
+returns the forward calls of each model conversion option, which is returned to the benchmarking 
+loop. It is that simple!
+
+At the risk of some code duplication, we have chosen to keep the conversion options separate, so 
+that one can easily add new conversion options without having to modify the existing ones. It also 
+makes it easier for the user to see what conversion options are available, and to understand what 
+each conversion option does.
 
 
 ## Structure of the repo

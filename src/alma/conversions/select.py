@@ -273,52 +273,52 @@ def select_forward_call_function(
         ###############################
         # OPTIMUM QUANTO QUANTIZATION #
         ###############################
-        case "OPTIMIM_QUANTO_AI8WI8":
+        case "OPTIMUM_QUANTO_AI8WI8":
             forward = get_optimum_quanto_forward_call(
                 model, data, weights=qint8, activations=qint8
             )
 
-        case "OPTIMIM_QUANTO_AI8WI4":
+        case "OPTIMUM_QUANTO_AI8WI4":
             forward = get_optimum_quanto_forward_call(
                 model, data, weights=qint4, activations=qint8
             )
 
-        case "OPTIMIM_QUANTO_AI8WI2":
+        case "OPTIMUM_QUANTO_AI8WI2":
             forward = get_optimum_quanto_forward_call(
                 model, data, weights=qint2, activations=qint8
             )
 
-        case "OPTIMIM_QUANTO_WI8":
+        case "OPTIMUM_QUANTO_WI8":
             forward = get_optimum_quanto_forward_call(
                 model, data, weights=qint8, activations=None
             )
 
-        case "OPTIMIM_QUANTO_WI4":
+        case "OPTIMUM_QUANTO_WI4":
             forward = get_optimum_quanto_forward_call(
                 model, data, weights=qint4, activations=None
             )
 
-        case "OPTIMIM_QUANTO_WI2":
+        case "OPTIMUM_QUANTO_WI2":
             forward = get_optimum_quanto_forward_call(
                 model, data, weights=qint2, activations=None
             )
 
-        case "OPTIMIM_QUANTO_Wf8E4M3N":
+        case "OPTIMUM_QUANTO_Wf8E4M3N":
             forward = get_optimum_quanto_forward_call(
                 model, data, weights=qfloat8_e4m3fn, activations=None
             )
 
-        case "OPTIMIM_QUANTO_Wf8E4M3NUZ":
+        case "OPTIMUM_QUANTO_Wf8E4M3NUZ":
             forward = get_optimum_quanto_forward_call(
                 model, data, weights=qfloat8_e4m3fnuz, activations=None
             )
 
-        case "OPTIMIM_QUANTO_Wf8E5M2":
+        case "OPTIMUM_QUANTO_Wf8E5M2":
             forward = get_optimum_quanto_forward_call(
                 model, data, weights=qfloat8_e5m2, activations=None
             )
 
-        case "OPTIMIM_QUANTO_Wf8E5M2+COMPILE_CUDAGRAPHS":
+        case "OPTIMUM_QUANTO_Wf8E5M2+COMPILE_CUDAGRAPHS":
             forward = get_optimum_quant_model_compiled_forward_call(
                 model,
                 data,
