@@ -113,8 +113,9 @@ jobs:
       - name: Download partial artifacts for this commit
         uses: actions/download-artifact@v4
         with:
-          name: "partial-results-${{ needs.generate-matrix.outputs.short-commit }}-*"
-          path: all_artifacts
+          pattern: "partial-results-${{ needs.generate-matrix.outputs.short-commit }}-*"
+          path: "all_artifacts"
+          merge-multiple: true
 
       - name: Merge & Display Results
         run: python .github/scripts/device_check_agg.py
