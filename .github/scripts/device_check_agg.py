@@ -13,17 +13,23 @@ def main():
     4. Print the final markdown table to stdout for logs.
     """
 
-    # 1. Find partial JSON files (downloaded via actions/download-artifact)
-    partial_files = glob(
-        os.path.join("all_artifacts", "**", "partial_results.json"), recursive=True
-    )
+    # 1. Find all partial JSON files (downloaded via actions/download-artifact)
+    partial_files = glob(os.path.join("all_artifacts", "**", "*.json"), recursive=True)
     results_list = []
 
-    # 2. Read and collect each partial JSON
+    # 2. Read and collect data from each partial JSON file
     for file_path in partial_files:
         with open(file_path, "r") as f:
-            data = json.load(f)
-            results_list.append(data)
+            try:
+                data = json.load(f)
+                results_list.append(data)
+            except json.JSONDecodeError:
+                print(f"Warning: Skipping invalid JSON file {file_path}")
+
+    # Ensure results_list is not empty
+    if not results_list:
+        print("Error: No valid JSON files found in 'all_artifacts'.")
+        return
 
     # 3. Write a merged JSON for debugging/visibility
     with open("merged_results.json", "w") as f:
@@ -41,6 +47,7 @@ def main():
         status = item.get("status", "N/A")
         rows += f"| {mode} | {device} | {status} |\n"
 
+    # Write the final markdown file
     with open("final_results.md", "w") as out:
         out.write(header + rows)
 
