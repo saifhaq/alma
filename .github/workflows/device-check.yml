@@ -86,7 +86,7 @@ jobs:
           fi
 
           # Write out partial results
-          cat <<EOF > partial_results.json
+          cat <<EOF > partial_results-${{ matrix.device }}-${{ matrix.mode }}.json
           {
             "mode": "${{ matrix.mode }}",
             "device": "${{ matrix.device }}",
@@ -94,12 +94,11 @@ jobs:
           }
           EOF
 
-
       - name: Upload partial results
         uses: actions/upload-artifact@v4
         with:
           name: "partial-results-${{ needs.generate-matrix.outputs.short-commit }}-${{ matrix.device }}-${{ matrix.mode }}"
-          path: examples/mnist/partial_results.json
+          path: "examples/mnist/partial_results-${{ matrix.device }}-${{ matrix.mode }}.json"
 
   combine-results:
     name: "Combine and Display Results"

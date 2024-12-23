@@ -7,17 +7,17 @@ from glob import glob
 
 def main():
     """
-    1. Recursively find partial_results.json in the downloaded artifacts folder.
+    1. Recursively find all *.json files in the downloaded artifacts folder.
     2. Merge them into a single JSON array (merged_results.json).
     3. Convert that JSON array into a final markdown file (final_results.md).
     4. Print the final markdown table to stdout for logs.
     """
 
-    # 1. Find all partial JSON files (downloaded via actions/download-artifact)
+    # 1. Find all JSON files (downloaded via actions/download-artifact)
     partial_files = glob(os.path.join("all_artifacts", "**", "*.json"), recursive=True)
     results_list = []
 
-    # 2. Read and collect data from each partial JSON file
+    # 2. Read and collect data from each JSON file
     for file_path in partial_files:
         with open(file_path, "r") as f:
             try:
