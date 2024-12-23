@@ -66,7 +66,20 @@ MODEL_CONVERSION_OPTIONS: dict[int, ConversionOption] = {
         mode="OPTIMIM_QUANTO_Wf8E5M2+COMPILE_CUDAGRAPHS", device_override="CUDA"
     ),
     42: ConversionOption(mode="FP16+EAGER"),
-    43: ConversionOption(mode="BF16+EAGER"),
+    43: ConversionOption(mode="BF16+EAGER"),  
+    44: ConversionOption(
+        mode="COMPILE_INDUCTOR_MAX_AUTOTUNE+TORCHAO_AUTOQUANT_DEFAULT"
+    ),
+    45: ConversionOption(
+        mode="COMPILE_INDUCTOR_MAX_AUTOTUNE+TORCHAO_AUTOQUANT_NONDEFAULT"
+    ),
+    46: ConversionOption(
+        mode="COMPILE_CUDAGRAPHS+TORCHAO_AUTOQUANT_DEFAULT", device_override="CUDA"
+    ),  # Works in certain circumstances, depends on weight tensor sizes
+    47: ConversionOption(
+        mode="COMPILE_INDUCTOR_MAX_AUTOTUNE+TORCHAO_QUANT_I4_WEIGHT_ONLY"
+    ),  # Requires bf16 suuport
+    48: ConversionOption(mode="TORCHAO_QUANT_I4_WEIGHT_ONLY"),  # Requires bf16 support
 }
 
 
