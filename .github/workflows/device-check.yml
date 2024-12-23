@@ -66,7 +66,7 @@ jobs:
           echo "Device: ${{ matrix.device }}"
           
           cd examples/mnist
-          CMD="python mem_efficient_benchmark_rand_tensor.py --conversions ${{ matrix.mode }}"
+          CMD="python benchmark_random_tensor.py --conversions ${{ matrix.mode }}"
           
           if [ "${{ matrix.device }}" = "cpu" ]; then
             CMD="$CMD --no-cuda --no-mps --no-device-override"
@@ -80,12 +80,16 @@ jobs:
           EXIT_CODE=$?
           set -e
 
-          STATUS="✅"
-          if [ $EXIT_CODE -ne 0 ]; then
-            STATUS="❌"
+          # Check the result.json status
+          RESULT_FILE="results/result.json"
+          STATUS="❌"  # Default to failure emoji
+          if [ -f "$RESULT_FILE" ]; then
+            RUN_STATUS=$(jq -r '.status' "$RESULT_FILE")
+            if [ "$RUN_STATUS" = "success" ]; then
+              STATUS="✅"
+            fi
           fi
 
-          # Write out partial results
           cat <<EOF > partial_results-${{ matrix.device }}-${{ matrix.mode }}.json
           {
             "mode": "${{ matrix.mode }}",
