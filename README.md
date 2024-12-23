@@ -162,57 +162,57 @@ e.g. `AOT_INDUCTOR`, `COMPILE_CUDAGRAPHS`, etc.
 ### Conversion Options Summary
 Below is a table summarizing the currently supported conversion options and their identifiers:
 
-  | ID  | Conversion Option                                 | Device Support |
-  |-----|---------------------------------------------------|----------------|
-  | 0   |  EAGER                                            | CPU, MPS, GPU  |
-  | 1   |  EXPORT+EAGER                                     | CPU, MPS, GPU  |
-  | 2   |  ONNX_CPU                                         | CPU            |
-  | 3   |  ONNX_GPU                                         | GPU            |
-  | 4   |  ONNX+DYNAMO_EXPORT                               | CPU            |
-  | 5   |  COMPILE_CUDAGRAPHS                               | GPU (CUDA)     |
-  | 6   |  COMPILE_INDUCTOR_DEFAULT                         | CPU, MPS, GPU  |
-  | 7   |  COMPILE_INDUCTOR_REDUCE_OVERHEAD                 | CPU, MPS, GPU  |
-  | 8   |  COMPILE_INDUCTOR_MAX_AUTOTUNE                    | CPU, MPS, GPU  |
-  | 9   |  COMPILE_INDUCTOR_EAGER_FALLBACK                  | CPU, MPS, GPU  |
-  | 10  |  COMPILE_ONNXRT                                   | CPU, MPS, GPU  |
-  | 11  |  COMPILE_OPENXLA                                  | XLA_GPU        |
-  | 12  |  COMPILE_TVM                                      | CPU, MPS, GPU  |
-  | 13  |  EXPORT+AI8WI8_FLOAT_QUANTIZED                    | CPU, MPS, GPU  |
-  | 14  |  EXPORT+AI8WI8_FLOAT_QUANTIZED+RUN_DECOMPOSITION  | CPU, MPS, GPU  |
-  | 15  |  EXPORT+AI8WI8_STATIC_QUANTIZED                   | CPU, MPS, GPU  |
-  | 16  |  EXPORT+AI8WI8_STATIC_QUANTIZED+RUN_DECOMPOSITION | CPU, MPS, GPU  |
-  | 17  |  EXPORT+AOT_INDUCTOR                              | CPU, MPS, GPU  |
-  | 18  |  EXPORT+COMPILE_CUDAGRAPHS                        | GPU (CUDA)     |
-  | 19  |  EXPORT+COMPILE_INDUCTOR_DEFAULT                  | CPU, MPS, GPU  |
-  | 20  |  EXPORT+COMPILE_INDUCTOR_REDUCE_OVERHEAD          | CPU, MPS, GPU  |
-  | 21  |  EXPORT+COMPILE_INDUCTOR_MAX_AUTOTUNE             | CPU, MPS, GPU  |
-  | 22  |  EXPORT+COMPILE_INDUCTOR_DEFAULT_EAGER_FALLBACK   | CPU, MPS, GPU  |
-  | 23  |  EXPORT+COMPILE_ONNXRT                            | CPU, MPS, GPU  |
-  | 24  |  EXPORT+COMPILE_OPENXLA                           | XLA_GPU        |
-  | 25  |  EXPORT+COMPILE_TVM                               | CPU, MPS, GPU  |
-  | 26  |  NATIVE_CONVERT_AI8WI8_STATIC_QUANTIZED           | CPU            |
-  | 27  |  NATIVE_FAKE_QUANTIZED_AI8WI8_STATIC              | CPU, GPU       |
-  | 28  |  COMPILE_TENSORRT                                 | GPU (CUDA)     |
-  | 29  |  EXPORT+COMPILE_TENSORRT                          | GPU (CUDA)     |
-  | 30  |  JIT_TRACE                                        | CPU, MPS, GPU  |
-  | 31  |  TORCH_SCRIPT                                     | CPU, MPS, GPU  |
-  | 32  |  OPTIMUM_QUANTO_AI8WI8                            | CPU, MPS, GPU  |
-  | 33  |  OPTIMUM_QUANTO_AI8WI4                            | CPU, MPS, GPU (not all GPUs supported) |
-  | 34  |  OPTIMUM_QUANTO_AI8WI2                            | CPU, MPS, GPU (not all GPUs supported) |
-  | 35  |  OPTIMUM_QUANTO_WI8                               | CPU, MPS, GPU  |
-  | 36  |  OPTIMUM_QUANTO_WI4                               | CPU, MPS, GPU (not all GPUs supported) |
-  | 37  |  OPTIMUM_QUANTO_WI2                               | CPU, MPS, GPU (not all GPUs supported) |
-  | 38  |  OPTIMUM_QUANTO_Wf8E4M3N                          | CPU, MPS, GPU  |
-  | 39  |  OPTIMUM_QUANTO_Wf8E4M3NUZ                        | CPU, MPS, GPU  |
-  | 40  |  OPTIMUM_QUANTO_Wf8E5M2                           | CPU, MPS, GPU  |
-  | 41  |  OPTIMUM_QUANTO_Wf8E5M2+COMPILE_CUDAGRAPHS        | GPU (CUDA)     |
-  | 42  |  FP16+EAGER                                       | CPU, MPS, GPU  |
-  | 43  |  BF16+EAGER                                       | CPU, MPS, GPU (not all GPUs natively supported)  |
-  | 44  |  COMPILE_INDUCTOR_MAX_AUTOTUNE+TORCHAO_AUTOQUANT_DEFAULT    | GPU  |
-  | 45  |  COMPILE_INDUCTOR_MAX_AUTOTUNE+TORCHAO_AUTOQUANT_NONDEFAULT | GPU  |
-  | 46  |  COMPILE_CUDAGRAPHS+TORCHAO_AUTOQUANT_DEFAULT               | GPU (CUDA) |
-  | 47  |  COMPILE_INDUCTOR_MAX_AUTOTUNE+TORCHAO_QUANT_I4_WEIGHT_ONLY | GPU (requires bf16 suuport)  |
-  | 48  |  TORCHAO_QUANT_I4_WEIGHT_ONLY                               | GPU (requires bf16 suuport) |
+  | ID  | Conversion Option                                 | Device Support | Project |
+  |-----|---------------------------------------------------|----------------|---------|
+  | 0   |  EAGER                                            | CPU, MPS, GPU  | PyTorch   |
+  | 1   |  EXPORT+EAGER                                     | CPU, MPS, GPU  | torch.export |
+  | 2   |  ONNX_CPU                                         | CPU            | ONNXRT      |
+  | 3   |  ONNX_GPU                                         | GPU            | ONNXRT      |
+  | 4   |  ONNX+DYNAMO_EXPORT                               | CPU            | ONNXRT      |
+  | 5   |  COMPILE_CUDAGRAPHS                               | GPU (CUDA)     | torch.compile |
+  | 6   |  COMPILE_INDUCTOR_DEFAULT                         | CPU, MPS, GPU  | torch.compile |
+  | 7   |  COMPILE_INDUCTOR_REDUCE_OVERHEAD                 | CPU, MPS, GPU  | torch.compile |
+  | 8   |  COMPILE_INDUCTOR_MAX_AUTOTUNE                    | CPU, MPS, GPU  | torch.compile |
+  | 9   |  COMPILE_INDUCTOR_EAGER_FALLBACK                  | CPU, MPS, GPU  | torch.compile |
+  | 10  |  COMPILE_ONNXRT                                   | CPU, MPS, GPU  | torch.compile / ONNXRT |
+  | 11  |  COMPILE_OPENXLA                                  | XLA_GPU        | torch.compile / OpenXLA |
+  | 12  |  COMPILE_TVM                                      | CPU, MPS, GPU  | torch.compile / Apache TVM |
+  | 13  |  EXPORT+AI8WI8_FLOAT_QUANTIZED                    | CPU, MPS, GPU  | torch.export |
+  | 14  |  EXPORT+AI8WI8_FLOAT_QUANTIZED+RUN_DECOMPOSITION  | CPU, MPS, GPU  | torch.export |
+  | 15  |  EXPORT+AI8WI8_STATIC_QUANTIZED                   | CPU, MPS, GPU  | torch.export |
+  | 16  |  EXPORT+AI8WI8_STATIC_QUANTIZED+RUN_DECOMPOSITION | CPU, MPS, GPU  | torch.export |
+  | 17  |  EXPORT+AOT_INDUCTOR                              | CPU, MPS, GPU  | torch.export / aot_inductor |
+  | 18  |  EXPORT+COMPILE_CUDAGRAPHS                        | GPU (CUDA)     | torch.export / torch.compile |
+  | 19  |  EXPORT+COMPILE_INDUCTOR_DEFAULT                  | CPU, MPS, GPU  | torch.export / torch.compile |
+  | 20  |  EXPORT+COMPILE_INDUCTOR_REDUCE_OVERHEAD          | CPU, MPS, GPU  | torch.export / torch.compile |
+  | 21  |  EXPORT+COMPILE_INDUCTOR_MAX_AUTOTUNE             | CPU, MPS, GPU  | torch.export / torch.compile |
+  | 22  |  EXPORT+COMPILE_INDUCTOR_DEFAULT_EAGER_FALLBACK   | CPU, MPS, GPU  | torch.export / torch.compile |
+  | 23  |  EXPORT+COMPILE_ONNXRT                            | CPU, MPS, GPU  | torch.export / torch.compile / ONNXRT |
+  | 24  |  EXPORT+COMPILE_OPENXLA                           | XLA_GPU        | torch.export / torch.compile / OpenXLA |
+  | 25  |  EXPORT+COMPILE_TVM                               | CPU, MPS, GPU  | torch.export / torch.compile / Apache TVM |
+  | 26  |  NATIVE_CONVERT_AI8WI8_STATIC_QUANTIZED           | CPU            | CPU (PyTorch) |
+  | 27  |  NATIVE_FAKE_QUANTIZED_AI8WI8_STATIC              | CPU, GPU       | CPU (PyTorch) |
+  | 28  |  COMPILE_TENSORRT                                 | GPU (CUDA)     | torch.compile / NVIDIA TensorRT |
+  | 29  |  EXPORT+COMPILE_TENSORRT                          | GPU (CUDA)     | torch.export / torch.compile / NVIDIA TensorRT |
+  | 30  |  JIT_TRACE                                        | CPU, MPS, GPU  | PyTorch   |
+  | 31  |  TORCH_SCRIPT                                     | CPU, MPS, GPU  | PyTorch   |
+  | 32  |  OPTIMUM_QUANTO_AI8WI8                            | CPU, MPS, GPU  | optimum quanto |
+  | 33  |  OPTIMUM_QUANTO_AI8WI4                            | CPU, MPS, GPU (not all GPUs supported) | optimum quanto |
+  | 34  |  OPTIMUM_QUANTO_AI8WI2                            | CPU, MPS, GPU (not all GPUs supported) | optimum quanto |
+  | 35  |  OPTIMUM_QUANTO_WI8                               | CPU, MPS, GPU  | optimum quanto |
+  | 36  |  OPTIMUM_QUANTO_WI4                               | CPU, MPS, GPU (not all GPUs supported) | optimum quanto |
+  | 37  |  OPTIMUM_QUANTO_WI2                               | CPU, MPS, GPU (not all GPUs supported) | optimum quanto |
+  | 38  |  OPTIMUM_QUANTO_Wf8E4M3N                          | CPU, MPS, GPU  | optimum quanto |
+  | 39  |  OPTIMUM_QUANTO_Wf8E4M3NUZ                        | CPU, MPS, GPU  | optimum quanto |
+  | 40  |  OPTIMUM_QUANTO_Wf8E5M2                           | CPU, MPS, GPU  | optimum quanto |
+  | 41  |  OPTIMUM_QUANTO_Wf8E5M2+COMPILE_CUDAGRAPHS        | GPU (CUDA)     | optimum quanto / torch.compile |
+  | 42  |  FP16+EAGER                                       | CPU, MPS, GPU  | PyTorch   |
+  | 43  |  BF16+EAGER                                       | CPU, MPS, GPU (not all GPUs natively supported)  | PyTorch   |
+  | 44  |  COMPILE_INDUCTOR_MAX_AUTOTUNE+TORCHAO_AUTOQUANT_DEFAULT    | GPU  | torch.compile / torchao |
+  | 45  |  COMPILE_INDUCTOR_MAX_AUTOTUNE+TORCHAO_AUTOQUANT_NONDEFAULT | GPU  | torch.compile / torchao |
+  | 46  |  COMPILE_CUDAGRAPHS+TORCHAO_AUTOQUANT_DEFAULT               | GPU (CUDA) | torch.compile / torchao |
+  | 47  |  COMPILE_INDUCTOR_MAX_AUTOTUNE+TORCHAO_QUANT_I4_WEIGHT_ONLY | GPU (requires bf16 suuport)  | torch.compile / torchao |
+  | 48  |  TORCHAO_QUANT_I4_WEIGHT_ONLY                               | GPU (requires bf16 suuport) | torchao |
 
 
 
