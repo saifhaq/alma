@@ -7,7 +7,7 @@ on:
 
 jobs:
   generate-matrix:
-    runs-on: ubuntu-latest
+    runs-on: titan
 
     outputs:
       dynamic-matrix: ${{ steps.generate-matrix.outputs.dynamic-matrix }}
