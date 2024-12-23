@@ -18,7 +18,8 @@ jobs:
 
       - name: Get short commit
         id: get-commit
-        run: echo "::set-output name=short_commit::$(git rev-parse --short HEAD)"
+        run: |
+          echo "short_commit=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
 
       - name: Install dependencies
         run: pip install .
@@ -42,7 +43,7 @@ jobs:
           print(json.dumps(matrix))
           """ > matrix.json
 
-          echo "::set-output name=dynamic-matrix::$(cat matrix.json)"
+          echo "dynamic-matrix=$(cat matrix.json)" >> $GITHUB_OUTPUT
 
   device-check:
     name: "Matrix Device Check"
@@ -103,7 +104,7 @@ jobs:
   combine-results:
     name: "Combine and Display Results"
     runs-on: titan
-    needs: device-check
+    needs: generate-matrix, device-check
 
     steps:
       - name: Checkout repo (optional if you need the script from the repo)
