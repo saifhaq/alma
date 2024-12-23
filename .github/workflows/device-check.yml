@@ -44,7 +44,6 @@ jobs:
           """ > matrix.json
 
           echo "dynamic-matrix=$(cat matrix.json)" >> $GITHUB_OUTPUT
-
   device-check:
     name: "Matrix Device Check"
     needs: [generate-matrix]
@@ -80,11 +79,11 @@ jobs:
           EXIT_CODE=$?
           set -e
 
-          # Check the result.json status
+          # Parse the result.json for the specific mode
           RESULT_FILE="results/result.json"
           STATUS="❌"  # Default to failure emoji
           if [ -f "$RESULT_FILE" ]; then
-            RUN_STATUS=$(jq -r '.status' "$RESULT_FILE")
+            RUN_STATUS=$(jq -r '.${{ matrix.mode }}.status' "$RESULT_FILE")
             if [ "$RUN_STATUS" = "success" ]; then
               STATUS="✅"
             fi
@@ -113,7 +112,7 @@ jobs:
       - name: Checkout repo (optional if you need the script from the repo)
         uses: actions/checkout@v4
 
-      - name: Download partial artifacts for this commit
+      - name: Download all partial artifacts
         uses: actions/download-artifact@v4
         with:
           pattern: "partial-results-${{ needs.generate-matrix.outputs.short-commit }}-*"
