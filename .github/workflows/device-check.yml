@@ -11,9 +11,14 @@ jobs:
 
     outputs:
       dynamic-matrix: ${{ steps.generate-matrix.outputs.dynamic-matrix }}
+      short-commit: ${{ steps.get-commit.outputs.short_commit }}
 
     steps:
       - uses: actions/checkout@v4
+
+      - name: Get short commit
+        id: get-commit
+        run: echo "::set-output name=short_commit::$(git rev-parse --short HEAD)"
 
       - name: Install dependencies
         run: pip install .
@@ -25,9 +30,11 @@ jobs:
           import json
           from alma.conversions.conversion_options import MODEL_CONVERSION_OPTIONS
 
-          modes = sorted([opt.mode for opt in MODEL_CONVERSION_OPTIONS.values()])
+          # Gather all modes from your library
+          modes = sorted(set(opt.mode for opt in MODEL_CONVERSION_OPTIONS.values()))
           matrix = {'include': []}
 
+          # We’ll test each mode on both CPU and CUDA
           for mode_str in modes:
               for dev in ['cpu', 'cuda']:
                   matrix['include'].append({'device': dev, 'mode': mode_str})
@@ -52,17 +59,6 @@ jobs:
       - name: Install alma package
         run: pip install .
 
-      - name: Prepare results file
-        run: |
-          if [ ! -f conversion_test_results.md ]; then
-            cat <<EOF > conversion_test_results.md
-            # Conversion Testing Results
-
-            | Conversion Mode | Device | Status |
-            |-----------------|--------|--------|
-            EOF
-          fi
-
       - name: Run benchmark
         run: |
           echo "Mode: ${{ matrix.mode }}"
@@ -86,13 +82,21 @@ jobs:
             STATUS="❌"
           fi
 
-          echo "| ${{ matrix.mode }} | ${{ matrix.device }} | $STATUS |" >> conversion_test_results.md
+          # Write out partial results
+          cat <<EOF > partial_results.json
+          {
+            "mode": "${{ matrix.mode }}",
+            "device": "${{ matrix.device }}",
+            "status": "$STATUS"
+          }
+          EOF
 
       - name: Upload partial results
         uses: actions/upload-artifact@v4
         with:
-          name: "partial-conversion-test-results-${{ matrix.device }}-${{ matrix.mode }}"
-          path: conversion_test_results.md
+          # Tag artifact with short commit, device, and mode
+          name: "partial-results-${{ needs.generate-matrix.outputs.short-commit }}-${{ matrix.device }}-${{ matrix.mode }}"
+          path: partial_results.json
 
   combine-results:
     name: "Combine and Display Results"
@@ -100,29 +104,18 @@ jobs:
     needs: device-check
 
     steps:
-      - name: Download all partial artifacts
+      - name: Checkout repo (optional if you need the script from the repo)
+        uses: actions/checkout@v4
+
+      - name: Download partial artifacts for this commit
         uses: actions/download-artifact@v4
         with:
+          # Download only artifacts with our short commit in the name
+          name: "partial-results-${{ needs.generate-matrix.outputs.short-commit }}-*"
           path: all_artifacts
 
-      - name: Merge the partial results
-        run: |
-          echo "# Final Merged Conversion Testing Results" > final_results.md
-          echo "" >> final_results.md
-
-          HEADER_FOUND=false
-
-          for f in $(find all_artifacts -type f -name "conversion_test_results.md"); do
-            echo "Merging $f..."
-            if [ "$HEADER_FOUND" = false ]; then
-              cat "$f" >> final_results.md
-              HEADER_FOUND=true
-            else
-              tail -n +5 "$f" >> final_results.md
-            fi
-          done
-
-          cat final_results.md
+      - name: Merge & Display Results
+        run: python .github/scripts/device_check_agg.py
 
       - name: Upload Final Merged Table
         uses: actions/upload-artifact@v4
