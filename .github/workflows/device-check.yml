@@ -1,0 +1,141 @@
+name: "Device Check"
+
+on:
+  push:
+    branches:
+      - feat/device_check
+
+jobs:
+  generate-matrix:
+    runs-on: ubuntu-latest
+
+    outputs:
+      dynamic-matrix: ${{ steps.generate-matrix.outputs.dynamic-matrix }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.9"
+
+      - name: Install dependencies
+        run: pip install .
+
+      - name: Generate matrix (mode + device)
+        id: generate-matrix
+        run: |
+          python -c """
+          import json
+          from alma.conversions.conversion_options import MODEL_CONVERSION_OPTIONS
+
+          modes = sorted([opt.mode for opt in MODEL_CONVERSION_OPTIONS.values()])
+          matrix = {'include': []}
+
+          for mode_str in modes:
+              for dev in ['cpu', 'cuda']:
+                  matrix['include'].append({'device': dev, 'mode': mode_str})
+
+          print(json.dumps(matrix))
+          """ > matrix.json
+
+          echo "::set-output name=dynamic-matrix::$(cat matrix.json)"
+
+  device-check:
+    name: "Matrix Device Check"
+    needs: [generate-matrix]
+    runs-on: titan
+
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.generate-matrix.outputs['dynamic-matrix']) }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install alma package
+        run: pip install .
+
+      - name: Prepare results file
+        run: |
+          if [ ! -f conversion_test_results.md ]; then
+            cat <<EOF > conversion_test_results.md
+            # Conversion Testing Results
+
+            | Conversion Mode | Device | Status |
+            |-----------------|--------|--------|
+            EOF
+          fi
+
+      - name: Run benchmark
+        run: |
+          echo "Mode: ${{ matrix.mode }}"
+          echo "Device: ${{ matrix.device }}"
+
+          CMD="python mem_efficient_benchmark_rand_tensor.py --conversions \"${{ matrix.mode }}\""
+          if [ "${{ matrix.device }}" = "cpu" ]; then
+            CMD="$CMD --no-cuda --no-mps --no-device-override"
+          else
+            CMD="$CMD --no-mps --no-device-override"
+          fi
+
+          echo "Running: $CMD"
+          set +e
+          $CMD
+          EXIT_CODE=$?
+          set -e
+
+          STATUS="✅"
+          if [ $EXIT_CODE -ne 0 ]; then
+            STATUS="❌"
+          fi
+
+          echo "| ${{ matrix.mode }} | ${{ matrix.device }} | $STATUS |" >> conversion_test_results.md
+
+      - name: Upload partial results
+        uses: actions/upload-artifact@v4
+        with:
+          name: "partial-conversion-test-results-${{ matrix.device }}-${{ matrix.mode }}"
+          path: conversion_test_results.md
+
+  combine-results:
+    name: "Combine and Display Results"
+    runs-on: titan
+    needs: device-check
+
+    steps:
+      - name: Download all partial artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: all_artifacts
+
+      - name: Merge the partial results
+        run: |
+          echo "# Final Merged Conversion Testing Results" > final_results.md
+          echo "" >> final_results.md
+
+          HEADER_FOUND=false
+
+          for f in $(find all_artifacts -type f -name "conversion_test_results.md"); do
+            echo "Merging $f..."
+            if [ "$HEADER_FOUND" = false ]; then
+              cat "$f" >> final_results.md
+              HEADER_FOUND=true
+            else
+              tail -n +5 "$f" >> final_results.md
+            fi
+          done
+
+          cat final_results.md
+
+      - name: Upload Final Merged Table
+        uses: actions/upload-artifact@v4
+        with:
+          name: "final-merged-conversion-test-results"
+          path: final_results.md
+
+      - name: Print final table
+        run: |
+          echo "Final Merged Table:"
+          cat final_results.md

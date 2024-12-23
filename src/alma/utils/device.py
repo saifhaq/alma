@@ -141,6 +141,10 @@ def setup_device(
         f"Mode: {mode}, Allow CUDA: {allow_cuda}, Allow MPS: {allow_mps}, Allow Override: {allow_device_override}"
     )
 
+    if current_device and allow_device_override == False:
+        logger.debug(f"Returning the user specified device: {current_device}")
+        return current_device
+
     # Handle XLA devices if mode indicates XLA
     if "XLA" in mode:
         try:
