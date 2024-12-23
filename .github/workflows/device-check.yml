@@ -83,7 +83,7 @@ jobs:
           RESULT_FILE="results/result.json"
           STATUS="❌"  # Default to failure emoji
           if [ -f "$RESULT_FILE" ]; then
-            RUN_STATUS=$(jq -r '.${{ matrix.mode }}.status' "$RESULT_FILE")
+            RUN_STATUS=$(jq -r '."${{ matrix.mode }}".status' "$RESULT_FILE")
             if [ "$RUN_STATUS" = "success" ]; then
               STATUS="✅"
             fi
