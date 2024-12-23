@@ -30,7 +30,7 @@ jobs:
           import json
           from alma.conversions.conversion_options import MODEL_CONVERSION_OPTIONS
 
-          # Gather all modes from your library
+          # Gather all modes alma source code 
           modes = sorted(set(opt.mode for opt in MODEL_CONVERSION_OPTIONS.values()))
           matrix = {'include': []}
 
@@ -97,9 +97,8 @@ jobs:
       - name: Upload partial results
         uses: actions/upload-artifact@v4
         with:
-          # Tag artifact with short commit, device, and mode
           name: "partial-results-${{ needs.generate-matrix.outputs.short-commit }}-${{ matrix.device }}-${{ matrix.mode }}"
-          path: partial_results.json
+          path: examples/mnist/partial_results.json
 
   combine-results:
     name: "Combine and Display Results"
@@ -113,7 +112,6 @@ jobs:
       - name: Download partial artifacts for this commit
         uses: actions/download-artifact@v4
         with:
-          # Download only artifacts with our short commit in the name
           name: "partial-results-${{ needs.generate-matrix.outputs.short-commit }}-*"
           path: all_artifacts
 
