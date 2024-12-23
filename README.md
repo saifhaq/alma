@@ -272,51 +272,57 @@ each conversion option does.
 ### Options Summary
 Below is a table summarizing the currently supported conversion options and their identifiers:
 
-  | ID  | Conversion Option                                 |
-  |-----|---------------------------------------------------|
-  | 0   |  EAGER                                            |
-  | 1   |  EXPORT+EAGER                                     |
-  | 2   |  ONNX_CPU                                         |
-  | 3   |  ONNX_GPU                                         |
-  | 4   |  ONNX+DYNAMO_EXPORT                               |
-  | 5   |  COMPILE_CUDAGRAPHS                               |
-  | 6   |  COMPILE_INDUCTOR_DEFAULT                         |
-  | 7   |  COMPILE_INDUCTOR_REDUCE_OVERHEAD                 |
-  | 8   |  COMPILE_INDUCTOR_MAX_AUTOTUNE                    |
-  | 9   |  COMPILE_INDUCTOR_EAGER_FALLBACK                  |
-  | 10  |  COMPILE_ONNXRT                                   |
-  | 11  |  COMPILE_OPENXLA                                  |
-  | 12  |  COMPILE_TVM                                      |
-  | 13  |  EXPORT+AI8WI8_FLOAT_QUANTIZED                    |
-  | 14  |  EXPORT+AI8WI8_FLOAT_QUANTIZED+RUN_DECOMPOSITION  |
-  | 15  |  EXPORT+AI8WI8_STATIC_QUANTIZED                   |
-  | 16  |  EXPORT+AI8WI8_STATIC_QUANTIZED+RUN_DECOMPOSITION |
-  | 17  |  EXPORT+AOT_INDUCTOR                              |
-  | 18  |  EXPORT+COMPILE_CUDAGRAPHS                        |
-  | 19  |  EXPORT+COMPILE_INDUCTOR_DEFAULT                  |
-  | 20  |  EXPORT+COMPILE_INDUCTOR_REDUCE_OVERHEAD          |
-  | 21  |  EXPORT+COMPILE_INDUCTOR_MAX_AUTOTUNE             |
-  | 22  |  EXPORT+COMPILE_INDUCTOR_DEFAULT_EAGER_FALLBACK   |
-  | 23  |  EXPORT+COMPILE_ONNXRT                            |
-  | 24  |  EXPORT+COMPILE_OPENXLA                           |
-  | 25  |  EXPORT+COMPILE_TVM                               |
-  | 26  |  NATIVE_CONVERT_AI8WI8_STATIC_QUANTIZED           |
-  | 27  |  NATIVE_FAKE_QUANTIZED_AI8WI8_STATIC              | 
-  | 28  |  COMPILE_TENSORRT                                 |
-  | 29  |  EXPORT+COMPILE_TENSORRT                          |
-  | 30  |  JIT_TRACE                                        |
-  | 31  |  TORCH_SCRIPT                                     |
-  | 32  |  OPTIMIM_QUANTO_AI8WI8                            |
-  | 33  |  OPTIMIM_QUANTO_AI8WI4                            |
-  | 34  |  OPTIMIM_QUANTO_AI8WI2                            |
-  | 35  |  OPTIMIM_QUANTO_WI8                               |
-  | 36  |  OPTIMIM_QUANTO_WI4                               |
-  | 37  |  OPTIMIM_QUANTO_WI2                               |
-  | 38  |  OPTIMIM_QUANTO_Wf8E4M3N                          |
-  | 39  |  OPTIMIM_QUANTO_Wf8E4M3NUZ                        |
-  | 40  |  OPTIMIM_QUANTO_Wf8E5M2                           |
-  | 41  |  OPTIMIM_QUANTO_Wf8E5M2+COMPILE_CUDAGRAPHS        |
-  | 42  |  FP16+EAGER                                       |
+  | ID  | Conversion Option                                           |
+  |-----|-------------------------------------------------------------|
+  | 0   |  EAGER                                                      |
+  | 1   |  EXPORT+EAGER                                               |
+  | 2   |  ONNX_CPU                                                   |
+  | 3   |  ONNX_GPU                                                   |
+  | 4   |  ONNX+DYNAMO_EXPORT                                         |
+  | 5   |  COMPILE_CUDAGRAPHS                                         |
+  | 6   |  COMPILE_INDUCTOR_DEFAULT                                   |
+  | 7   |  COMPILE_INDUCTOR_REDUCE_OVERHEAD                           |
+  | 8   |  COMPILE_INDUCTOR_MAX_AUTOTUNE                              |
+  | 9   |  COMPILE_INDUCTOR_EAGER_FALLBACK                            |
+  | 10  |  COMPILE_ONNXRT                                             |
+  | 11  |  COMPILE_OPENXLA                                            |
+  | 12  |  COMPILE_TVM                                                |
+  | 13  |  EXPORT+AI8WI8_FLOAT_QUANTIZED                              |
+  | 14  |  EXPORT+AI8WI8_FLOAT_QUANTIZED+RUN_DECOMPOSITION            |
+  | 15  |  EXPORT+AI8WI8_STATIC_QUANTIZED                             |
+  | 16  |  EXPORT+AI8WI8_STATIC_QUANTIZED+RUN_DECOMPOSITION           |
+  | 17  |  EXPORT+AOT_INDUCTOR                                        |
+  | 18  |  EXPORT+COMPILE_CUDAGRAPHS                                  |
+  | 19  |  EXPORT+COMPILE_INDUCTOR_DEFAULT                            |
+  | 20  |  EXPORT+COMPILE_INDUCTOR_REDUCE_OVERHEAD                    |
+  | 21  |  EXPORT+COMPILE_INDUCTOR_MAX_AUTOTUNE                       |
+  | 22  |  EXPORT+COMPILE_INDUCTOR_DEFAULT_EAGER_FALLBACK             |
+  | 23  |  EXPORT+COMPILE_ONNXRT                                      |
+  | 24  |  EXPORT+COMPILE_OPENXLA                                     |
+  | 25  |  EXPORT+COMPILE_TVM                                         |
+  | 26  |  NATIVE_CONVERT_AI8WI8_STATIC_QUANTIZED                     |
+  | 27  |  NATIVE_FAKE_QUANTIZED_AI8WI8_STATIC                        |
+  | 28  |  COMPILE_TENSORRT                                           |
+  | 29  |  EXPORT+COMPILE_TENSORRT                                    |
+  | 30  |  JIT_TRACE                                                  |
+  | 31  |  TORCH_SCRIPT                                               |
+  | 32  |  OPTIMIM_QUANTO_AI8WI8                                      |
+  | 33  |  OPTIMIM_QUANTO_AI8WI4                                      |
+  | 34  |  OPTIMIM_QUANTO_AI8WI2                                      |
+  | 35  |  OPTIMIM_QUANTO_WI8                                         |
+  | 36  |  OPTIMIM_QUANTO_WI4                                         |
+  | 37  |  OPTIMIM_QUANTO_WI2                                         |
+  | 38  |  OPTIMIM_QUANTO_Wf8E4M3N                                    |
+  | 39  |  OPTIMIM_QUANTO_Wf8E4M3NUZ                                  |
+  | 40  |  OPTIMIM_QUANTO_Wf8E5M2                                     |
+  | 41  |  OPTIMIM_QUANTO_Wf8E5M2+COMPILE_CUDAGRAPHS                  |
+  | 42  |  FP16+EAGER                                                 |
+  | 43  |  FP16+EAGER                                                 |
+  | 44  |  COMPILE_INDUCTOR_MAX_AUTOTUNE+TORCHAO_AUTOQUANT_DEFAULT    |
+  | 45  |  COMPILE_INDUCTOR_MAX_AUTOTUNE+TORCHAO_AUTOQUANT_NONDEFAULT |
+  | 46  |  COMPILE_CUDAGRAPHS+TORCHAO_AUTOQUANT_DEFAULT               |
+  | 47  |  COMPILE_INDUCTOR_MAX_AUTOTUNE+TORCHAO_QUANT_I4_WEIGHT_ONLY |
+  | 48  |  TORCHAO_QUANT_I4_WEIGHT_ONLY                               |
 
 
 
