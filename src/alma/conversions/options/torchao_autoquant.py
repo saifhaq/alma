@@ -6,9 +6,7 @@ import logging
 from typing import Callable
 
 import torch
-import torchao
 from torch._dynamo.eval_frame import OptimizedModule
-from torchao.quantization import DEFAULT_INT4_AUTOQUANT_CLASS_LIST
 
 from ...utils.setup_logging import suppress_output
 from .compile import get_compiled_model
@@ -37,6 +35,9 @@ def get_torchao_autoquant_model(
     Outputs:
     - model (OptimizedModule): The model with autoquantization applied.
     """
+    import torchao
+    from torchao.quantization import DEFAULT_INT4_AUTOQUANT_CLASS_LIST
+
     # Compile the model using torch.compile
     compiled_model = get_compiled_model(model, data, backend=backend)
 
