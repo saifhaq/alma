@@ -174,26 +174,26 @@ Below is a table summarizing the currently supported conversion options and thei
   | 7   |  COMPILE_INDUCTOR_REDUCE_OVERHEAD                 | CPU, MPS, GPU  | torch.compile |
   | 8   |  COMPILE_INDUCTOR_MAX_AUTOTUNE                    | CPU, MPS, GPU  | torch.compile |
   | 9   |  COMPILE_INDUCTOR_EAGER_FALLBACK                  | CPU, MPS, GPU  | torch.compile |
-  | 10  |  COMPILE_ONNXRT                                   | CPU, MPS, GPU  | torch.compile / ONNXRT |
-  | 11  |  COMPILE_OPENXLA                                  | XLA_GPU        | torch.compile / OpenXLA |
-  | 12  |  COMPILE_TVM                                      | CPU, MPS, GPU  | torch.compile / Apache TVM |
+  | 10  |  COMPILE_ONNXRT                                   | CPU, MPS, GPU  | torch.compile + ONNXRT |
+  | 11  |  COMPILE_OPENXLA                                  | XLA_GPU        | torch.compile + OpenXLA |
+  | 12  |  COMPILE_TVM                                      | CPU, MPS, GPU  | torch.compile + Apache TVM |
   | 13  |  EXPORT+AI8WI8_FLOAT_QUANTIZED                    | CPU, MPS, GPU  | torch.export |
   | 14  |  EXPORT+AI8WI8_FLOAT_QUANTIZED+RUN_DECOMPOSITION  | CPU, MPS, GPU  | torch.export |
   | 15  |  EXPORT+AI8WI8_STATIC_QUANTIZED                   | CPU, MPS, GPU  | torch.export |
   | 16  |  EXPORT+AI8WI8_STATIC_QUANTIZED+RUN_DECOMPOSITION | CPU, MPS, GPU  | torch.export |
-  | 17  |  EXPORT+AOT_INDUCTOR                              | CPU, MPS, GPU  | torch.export / aot_inductor |
-  | 18  |  EXPORT+COMPILE_CUDAGRAPHS                        | GPU (CUDA)     | torch.export / torch.compile |
-  | 19  |  EXPORT+COMPILE_INDUCTOR_DEFAULT                  | CPU, MPS, GPU  | torch.export / torch.compile |
-  | 20  |  EXPORT+COMPILE_INDUCTOR_REDUCE_OVERHEAD          | CPU, MPS, GPU  | torch.export / torch.compile |
-  | 21  |  EXPORT+COMPILE_INDUCTOR_MAX_AUTOTUNE             | CPU, MPS, GPU  | torch.export / torch.compile |
-  | 22  |  EXPORT+COMPILE_INDUCTOR_DEFAULT_EAGER_FALLBACK   | CPU, MPS, GPU  | torch.export / torch.compile |
-  | 23  |  EXPORT+COMPILE_ONNXRT                            | CPU, MPS, GPU  | torch.export / torch.compile / ONNXRT |
-  | 24  |  EXPORT+COMPILE_OPENXLA                           | XLA_GPU        | torch.export / torch.compile / OpenXLA |
-  | 25  |  EXPORT+COMPILE_TVM                               | CPU, MPS, GPU  | torch.export / torch.compile / Apache TVM |
+  | 17  |  EXPORT+AOT_INDUCTOR                              | CPU, MPS, GPU  | torch.export + aot_inductor |
+  | 18  |  EXPORT+COMPILE_CUDAGRAPHS                        | GPU (CUDA)     | torch.export + torch.compile |
+  | 19  |  EXPORT+COMPILE_INDUCTOR_DEFAULT                  | CPU, MPS, GPU  | torch.export + torch.compile |
+  | 20  |  EXPORT+COMPILE_INDUCTOR_REDUCE_OVERHEAD          | CPU, MPS, GPU  | torch.export + torch.compile |
+  | 21  |  EXPORT+COMPILE_INDUCTOR_MAX_AUTOTUNE             | CPU, MPS, GPU  | torch.export + torch.compile |
+  | 22  |  EXPORT+COMPILE_INDUCTOR_DEFAULT_EAGER_FALLBACK   | CPU, MPS, GPU  | torch.export + torch.compile |
+  | 23  |  EXPORT+COMPILE_ONNXRT                            | CPU, MPS, GPU  | torch.export + torch.compile + ONNXRT |
+  | 24  |  EXPORT+COMPILE_OPENXLA                           | XLA_GPU        | torch.export + torch.compile + OpenXLA |
+  | 25  |  EXPORT+COMPILE_TVM                               | CPU, MPS, GPU  | torch.export + torch.compile + Apache TVM |
   | 26  |  NATIVE_CONVERT_AI8WI8_STATIC_QUANTIZED           | CPU            | CPU (PyTorch) |
   | 27  |  NATIVE_FAKE_QUANTIZED_AI8WI8_STATIC              | CPU, GPU       | CPU (PyTorch) |
-  | 28  |  COMPILE_TENSORRT                                 | GPU (CUDA)     | torch.compile / NVIDIA TensorRT |
-  | 29  |  EXPORT+COMPILE_TENSORRT                          | GPU (CUDA)     | torch.export / torch.compile / NVIDIA TensorRT |
+  | 28  |  COMPILE_TENSORRT                                 | GPU (CUDA)     | torch.compile + NVIDIA TensorRT |
+  | 29  |  EXPORT+COMPILE_TENSORRT                          | GPU (CUDA)     | torch.export + torch.compile + NVIDIA TensorRT |
   | 30  |  JIT_TRACE                                        | CPU, MPS, GPU  | PyTorch   |
   | 31  |  TORCH_SCRIPT                                     | CPU, MPS, GPU  | PyTorch   |
   | 32  |  OPTIMUM_QUANTO_AI8WI8                            | CPU, MPS, GPU  | optimum quanto |
@@ -205,14 +205,14 @@ Below is a table summarizing the currently supported conversion options and thei
   | 38  |  OPTIMUM_QUANTO_Wf8E4M3N                          | CPU, MPS, GPU  | optimum quanto |
   | 39  |  OPTIMUM_QUANTO_Wf8E4M3NUZ                        | CPU, MPS, GPU  | optimum quanto |
   | 40  |  OPTIMUM_QUANTO_Wf8E5M2                           | CPU, MPS, GPU  | optimum quanto |
-  | 41  |  OPTIMUM_QUANTO_Wf8E5M2+COMPILE_CUDAGRAPHS        | GPU (CUDA)     | optimum quanto / torch.compile |
+  | 41  |  OPTIMUM_QUANTO_Wf8E5M2+COMPILE_CUDAGRAPHS        | GPU (CUDA)     | optimum quanto + torch.compile |
   | 42  |  FP16+EAGER                                       | CPU, MPS, GPU  | PyTorch   |
   | 43  |  BF16+EAGER                                       | CPU, MPS, GPU (not all GPUs natively supported)  | PyTorch   |
-  | 44  |  COMPILE_INDUCTOR_MAX_AUTOTUNE+TORCHAO_AUTOQUANT_DEFAULT    | GPU  | torch.compile / torchao |
-  | 45  |  COMPILE_INDUCTOR_MAX_AUTOTUNE+TORCHAO_AUTOQUANT_NONDEFAULT | GPU  | torch.compile / torchao |
-  | 46  |  COMPILE_CUDAGRAPHS+TORCHAO_AUTOQUANT_DEFAULT               | GPU (CUDA) | torch.compile / torchao |
-  | 47  |  COMPILE_INDUCTOR_MAX_AUTOTUNE+TORCHAO_QUANT_I4_WEIGHT_ONLY | GPU (requires bf16 suuport)  | torch.compile / torchao |
-  | 48  |  TORCHAO_QUANT_I4_WEIGHT_ONLY                               | GPU (requires bf16 suuport) | torchao |
+  | 44  |  COMPILE_INDUCTOR_MAX_AUTOTUNE+TORCHAO_AUTOQUANT_DEFAULT    | GPU  | torch.compile + torchao |
+  | 45  |  COMPILE_INDUCTOR_MAX_AUTOTUNE+TORCHAO_AUTOQUANT_NONDEFAULT | GPU  | torch.compile + torchao |
+  | 46  |  COMPILE_CUDAGRAPHS+TORCHAO_AUTOQUANT_DEFAULT               | GPU (CUDA) | torch.compile + torchao |
+  | 47  |  COMPILE_INDUCTOR_MAX_AUTOTUNE+TORCHAO_QUANT_I4_WEIGHT_ONLY | GPU (requires bf16 support)  | torch.compile + torchao |
+  | 48  |  TORCHAO_QUANT_I4_WEIGHT_ONLY                               | GPU (requires bf16 support) | torchao |
 
 
 
