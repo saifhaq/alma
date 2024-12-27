@@ -90,19 +90,7 @@ def benchmark_model(
     multiprocessing: bool = config.multiprocessing
     fail_on_error: bool = config.fail_on_error
 
-    # Creates a dataloader with random data, of the same size as the input data sample
-    # If the data_loader has been provided by the user, we use that one
-    if not isinstance(data_loader, DataLoader):
-        data_loader = create_single_tensor_dataloader(
-            tensor_size=data.size(),
-            num_tensors=n_samples,
-            random_type="normal",
-            random_params={"mean": 0.0, "std": 2.0},
-            batch_size=batch_size,
-            collate_fn=DeviceCollator(device),  # Moves data to device during data loader initialization
-            pin_memory=False,  # Not needed since we move to device in collate_fn
-        )
-
+    # Initialize results
     all_results: Dict[str, Dict[str, Any]] = {}
 
     for conversion_option in conversions:
@@ -124,6 +112,22 @@ def benchmark_model(
             selected_conversion=conversion_option,
         )
 
+        # Creates a dataloader with random data, of the same size as the input data sample
+        # If the data_loader has been provided by the user, we use that one
+        # We re-initialise this for each conversion method to ensure device alignment
+        if not isinstance(data_loader, DataLoader):
+            prepared_data_loader = create_single_tensor_dataloader(
+                tensor_size=data.size(),
+                num_tensors=n_samples,
+                random_type="normal",
+                random_params={"mean": 0.0, "std": 2.0},
+                batch_size=batch_size,
+                collate_fn=DeviceCollator(device),  # Moves data to device during data loader initialization
+                pin_memory=False,  # Not needed since we move to device in collate_fn
+            )
+        else:
+            prepared_data_loader = data_loader
+
         # Benchmark the model
         result = benchmark_process_wrapper(
             multiprocessing,
@@ -131,7 +135,7 @@ def benchmark_model(
             device,
             model,
             conversion_mode,
-            data_loader,
+            prepared_data_loader,
             n_samples,
         )
         all_results[conversion_mode] = result

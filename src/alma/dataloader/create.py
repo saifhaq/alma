@@ -4,6 +4,7 @@ import torch
 from torch.utils.data import DataLoader, Dataset
 
 from .dataloader import SingleTensorDataset
+from .collate import DeviceCollator
 
 
 def create_single_tensor_dataloader(

@@ -39,26 +39,26 @@ def time_forward(
     if len(data_loader) == 0:
         raise ValueError("Empty data loader provided")
 
-    if device.type in ["cudax", "XLA"]:
-        print("Using CUDA timing module")
-        result = time_cuda(
-            forward_call,
-            data_loader,
-            n_samples,
-            device,
-            conversion,
-            warmup_iterations=10,
-        )
-    else:
-        print("Using generic timing module")
-        result = time_generic(
-            forward_call,
-            data_loader,
-            n_samples,
-            device,
-            conversion,
-            warmup_iterations=10,
-        )
+    # if device.type in ["cudax", "XLA"]:
+    #     print("Using CUDA timing module")
+    result = time_cuda(
+        forward_call,
+        data_loader,
+        n_samples,
+        device,
+        conversion,
+        warmup_iterations=10,
+    )
+    # else:
+    #     print("Using generic timing module")
+    #     result = time_generic(
+    #         forward_call,
+    #         data_loader,
+    #         n_samples,
+    #         device,
+    #         conversion,
+    #         warmup_iterations=10,
+    #     )
     return result
 
 
@@ -91,16 +91,18 @@ def time_cuda(
     start_time = time.perf_counter()
 
     # Ensure CUDA is initialized
-    torch.cuda.synchronize()
+    # torch.cuda.synchronize()
 
     # Create dedicated CUDA stream for timing
-    stream = torch.cuda.Stream()
+    # stream = torch.cuda.Stream()
 
     # Do warmup iterations to get GPU to steady state
-    with torch.no_grad(), torch.cuda.stream(stream):
+    with torch.no_grad():  #, torch.cuda.stream(stream):
         warmup_data = next(iter(data_loader))[0]
+        print(f"Data device: {warmup_data.device}")
         for _ in range(warmup_iterations):
             _ = forward_call(warmup_data)
+
 
     # Initialize benchmark variables
     total_inf_time = 0.0
@@ -113,7 +115,7 @@ def time_cuda(
     end_events = []
 
     # Main timing loop
-    with torch.no_grad(), torch.cuda.stream(stream):
+    with torch.no_grad(): #, torch.cuda.stream(stream):
         for i, (data, _) in enumerate(
             tqdm(data_loader, desc=f"Benchmarking {conversion} on {device}")
         ):
@@ -232,12 +234,12 @@ def time_generic(
                 break
 
             data = data.to(device)
-            sync_device()  # Ensure previous operations are complete
+            # sync_device()  # Ensure previous operations are complete
 
             # Record timing for entire batch
             start_times[i] = time.perf_counter()
             _ = forward_call(data)
-            sync_device()  # Ensure forward pass is complete
+            # sync_device()  # Ensure forward pass is complete
             end_times[i] = time.perf_counter()
 
             batch_sizes.append(data.size(0))
