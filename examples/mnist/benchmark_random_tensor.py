@@ -37,7 +37,7 @@ def main() -> None:
         device=device,
         multiprocessing=True,  # If True, we test each method in its own isolated environment,
         # which helps keep methods from contaminating the global torch state
-        fail_on_error=False,  # If False, we fail gracefully and keep testing other methods
+        fail_on_error=True,  # If False, we fail gracefully and keep testing other methods
     )
 
     # Hard-code a list of options. These can be provided as a list of strings, or a list of ConversionOption objects

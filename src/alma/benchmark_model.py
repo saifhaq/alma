@@ -12,6 +12,7 @@ from .conversions.conversion_options import (
     mode_str_to_conversions,
 )
 from .dataloader.create import create_single_tensor_dataloader
+from .dataloader.collate import DeviceCollator
 from .utils.checks import check_consistent_batch_size, check_inputs
 from .utils.device import setup_device
 from .utils.multiprocessing import benchmark_process_wrapper
@@ -98,6 +99,8 @@ def benchmark_model(
             random_type="normal",
             random_params={"mean": 0.0, "std": 2.0},
             batch_size=batch_size,
+            collate_fn=DeviceCollator(device),  # Moves data to device during data loader initialization
+            pin_memory=False,  # Not needed since we move to device in collate_fn
         )
 
     all_results: Dict[str, Dict[str, Any]] = {}

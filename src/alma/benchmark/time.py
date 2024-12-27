@@ -4,6 +4,11 @@ from typing import Any, Callable, Dict
 import torch
 from tqdm import tqdm
 
+import logging
+
+logger = logging.getLogger(__name__)
+logger.addHandler(logging.NullHandler())
+
 
 def time_forward(
     forward_call: Callable,
@@ -34,7 +39,8 @@ def time_forward(
     if len(data_loader) == 0:
         raise ValueError("Empty data loader provided")
 
-    if device.type in ["cuda", "XLA"]:
+    if device.type in ["cudax", "XLA"]:
+        print("Using CUDA timing module")
         result = time_cuda(
             forward_call,
             data_loader,
@@ -44,6 +50,7 @@ def time_forward(
             warmup_iterations=10,
         )
     else:
+        print("Using generic timing module")
         result = time_generic(
             forward_call,
             data_loader,
@@ -100,9 +107,10 @@ def time_cuda(
     total_samples = 0
     num_batches = 0
     batch_sizes = []
+    expected_batch_size = warmup_data.size(0)
 
-    start_events = [torch.cuda.Event(enable_timing=True) for _ in range(steps)]
-    end_events = [torch.cuda.Event(enable_timing=True) for _ in range(steps)]
+    start_events = []
+    end_events = []
 
     # Main timing loop
     with torch.no_grad(), torch.cuda.stream(stream):
@@ -112,19 +120,27 @@ def time_cuda(
             if total_samples >= n_samples:
                 break
 
+            # Create events for this batch
+            start_event = torch.cuda.Event(enable_timing=True)
+            end_event = torch.cuda.Event(enable_timing=True)
+
             # Record timing for entire batch
-            start_events[i].record()
+            start_event.record()
             _ = forward_call(data)
-            end_events[i].record()
+            end_event.record()
+
+            # Store events
+            start_events.append(start_event)
+            end_events.append(end_event)
 
             batch_sizes.append(data.size(0))
             total_samples += data.size(0)
             num_batches += 1
 
-        # Make sure all operations are completed
-        torch.cuda.synchronize()
-        times = [s.elapsed_time(e) for s, e in zip(start_events, end_events)]
-        total_inf_time = sum(times)
+    # Make sure all operations are completed
+    torch.cuda.synchronize()
+    times = [s.elapsed_time(e) / 1000 for s, e in zip(start_events, end_events)]
+    total_inf_time = sum(times)
 
     # End timing for the entire process
     end_time = time.perf_counter()
@@ -133,11 +149,11 @@ def time_cuda(
     torch.cuda.empty_cache()
 
     assert all(
-        batch_sizes[0] == batch_size for batch_size in batch_sizes
+        expected_batch_size == batch_size for batch_size in batch_sizes
     ), f"All batches should have the same size. Got batch sizes: {batch_sizes}"
 
-    total_elapsed_time = end_time - start_time
-    throughput = total_samples / total_inf_time if total_elapsed_time > 0 else 0
+    total_elapsed_time = (end_time - start_time) / 1000
+    throughput = total_samples / total_inf_time if total_inf_time > 0 else 0
     result: Dict[str, Any] = {
         "device": device,
         "total_elapsed_time": total_elapsed_time,
@@ -228,9 +244,9 @@ def time_generic(
             total_samples += data.size(0)
             num_batches += 1
 
-        # Calculate total inference time in milliseconds
+        # Calculate total inference time in seconds
         times = [
-            (end - start) * 1000
+            (end - start)
             for start, end in zip(start_times[:num_batches], end_times[:num_batches])
         ]
         total_inf_time = sum(times)
@@ -242,7 +258,7 @@ def time_generic(
         batch_sizes[0] == batch_size for batch_size in batch_sizes
     ), f"All batches should have the same size. Got batch sizes: {batch_sizes}"
 
-    total_elapsed_time = (end_time - start_time) * 1000  # Convert to milliseconds
+    total_elapsed_time = end_time - start_time
     throughput = total_samples / total_inf_time if total_elapsed_time > 0 else 0
 
     result: Dict[str, Any] = {
