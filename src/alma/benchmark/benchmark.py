@@ -1,18 +1,16 @@
 import logging
-import time
-from typing import Any, Callable, Dict, Union
+from typing import Callable, Dict, Union
 
 import torch
 import torch._dynamo
 from torch.utils.data import DataLoader
-from tqdm import tqdm
 
 from ..conversions.select import select_forward_call_function
 from ..utils.data import get_sample_data
 from ..utils.multiprocessing import benchmark_error_handler
 from ..utils.times import inference_time_benchmarking  # should we use this?
 from .log import log_results
-from .warmup import warmup
+from .time import time_forward
 
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())
@@ -63,11 +61,6 @@ def benchmark(
     # Set to eval mode
     model.eval()
 
-    # Initialize benchmark variables
-    total_inf_time = 0.0
-    total_samples = 0
-    num_batches = 0
-
     # Get sample of data from dataloader
     data = get_sample_data(data_loader, device)
 
@@ -79,43 +72,17 @@ def benchmark(
     # Clear all caches, etc.
     torch._dynamo.reset()
 
-    # Warmup
-    warmup(forward_call, data_loader, device)
-
     # Benchmarking loop
-    start_time = time.perf_counter()  # Start timing for the entire process
-    with torch.no_grad():
-        for data, _ in tqdm(data_loader, desc=f"Benchmarking {conversion} on {device}"):
-            if total_samples >= n_samples:
-                break
+    result = time_forward(
+        forward_call,
+        data_loader,
+        n_samples,
+        device,
+        conversion,
+        warmup_iterations=10,
+    )
 
-            # data = data.to(device, non_blocking=True)
-            data = data.to(device)
-            batch_start_time = time.perf_counter()
-            _ = forward_call(data)
-            batch_end_time = time.perf_counter()
-
-            batch_size = min(data.size(0), n_samples - total_samples)
-            total_inf_time += batch_end_time - batch_start_time
-            total_samples += batch_size
-            num_batches += 1
-
-            if total_samples >= n_samples:
-                break
-
-    end_time = time.perf_counter()  # End timing for the entire process
-
-    total_elapsed_time = end_time - start_time
-    throughput = total_samples / total_inf_time if total_elapsed_time > 0 else 0
-    result: Dict[str, Any] = {
-        "device": device,
-        "total_elapsed_time": total_elapsed_time,
-        "total_inf_time": total_inf_time,
-        "total_samples": total_samples,
-        "batch_size": data.shape[0],
-        "throughput": throughput,
-        "status": "success",
-    }
+    result["status"] = "success"
     if logger.root.level <= logging.DEBUG:
         log_results(result)
 
