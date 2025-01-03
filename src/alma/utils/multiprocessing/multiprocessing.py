@@ -1,4 +1,3 @@
-import multiprocessing as mp
 import traceback
 from multiprocessing import Process, Queue
 from typing import Any, Callable, Union
@@ -7,6 +6,11 @@ import torch
 
 from .traceback import get_next_line_info
 
+# MPS requires the `multiprocess` package
+if torch.backends.mps.is_available():
+    import multiprocess as mp
+else:
+    import multiprocessing as mp
 
 def run_benchmark_process(
     formatted_stacktrace: str,
