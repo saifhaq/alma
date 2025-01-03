@@ -208,10 +208,10 @@ Below is a table summarizing the currently supported conversion options and thei
   | 41  |  OPTIMUM_QUANTO_Wf8E5M2+COMPILE_CUDAGRAPHS        | GPU (CUDA)     | optimum quanto + torch.compile |
   | 42  |  FP16+EAGER                                       | CPU, MPS, GPU  | PyTorch   |
   | 43  |  BF16+EAGER                                       | CPU, MPS, GPU (not all GPUs natively supported)  | PyTorch   |
-  | 44  |  COMPILE_INDUCTOR_MAX_AUTOTUNE+TORCHAO_AUTOQUANT_DEFAULT    | GPU  | torch.compile + torchao |
-  | 45  |  COMPILE_INDUCTOR_MAX_AUTOTUNE+TORCHAO_AUTOQUANT_NONDEFAULT | GPU  | torch.compile + torchao |
-  | 46  |  COMPILE_CUDAGRAPHS+TORCHAO_AUTOQUANT_DEFAULT               | GPU (CUDA) | torch.compile + torchao |
-  | 47  |  COMPILE_INDUCTOR_MAX_AUTOTUNE+TORCHAO_QUANT_I4_WEIGHT_ONLY | GPU (requires bf16 support)  | torch.compile + torchao |
+  | 44  |  COMPILE_INDUCTOR_MAX_AUTOTUNE+<br>TORCHAO_AUTOQUANT_DEFAULT    | GPU  | torch.compile + torchao |
+  | 45  |  COMPILE_INDUCTOR_MAX_AUTOTUNE+<br>TORCHAO_AUTOQUANT_NONDEFAULT | GPU  | torch.compile + torchao |
+  | 46  |  COMPILE_CUDAGRAPHS+<br>TORCHAO_AUTOQUANT_DEFAULT               | GPU (CUDA) | torch.compile + torchao |
+  | 47  |  COMPILE_INDUCTOR_MAX_AUTOTUNE+<br>TORCHAO_QUANT_I4_WEIGHT_ONLY | GPU (requires bf16 support)  | torch.compile + torchao |
   | 48  |  TORCHAO_QUANT_I4_WEIGHT_ONLY                               | GPU (requires bf16 support) | torchao |
 
 
