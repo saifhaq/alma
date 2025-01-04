@@ -98,6 +98,11 @@ def get_compile_settings(backend: Literal[str] = "inductor-default") -> Dict[str
                 "backend": backend,
                 "options": ort_options,
             }
+        case "openvino":
+            compile_settings = {
+                "options": {"config": {"PERFORMANCE_HINT": "LATENCY"}},
+                "backend": backend,
+            }
         case _:
             raise ValueError(f"{backend} is not a valid option")
 
