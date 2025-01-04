@@ -114,6 +114,10 @@ def select_forward_call_function(
             check_tensort()
             forward = get_export_compiled_forward_call(model, data, backend="tensorrt")
 
+        case "COMPILE_OPENVINO":
+            check_tensort()
+            forward = get_export_compiled_forward_call(model, data, backend="openvino")
+
         case "EXPORT+COMPILE_INDUCTOR_DEFAULT_EAGER_FALLBACK":
             forward = get_export_compiled_forward_call_eager_fallback(
                 model,

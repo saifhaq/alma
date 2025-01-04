@@ -12,6 +12,7 @@ if torch.backends.mps.is_available():
 else:
     import multiprocessing as mp
 
+
 def run_benchmark_process(
     formatted_stacktrace: str,
     benchmark_func: Callable,

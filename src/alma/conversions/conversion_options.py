@@ -51,35 +51,36 @@ MODEL_CONVERSION_OPTIONS: dict[int, ConversionOption] = {
     27: ConversionOption(mode="NATIVE_FAKE_QUANTIZED_AI8WI8_STATIC"),
     28: ConversionOption(mode="COMPILE_TENSORRT"),
     29: ConversionOption(mode="EXPORT+COMPILE_TENSORRT"),
-    30: ConversionOption(mode="JIT_TRACE"),
-    31: ConversionOption(mode="TORCH_SCRIPT"),
-    32: ConversionOption(mode="OPTIMUM_QUANTO_AI8WI8"),
-    33: ConversionOption(mode="OPTIMUM_QUANTO_AI8WI4"),
-    34: ConversionOption(mode="OPTIMUM_QUANTO_AI8WI2"),
-    35: ConversionOption(mode="OPTIMUM_QUANTO_WI8"),
-    36: ConversionOption(mode="OPTIMUM_QUANTO_WI4"),
-    37: ConversionOption(mode="OPTIMUM_QUANTO_WI2"),
-    38: ConversionOption(mode="OPTIMUM_QUANTO_Wf8E4M3N"),
-    39: ConversionOption(mode="OPTIMUM_QUANTO_Wf8E4M3NUZ"),
-    40: ConversionOption(mode="OPTIMUM_QUANTO_Wf8E5M2"),
-    41: ConversionOption(
+    30: ConversionOption(mode="COMPILE_OPENVINO"),
+    31: ConversionOption(mode="JIT_TRACE"),
+    32: ConversionOption(mode="TORCH_SCRIPT"),
+    33: ConversionOption(mode="OPTIMUM_QUANTO_AI8WI8"),
+    34: ConversionOption(mode="OPTIMUM_QUANTO_AI8WI4"),
+    35: ConversionOption(mode="OPTIMUM_QUANTO_AI8WI2"),
+    36: ConversionOption(mode="OPTIMUM_QUANTO_WI8"),
+    37: ConversionOption(mode="OPTIMUM_QUANTO_WI4"),
+    38: ConversionOption(mode="OPTIMUM_QUANTO_WI2"),
+    39: ConversionOption(mode="OPTIMUM_QUANTO_Wf8E4M3N"),
+    40: ConversionOption(mode="OPTIMUM_QUANTO_Wf8E4M3NUZ"),
+    41: ConversionOption(mode="OPTIMUM_QUANTO_Wf8E5M2"),
+    42: ConversionOption(
         mode="OPTIMIM_QUANTO_Wf8E5M2+COMPILE_CUDAGRAPHS", device_override="CUDA"
     ),
-    42: ConversionOption(mode="FP16+EAGER"),
-    43: ConversionOption(mode="BF16+EAGER"),  
-    44: ConversionOption(
+    43: ConversionOption(mode="FP16+EAGER"),
+    44: ConversionOption(mode="BF16+EAGER"),
+    45: ConversionOption(
         mode="COMPILE_INDUCTOR_MAX_AUTOTUNE+TORCHAO_AUTOQUANT_DEFAULT"
     ),
-    45: ConversionOption(
+    46: ConversionOption(
         mode="COMPILE_INDUCTOR_MAX_AUTOTUNE+TORCHAO_AUTOQUANT_NONDEFAULT"
     ),
-    46: ConversionOption(
+    47: ConversionOption(
         mode="COMPILE_CUDAGRAPHS+TORCHAO_AUTOQUANT_DEFAULT", device_override="CUDA"
     ),  # Works in certain circumstances, depends on weight tensor sizes
-    47: ConversionOption(
+    48: ConversionOption(
         mode="COMPILE_INDUCTOR_MAX_AUTOTUNE+TORCHAO_QUANT_I4_WEIGHT_ONLY"
     ),  # Requires bf16 suuport
-    48: ConversionOption(mode="TORCHAO_QUANT_I4_WEIGHT_ONLY"),  # Requires bf16 support
+    49: ConversionOption(mode="TORCHAO_QUANT_I4_WEIGHT_ONLY"),  # Requires bf16 support
 }
 
 
