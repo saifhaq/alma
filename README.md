@@ -10,7 +10,7 @@
     <img src="https://img.shields.io/badge/discord-7289da.svg?style=flat-square&logo=discord" alt="discord" style="height: 20px;">
   </a>
   <a href="https://pepy.tech/project/alma-torch">
-    <img src="https://static.pepy.tech/badge/alma-torch" alt="total downloads" style="height: 20px;">
+    <img src="https://pepy.tech/badge/alma-torch?style=flat" alt="Downloads" style="height: 20px;">
   </a>
   <a href="https://pepy.tech/project/alma-torch">
     <img src="https://img.shields.io/pypi/dm/alma-torch" alt="monthly downloads" style="height: 20px;">
