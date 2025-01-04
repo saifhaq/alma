@@ -200,25 +200,26 @@ Below is a table summarizing the currently supported conversion options and thei
   | 27  |  NATIVE_FAKE_QUANTIZED_AI8WI8_STATIC              | CPU, GPU       | CPU (PyTorch) |
   | 28  |  COMPILE_TENSORRT                                 | GPU (CUDA)     | torch.compile + NVIDIA TensorRT |
   | 29  |  EXPORT+COMPILE_TENSORRT                          | GPU (CUDA)     | torch.export + torch.compile + NVIDIA TensorRT |
-  | 30  |  JIT_TRACE                                        | CPU, MPS, GPU  | PyTorch   |
-  | 31  |  TORCH_SCRIPT                                     | CPU, MPS, GPU  | PyTorch   |
-  | 32  |  OPTIMUM_QUANTO_AI8WI8                            | CPU, MPS, GPU  | optimum quanto |
-  | 33  |  OPTIMUM_QUANTO_AI8WI4                            | CPU, MPS, GPU (not all GPUs supported) | optimum quanto |
-  | 34  |  OPTIMUM_QUANTO_AI8WI2                            | CPU, MPS, GPU (not all GPUs supported) | optimum quanto |
-  | 35  |  OPTIMUM_QUANTO_WI8                               | CPU, MPS, GPU  | optimum quanto |
-  | 36  |  OPTIMUM_QUANTO_WI4                               | CPU, MPS, GPU (not all GPUs supported) | optimum quanto |
-  | 37  |  OPTIMUM_QUANTO_WI2                               | CPU, MPS, GPU (not all GPUs supported) | optimum quanto |
-  | 38  |  OPTIMUM_QUANTO_Wf8E4M3N                          | CPU, MPS, GPU  | optimum quanto |
-  | 39  |  OPTIMUM_QUANTO_Wf8E4M3NUZ                        | CPU, MPS, GPU  | optimum quanto |
-  | 40  |  OPTIMUM_QUANTO_Wf8E5M2                           | CPU, MPS, GPU  | optimum quanto |
-  | 41  |  OPTIMUM_QUANTO_Wf8E5M2+COMPILE_CUDAGRAPHS        | GPU (CUDA)     | optimum quanto + torch.compile |
-  | 42  |  FP16+EAGER                                       | CPU, MPS, GPU  | PyTorch   |
-  | 43  |  BF16+EAGER                                       | CPU, MPS, GPU (not all GPUs natively supported)  | PyTorch   |
-  | 44  |  COMPILE_INDUCTOR_MAX_AUTOTUNE+<br>TORCHAO_AUTOQUANT_DEFAULT    | GPU  | torch.compile + torchao |
-  | 45  |  COMPILE_INDUCTOR_MAX_AUTOTUNE+<br>TORCHAO_AUTOQUANT_NONDEFAULT | GPU  | torch.compile + torchao |
-  | 46  |  COMPILE_CUDAGRAPHS+<br>TORCHAO_AUTOQUANT_DEFAULT               | GPU (CUDA) | torch.compile + torchao |
-  | 47  |  COMPILE_INDUCTOR_MAX_AUTOTUNE+<br>TORCHAO_QUANT_I4_WEIGHT_ONLY | GPU (requires bf16 support)  | torch.compile + torchao |
-  | 48  |  TORCHAO_QUANT_I4_WEIGHT_ONLY                               | GPU (requires bf16 support) | torchao |
+  | 30  |  COMPILE_OPENVINO                                 | CPU (Intel)    | torch.compile + OpenVINO  |
+  | 31  |  JIT_TRACE                                        | CPU, MPS, GPU  | PyTorch   |
+  | 32  |  TORCH_SCRIPT                                     | CPU, MPS, GPU  | PyTorch   |
+  | 33  |  OPTIMUM_QUANTO_AI8WI8                            | CPU, MPS, GPU  | optimum quanto |
+  | 34  |  OPTIMUM_QUANTO_AI8WI4                            | CPU, MPS, GPU (not all GPUs supported) | optimum quanto |
+  | 35  |  OPTIMUM_QUANTO_AI8WI2                            | CPU, MPS, GPU (not all GPUs supported) | optimum quanto |
+  | 36  |  OPTIMUM_QUANTO_WI8                               | CPU, MPS, GPU  | optimum quanto |
+  | 37  |  OPTIMUM_QUANTO_WI4                               | CPU, MPS, GPU (not all GPUs supported) | optimum quanto |
+  | 38  |  OPTIMUM_QUANTO_WI2                               | CPU, MPS, GPU (not all GPUs supported) | optimum quanto |
+  | 39  |  OPTIMUM_QUANTO_Wf8E4M3N                          | CPU, MPS, GPU  | optimum quanto |
+  | 40  |  OPTIMUM_QUANTO_Wf8E4M3NUZ                        | CPU, MPS, GPU  | optimum quanto |
+  | 41  |  OPTIMUM_QUANTO_Wf8E5M2                           | CPU, MPS, GPU  | optimum quanto |
+  | 42  |  OPTIMUM_QUANTO_Wf8E5M2+COMPILE_CUDAGRAPHS        | GPU (CUDA)     | optimum quanto + torch.compile |
+  | 43  |  FP16+EAGER                                       | CPU, MPS, GPU  | PyTorch   |
+  | 44  |  BF16+EAGER                                       | CPU, MPS, GPU (not all GPUs natively supported)  | PyTorch   |
+  | 45  |  COMPILE_INDUCTOR_MAX_AUTOTUNE+<br>TORCHAO_AUTOQUANT_DEFAULT    | GPU  | torch.compile + torchao |
+  | 46  |  COMPILE_INDUCTOR_MAX_AUTOTUNE+<br>TORCHAO_AUTOQUANT_NONDEFAULT | GPU  | torch.compile + torchao |
+  | 47  |  COMPILE_CUDAGRAPHS+<br>TORCHAO_AUTOQUANT_DEFAULT               | GPU (CUDA) | torch.compile + torchao |
+  | 48  |  COMPILE_INDUCTOR_MAX_AUTOTUNE+<br>TORCHAO_QUANT_I4_WEIGHT_ONLY | GPU (requires bf16 support)  | torch.compile + torchao |
+  | 49  |  TORCHAO_QUANT_I4_WEIGHT_ONLY                               | GPU (requires bf16 support) | torchao |
 
 
 
