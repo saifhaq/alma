@@ -1,5 +1,5 @@
 # alma
-<p align="center"><img width="900" src="assets/alma-logo-banner.jpg" alt="Alma Logo"></p>
+<p align="center"><img width="900" src="assets/alma-thicker-banner.jpg" alt="Alma Logo"></p>
 <p align="center">
   A Python library for benchmarking PyTorch model speed for different conversion options 🚀
 </p>
