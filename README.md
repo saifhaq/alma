@@ -19,8 +19,9 @@
 </h2>
 
 With just one function call, you can get a full report on how fast your PyTorch model runs for inference across over 40 conversion options, such as
-JIT tracing, torch.compile, torch.export, torchao, ONNX, OpenVINO, TensorRT, and many more! This allows one to find
-the best option for one's model, data, and hardware. See 
+JIT tracing, torch.compile, torch.export, torchao, ONNX, OpenVINO, TensorRT, and many more!
+
+This allows one to find the best option for one's model, data, and hardware. See 
 [here](#conversion-options) for all supported options.
 
 ## Table of Contents
