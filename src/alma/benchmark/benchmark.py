@@ -79,9 +79,10 @@ def benchmark(
         )
     else:
         # If a data loader is provided, we check that the data dtype matches the conversion dtype
+        data = get_sample_data(data_loader, device)
         assert (
-            data_loader.dataset.tensor.dtype == conversion.data_dtype
-        ), "The data loader dtype does not match the conversion dtype"
+            data.dtype == conversion.data_dtype
+        ), f"The data loader dtype ({data.dtype}) does not match the conversion dtype ({conversion.data_dtype})."
 
     # Send the model to device
     model = model.to(device)
