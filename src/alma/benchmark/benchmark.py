@@ -7,15 +7,15 @@ import torch._dynamo
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 
-from ..conversions.select import select_forward_call_function
 from ..conversions.conversion_options import ConversionOption
+from ..conversions.select import select_forward_call_function
 from ..dataloader.create import create_single_tensor_dataloader
 from ..utils.data import get_sample_data
 from ..utils.multiprocessing import benchmark_error_handler
 from ..utils.times import inference_time_benchmarking  # should we use this?
+from .benchmark_config import BenchmarkConfig
 from .log import log_results
 from .warmup import warmup
-from .benchmark_config import BenchmarkConfig
 
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())

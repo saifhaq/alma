@@ -37,6 +37,7 @@ def get_fp16_eager_forward_call(
 
     return forward
 
+
 def get_fp16_model(
     model: torch.nn.Module,
 ) -> torch.nn.Module:

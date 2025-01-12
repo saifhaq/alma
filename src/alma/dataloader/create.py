@@ -61,7 +61,6 @@ def create_single_tensor_dataloader(
         dtype=dtype,
     )
 
-
     return DataLoader(
         dataset,
         batch_size=batch_size,
