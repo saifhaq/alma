@@ -8,11 +8,14 @@ from torch.utils.data import DataLoader
 from tqdm import tqdm
 
 from ..conversions.select import select_forward_call_function
+from ..conversions.conversion_options import ConversionOption
+from ..dataloader.create import create_single_tensor_dataloader
 from ..utils.data import get_sample_data
 from ..utils.multiprocessing import benchmark_error_handler
 from ..utils.times import inference_time_benchmarking  # should we use this?
 from .log import log_results
 from .warmup import warmup
+from .benchmark_config import BenchmarkConfig
 
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())
@@ -22,9 +25,10 @@ logger.addHandler(logging.NullHandler())
 def benchmark(
     device: torch.device,
     model: Union[torch.nn.Module, Callable],
-    conversion: str,
+    config: BenchmarkConfig,
+    conversion: ConversionOption,
+    data: torch.Tensor,
     data_loader: DataLoader,
-    n_samples: int,
 ) -> Dict[str, float]:
     """
     Benchmark the model using the given data loader. This function will benchmark the model using the
@@ -39,9 +43,10 @@ def benchmark(
     - model (Union[torch.nn.Module, Callable]): The model to benchmark, or callable which returns
     the model (used for memory efficiency when using multi-processing, as a means of creating
     isolated test environments).
-    - conversion (str): The conversion method to use for benchmarking.
+    - config (BenchmarkConfig): The configuration for the benchmarking.
+    - conversion (ConversionOption): The conversion method to benchmark.
+    - data (torch.Tensor): The input data to benchmark the model on.
     - data_loader (DataLoader): The DataLoader to get samples of data from.
-    - n_samples (int): The number of samples to benchmark on.
 
     Outputs:
     - total_elapsed_time (float): The total elapsed time for the benchmark.
@@ -51,11 +56,32 @@ def benchmark(
     """
     # If the model is a callable, call it to get the model
     if not isinstance(model, torch.nn.Module):
-        logger.info(f"Initializing model inside {conversion} benchmarking")
+        logger.info(f"Initializing model inside {conversion.mode} benchmarking")
         model = model()
         assert isinstance(
             model, torch.nn.Module
         ), "The provided callable should return a PyTorch model"
+
+    # Get the number of samples to benchmark
+    n_samples = config.n_samples
+    batch_size = config.batch_size
+
+    # Creates a dataloader with random data, of the same size as the input data sample
+    # If the data_loader has been provided by the user, we use that one
+    if not isinstance(data_loader, DataLoader):
+        data_loader = create_single_tensor_dataloader(
+            tensor_size=data.size(),
+            num_tensors=n_samples,
+            random_type="normal",
+            random_params={"mean": 0.0, "std": 2.0},
+            batch_size=batch_size,
+            dtype=conversion.data_dtype,
+        )
+    else:
+        # If a data loader is provided, we check that the data dtype matches the conversion dtype
+        assert (
+            data_loader.dataset.tensor.dtype == conversion.data_dtype
+        ), "The data loader dtype does not match the conversion dtype"
 
     # Send the model to device
     model = model.to(device)
@@ -68,13 +94,13 @@ def benchmark(
     total_samples = 0
     num_batches = 0
 
-    # Get sample of data from dataloader
+    # Get sample of data from dataloader. This overwrites the data tensor provided by the user
     data = get_sample_data(data_loader, device)
 
     # Get the forward call of the model, which we will benchmark. We also return the device we will
     # benchmark on, since some conversions are only supported for certain devices, e.g.
     # PyTorch native quantized conversions requires CPU
-    forward_call = select_forward_call_function(model, conversion, data, device)
+    forward_call = select_forward_call_function(model, conversion.mode, data, device)
 
     # Clear all caches, etc.
     torch._dynamo.reset()
@@ -85,7 +111,9 @@ def benchmark(
     # Benchmarking loop
     start_time = time.perf_counter()  # Start timing for the entire process
     with torch.no_grad():
-        for data, _ in tqdm(data_loader, desc=f"Benchmarking {conversion} on {device}"):
+        for data, _ in tqdm(
+            data_loader, desc=f"Benchmarking {conversion.mode} on {device}"
+        ):
             if total_samples >= n_samples:
                 break
 

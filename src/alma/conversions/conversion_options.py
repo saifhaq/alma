@@ -1,6 +1,7 @@
 from typing import List, Optional, Union
+import torch
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, validator
 
 
 class ConversionOption(BaseModel):
@@ -12,11 +13,29 @@ class ConversionOption(BaseModel):
         device_override (Optional[str]): Override device for conversion, e.g., "CPU", "CUDA", or None.
     """
 
+    class Config:
+        arbitrary_types_allowed = True  # Add this to allow torch.dtype
+
     mode: str = Field(..., description="The mode or strategy for model conversion.")
     device_override: Optional[str] = Field(
         None,
         description="Optional override for the target device, e.g., 'CPU', 'CUDA', etc.",
     )
+    data_dtype: Optional[torch.dtype] = Field(  # Specify the type hint correctly
+        default=torch.float32,
+        description="The data type of the input data."
+    )
+
+    @validator('data_dtype', pre=True)
+    def validate_dtype(cls, v):
+        if v is None:
+            return None
+        if isinstance(v, str):
+            # Convert string representation to torch.dtype
+            return getattr(torch, v)
+        if isinstance(v, torch.dtype):
+            return v
+        raise ValueError(f'Invalid dtype: {v}')
 
 
 # Predefined conversion options for benchmarking
@@ -66,8 +85,8 @@ MODEL_CONVERSION_OPTIONS: dict[int, ConversionOption] = {
     42: ConversionOption(
         mode="OPTIMIM_QUANTO_Wf8E5M2+COMPILE_CUDAGRAPHS", device_override="CUDA"
     ),
-    43: ConversionOption(mode="FP16+EAGER"),
-    44: ConversionOption(mode="BF16+EAGER"),
+    43: ConversionOption(mode="FP16+EAGER", data_dtype=torch.float16),
+    44: ConversionOption(mode="BF16+EAGER", data_dtype=torch.bfloat16),
     45: ConversionOption(
         mode="COMPILE_INDUCTOR_MAX_AUTOTUNE+TORCHAO_AUTOQUANT_DEFAULT"
     ),
@@ -81,28 +100,28 @@ MODEL_CONVERSION_OPTIONS: dict[int, ConversionOption] = {
         mode="COMPILE_INDUCTOR_MAX_AUTOTUNE+TORCHAO_QUANT_I4_WEIGHT_ONLY"
     ),  # Requires bf16 suuport
     49: ConversionOption(mode="TORCHAO_QUANT_I4_WEIGHT_ONLY"),  # Requires bf16 support
-    50: ConversionOption(mode="FP16+COMPILE_CUDAGRAPHS", device_override="CUDA"),
-    51: ConversionOption(mode="FP16+COMPILE_INDUCTOR_DEFAULT"),
-    52: ConversionOption(mode="FP16+COMPILE_INDUCTOR_REDUCE_OVERHEAD"),
-    53: ConversionOption(mode="FP16+COMPILE_INDUCTOR_MAX_AUTOTUNE"),
-    54: ConversionOption(mode="FP16+COMPILE_INDUCTOR_EAGER_FALLBACK"),
-    55: ConversionOption(mode="FP16+COMPILE_ONNXRT", device_override="CUDA"),
-    56: ConversionOption(mode="FP16+COMPILE_OPENXLA", device_override="XLA_GPU"),
-    57: ConversionOption(mode="FP16+COMPILE_TVM"),
-    58: ConversionOption(mode="FP16+COMPILE_TENSORRT"),
-    59: ConversionOption(mode="FP16+COMPILE_OPENVINO"),
-    60: ConversionOption(mode="FP16+EXPORT+COMPILE_CUDAGRAPHS", device_override="CUDA"),
-    61: ConversionOption(mode="FP16+EXPORT+COMPILE_INDUCTOR_DEFAULT"),
-    62: ConversionOption(mode="FP16+EXPORT+COMPILE_INDUCTOR_REDUCE_OVERHEAD"),
-    63: ConversionOption(mode="FP16+EXPORT+COMPILE_INDUCTOR_MAX_AUTOTUNE"),
-    64: ConversionOption(mode="FP16+EXPORT+COMPILE_INDUCTOR_DEFAULT_EAGER_FALLBACK"),
-    65: ConversionOption(mode="FP16+EXPORT+COMPILE_ONNXRT", device_override="CUDA"),
-    66: ConversionOption(mode="FP16+EXPORT+COMPILE_OPENXLA", device_override="XLA_GPU"),
-    67: ConversionOption(mode="FP16+EXPORT+COMPILE_TVM"),
-    68: ConversionOption(mode="FP16+EXPORT+COMPILE_TENSORRT"),
-    69: ConversionOption(mode="FP16+EXPORT+COMPILE_OPENVINO"),
-    70: ConversionOption(mode="FP16+JIT_TRACE"),
-    71: ConversionOption(mode="FP16+TORCH_SCRIPT"),
+    50: ConversionOption(mode="FP16+COMPILE_CUDAGRAPHS", device_override="CUDA", data_dtype=torch.float16),
+    51: ConversionOption(mode="FP16+COMPILE_INDUCTOR_DEFAULT", data_dtype=torch.float16),
+    52: ConversionOption(mode="FP16+COMPILE_INDUCTOR_REDUCE_OVERHEAD", data_dtype=torch.float16),
+    53: ConversionOption(mode="FP16+COMPILE_INDUCTOR_MAX_AUTOTUNE", data_dtype=torch.float16),
+    54: ConversionOption(mode="FP16+COMPILE_INDUCTOR_EAGER_FALLBACK", data_dtype=torch.float16),
+    55: ConversionOption(mode="FP16+COMPILE_ONNXRT", device_override="CUDA", data_dtype=torch.float16),
+    56: ConversionOption(mode="FP16+COMPILE_OPENXLA", device_override="XLA_GPU", data_dtype=torch.float16),
+    57: ConversionOption(mode="FP16+COMPILE_TVM", data_dtype=torch.float16),
+    58: ConversionOption(mode="FP16+COMPILE_TENSORRT", data_dtype=torch.float16),
+    59: ConversionOption(mode="FP16+COMPILE_OPENVINO", data_dtype=torch.float16),
+    60: ConversionOption(mode="FP16+EXPORT+COMPILE_CUDAGRAPHS", device_override="CUDA", data_dtype=torch.float16),
+    61: ConversionOption(mode="FP16+EXPORT+COMPILE_INDUCTOR_DEFAULT", data_dtype=torch.float16),
+    62: ConversionOption(mode="FP16+EXPORT+COMPILE_INDUCTOR_REDUCE_OVERHEAD", data_dtype=torch.float16),
+    63: ConversionOption(mode="FP16+EXPORT+COMPILE_INDUCTOR_MAX_AUTOTUNE", data_dtype=torch.float16),
+    64: ConversionOption(mode="FP16+EXPORT+COMPILE_INDUCTOR_DEFAULT_EAGER_FALLBACK", data_dtype=torch.float16),
+    65: ConversionOption(mode="FP16+EXPORT+COMPILE_ONNXRT", device_override="CUDA", data_dtype=torch.float16),
+    66: ConversionOption(mode="FP16+EXPORT+COMPILE_OPENXLA", device_override="XLA_GPU", data_dtype=torch.float16),
+    67: ConversionOption(mode="FP16+EXPORT+COMPILE_TVM", data_dtype=torch.float16),
+    68: ConversionOption(mode="FP16+EXPORT+COMPILE_TENSORRT", data_dtype=torch.float16),
+    69: ConversionOption(mode="FP16+EXPORT+COMPILE_OPENVINO", data_dtype=torch.float16),
+    70: ConversionOption(mode="FP16+JIT_TRACE", data_dtype=torch.float16),
+    71: ConversionOption(mode="FP16+TORCH_SCRIPT", data_dtype=torch.float16),
 }
 
 
@@ -146,6 +165,7 @@ def mode_str_to_conversions(conversions: List[str]) -> List[ConversionOption]:
         return []
 
     output = []
+    # TODO: correct the order of the conversions, so that they are in the same order as the input
     for option in MODEL_CONVERSION_OPTIONS.values():
         name = option.mode
         if name in conversions:

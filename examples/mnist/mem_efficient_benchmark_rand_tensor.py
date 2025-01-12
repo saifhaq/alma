@@ -58,9 +58,9 @@ def main() -> None:
     config = BenchmarkConfig(
         n_samples=args.n_samples,
         batch_size=args.batch_size,
-        multiprocessing=True,  # If True, we test each method in its own isolated environment,
+        multiprocessing=False,  # If True, we test each method in its own isolated environment,
         # which helps keep methods from contaminating the global torch state
-        fail_on_error=False,  # If False, we fail gracefully and keep testing other methods
+        fail_on_error=True,  # If False, we fail gracefully and keep testing other methods
         # Device options:
         allow_device_override=not args.no_device_override,  # Allow device override for device-specific conversions
         allow_cuda=not args.no_cuda,  # True allows CUDA as an override option
