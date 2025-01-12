@@ -143,6 +143,7 @@ def benchmark(
         "batch_size": data.shape[0],
         "throughput": throughput,
         "status": "success",
+        "data_dtype": conversion.data_dtype,
     }
     if logger.root.level <= logging.DEBUG:
         log_results(result)
