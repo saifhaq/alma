@@ -36,3 +36,18 @@ def get_fp16_eager_forward_call(
         return model(data)
 
     return forward
+
+def get_fp16_model(
+    model: torch.nn.Module,
+) -> torch.nn.Module:
+    """
+    Cast the model to half precision and return the model.
+
+    Inputs:
+    - model (torch.nn.Module): The model to cast to half precision.
+
+    Returns:
+    - model (torch.nn.Module): the fp16 model.
+    """
+    model = model.half()
+    return model

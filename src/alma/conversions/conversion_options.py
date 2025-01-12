@@ -81,6 +81,28 @@ MODEL_CONVERSION_OPTIONS: dict[int, ConversionOption] = {
         mode="COMPILE_INDUCTOR_MAX_AUTOTUNE+TORCHAO_QUANT_I4_WEIGHT_ONLY"
     ),  # Requires bf16 suuport
     49: ConversionOption(mode="TORCHAO_QUANT_I4_WEIGHT_ONLY"),  # Requires bf16 support
+    50: ConversionOption(mode="FP16+COMPILE_CUDAGRAPHS", device_override="CUDA"),
+    51: ConversionOption(mode="FP16+COMPILE_INDUCTOR_DEFAULT"),
+    52: ConversionOption(mode="FP16+COMPILE_INDUCTOR_REDUCE_OVERHEAD"),
+    53: ConversionOption(mode="FP16+COMPILE_INDUCTOR_MAX_AUTOTUNE"),
+    54: ConversionOption(mode="FP16+COMPILE_INDUCTOR_EAGER_FALLBACK"),
+    55: ConversionOption(mode="FP16+COMPILE_ONNXRT", device_override="CUDA"),
+    56: ConversionOption(mode="FP16+COMPILE_OPENXLA", device_override="XLA_GPU"),
+    57: ConversionOption(mode="FP16+COMPILE_TVM"),
+    58: ConversionOption(mode="FP16+COMPILE_TENSORRT"),
+    59: ConversionOption(mode="FP16+COMPILE_OPENVINO"),
+    60: ConversionOption(mode="FP16+EXPORT+COMPILE_CUDAGRAPHS", device_override="CUDA"),
+    61: ConversionOption(mode="FP16+EXPORT+COMPILE_INDUCTOR_DEFAULT"),
+    62: ConversionOption(mode="FP16+EXPORT+COMPILE_INDUCTOR_REDUCE_OVERHEAD"),
+    63: ConversionOption(mode="FP16+EXPORT+COMPILE_INDUCTOR_MAX_AUTOTUNE"),
+    64: ConversionOption(mode="FP16+EXPORT+COMPILE_INDUCTOR_DEFAULT_EAGER_FALLBACK"),
+    65: ConversionOption(mode="FP16+EXPORT+COMPILE_ONNXRT", device_override="CUDA"),
+    66: ConversionOption(mode="FP16+EXPORT+COMPILE_OPENXLA", device_override="XLA_GPU"),
+    67: ConversionOption(mode="FP16+EXPORT+COMPILE_TVM"),
+    68: ConversionOption(mode="FP16+EXPORT+COMPILE_TENSORRT"),
+    69: ConversionOption(mode="FP16+EXPORT+COMPILE_OPENVINO"),
+    70: ConversionOption(mode="FP16+JIT_TRACE"),
+    71: ConversionOption(mode="FP16+TORCH_SCRIPT"),
 }
 
 
