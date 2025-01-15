@@ -14,7 +14,7 @@ from optimum.quanto import (
 )
 
 from .conversion_options import MODEL_CONVERSION_OPTIONS
-from .options.bf16 import get_bfp16_eager_forward_call
+from .options.bf16 import get_bf16_eager_forward_call, get_bf16_model
 from .options.compile import (
     get_compiled_forward_call_eager_fallback,
     get_compiled_model_forward_call,
@@ -336,9 +336,6 @@ def select_forward_call_function(
         case "FP16+EAGER":
             forward = get_fp16_eager_forward_call(model)
 
-        case "BF16+EAGER":
-            forward = get_bfp16_eager_forward_call
-
         case "FP16+COMPILE_CUDAGRAPHS":
             model = get_fp16_model(model)
             forward = get_compiled_model_forward_call(model, data, backend="cudagraphs")
@@ -454,6 +451,127 @@ def select_forward_call_function(
         case "FP16+TORCH_SCRIPT":
             model = get_fp16_model(model)
             forward = get_torch_scripted_model_forward_call(model)
+
+        case "BF16+EAGER":
+            forward = get_bf16_eager_forward_call(model)
+
+        case "BF16+COMPILE_CUDAGRAPHS":
+            model = get_bf16_model(model)
+            forward = get_compiled_model_forward_call(model, data, backend="cudagraphs")
+
+        case "BF16+COMPILE_INDUCTOR_DEFAULT":
+            model = get_bf16_model(model)
+            forward = get_compiled_model_forward_call(
+                model, data, backend="inductor-default"
+            )
+
+        case "BF16+COMPILE_INDUCTOR_REDUCE_OVERHEAD":
+            model = get_bf16_model(model)
+            forward = get_compiled_model_forward_call(
+                model, data, backend="inductor-reduce-overhead"
+            )
+
+        case "BF16+COMPILE_INDUCTOR_MAX_AUTOTUNE":
+            model = get_bf16_model(model)
+            forward = get_compiled_model_forward_call(
+                model, data, backend="inductor-max-autotune"
+            )
+
+        case "BF16+COMPILE_INDUCTOR_EAGER_FALLBACK":
+            model = get_bf16_model(model)
+            forward = get_compiled_forward_call_eager_fallback(
+                model, data, backend="inductor-default"
+            )
+
+        case "BF16+COMPILE_ONNXRT":
+            model = get_bf16_model(model)
+            check_onnxrt()
+            forward = get_compiled_model_forward_call(model, data, backend="onnxrt")
+
+        case "BF16+COMPILE_OPENXLA":
+            model = get_bf16_model(model)
+            check_openxla()
+            forward = get_compiled_model_forward_call(model, data, backend="openxla")
+
+        case "BF16+COMPILE_TVM":
+            model = get_bf16_model(model)
+            check_tvm()
+            forward = get_compiled_model_forward_call(model, data, backend="tvm")
+
+        case "BF16+COMPILE_TENSORRT":
+            model = get_bf16_model(model)
+            check_tensort()
+            forward = get_compiled_model_forward_call(model, data, backend="tensorrt")
+
+        case "BF16+COMPILE_OPENVINO":
+            model = get_bf16_model(model)
+            forward = get_compiled_model_forward_call(model, data, backend="openvino")
+
+        case "BF16+EXPORT+COMPILE_CUDAGRAPHS":
+            model = get_bf16_model(model)
+            forward = get_export_compiled_forward_call(
+                model, data, backend="cudagraphs"
+            )
+
+        case "BF16+EXPORT+COMPILE_INDUCTOR_DEFAULT":
+            model = get_bf16_model(model)
+            forward = get_export_compiled_forward_call(
+                model, data, backend="inductor-default"
+            )
+
+        case "BF16+EXPORT+COMPILE_INDUCTOR_REDUCE_OVERHEAD":
+            model = get_bf16_model(model)
+            forward = get_export_compiled_forward_call(
+                model, data, backend="inductor-reduce-overhead"
+            )
+
+        case "BF16+EXPORT+COMPILE_INDUCTOR_MAX_AUTOTUNE":
+            model = get_bf16_model(model)
+            forward = get_export_compiled_forward_call(
+                model, data, backend="inductor-max-autotune"
+            )
+
+        case "BF16+EXPORT+COMPILE_INDUCTOR_DEFAULT_EAGER_FALLBACK":
+            model = get_bf16_model(model)
+            forward = get_export_compiled_forward_call_eager_fallback(
+                model,
+                data,
+                backend="inductor-default",
+            )
+
+        case "BF16+EXPORT+COMPILE_ONNXRT":
+            model = get_bf16_model(model)
+            check_onnxrt()
+            forward = get_export_compiled_forward_call(model, data, backend="onnxrt")
+
+        case "BF16+EXPORT+COMPILE_OPENXLA":
+            model = get_bf16_model(model)
+            check_openxla()
+            forward = get_export_compiled_forward_call(model, data, backend="openxla")
+
+        case "BF16+EXPORT+COMPILE_TVM":
+            model = get_bf16_model(model)
+            check_tvm()
+            forward = get_export_compiled_forward_call(model, data, backend="tvm")
+
+        case "BF16+EXPORT+COMPILE_TENSORRT":
+            model = get_bf16_model(model)
+            check_tensort()
+            forward = get_export_compiled_forward_call(model, data, backend="tensorrt")
+
+        case "BF16+EXPORT+COMPILE_OPENVINO":
+            model = get_bf16_model(model)
+            forward = get_export_compiled_forward_call(model, data, backend="openvino")
+
+        case "BF16+JIT_TRACE":
+            model = get_bf16_model(model)
+            forward = get_jit_traced_model_forward_call(model, data)
+
+        case "BF16+TORCH_SCRIPT":
+            model = get_bf16_model(model)
+            forward = get_torch_scripted_model_forward_call(model)
+
+
 
         case _:
             error_msg = f"The option {conversion} is not supported"
