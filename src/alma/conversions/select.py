@@ -571,8 +571,6 @@ def select_forward_call_function(
             model = get_bf16_model(model)
             forward = get_torch_scripted_model_forward_call(model)
 
-
-
         case _:
             error_msg = f"The option {conversion} is not supported"
             assert conversion in MODEL_CONVERSION_OPTIONS.values(), error_msg

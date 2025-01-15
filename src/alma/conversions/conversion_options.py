@@ -156,26 +156,69 @@ MODEL_CONVERSION_OPTIONS: dict[int, ConversionOption] = {
     69: ConversionOption(mode="FP16+EXPORT+COMPILE_OPENVINO", data_dtype=torch.float16),
     70: ConversionOption(mode="FP16+JIT_TRACE", data_dtype=torch.float16),
     71: ConversionOption(mode="FP16+TORCH_SCRIPT", data_dtype=torch.float16),
-    72: ConversionOption(mode="BF16+COMPILE_CUDAGRAPHS", device_override="CUDA", data_dtype=torch.bfloat16),
-    73: ConversionOption(mode="BF16+COMPILE_INDUCTOR_DEFAULT", data_dtype=torch.bfloat16),
-    74: ConversionOption(mode="BF16+COMPILE_INDUCTOR_REDUCE_OVERHEAD", data_dtype=torch.bfloat16),
-    75: ConversionOption(mode="BF16+COMPILE_INDUCTOR_MAX_AUTOTUNE", data_dtype=torch.bfloat16),
-    76: ConversionOption(mode="BF16+COMPILE_INDUCTOR_EAGER_FALLBACK", data_dtype=torch.bfloat16),
-    77: ConversionOption(mode="BF16+COMPILE_ONNXRT", device_override="CUDA", data_dtype=torch.bfloat16),
-    78: ConversionOption(mode="BF16+COMPILE_OPENXLA", device_override="XLA_GPU", data_dtype=torch.bfloat16),
+    72: ConversionOption(
+        mode="BF16+COMPILE_CUDAGRAPHS",
+        device_override="CUDA",
+        data_dtype=torch.bfloat16,
+    ),
+    73: ConversionOption(
+        mode="BF16+COMPILE_INDUCTOR_DEFAULT", data_dtype=torch.bfloat16
+    ),
+    74: ConversionOption(
+        mode="BF16+COMPILE_INDUCTOR_REDUCE_OVERHEAD", data_dtype=torch.bfloat16
+    ),
+    75: ConversionOption(
+        mode="BF16+COMPILE_INDUCTOR_MAX_AUTOTUNE", data_dtype=torch.bfloat16
+    ),
+    76: ConversionOption(
+        mode="BF16+COMPILE_INDUCTOR_EAGER_FALLBACK", data_dtype=torch.bfloat16
+    ),
+    77: ConversionOption(
+        mode="BF16+COMPILE_ONNXRT", device_override="CUDA", data_dtype=torch.bfloat16
+    ),
+    78: ConversionOption(
+        mode="BF16+COMPILE_OPENXLA",
+        device_override="XLA_GPU",
+        data_dtype=torch.bfloat16,
+    ),
     79: ConversionOption(mode="BF16+COMPILE_TVM", data_dtype=torch.bfloat16),
     80: ConversionOption(mode="BF16+COMPILE_TENSORRT", data_dtype=torch.bfloat16),
     81: ConversionOption(mode="BF16+COMPILE_OPENVINO", data_dtype=torch.bfloat16),
-    82: ConversionOption(mode="BF16+EXPORT+COMPILE_CUDAGRAPHS", device_override="CUDA", data_dtype=torch.bfloat16),
-    83: ConversionOption(mode="BF16+EXPORT+COMPILE_INDUCTOR_DEFAULT", data_dtype=torch.bfloat16),
-    84: ConversionOption(mode="BF16+EXPORT+COMPILE_INDUCTOR_REDUCE_OVERHEAD", data_dtype=torch.bfloat16),
-    85: ConversionOption(mode="BF16+EXPORT+COMPILE_INDUCTOR_MAX_AUTOTUNE", data_dtype=torch.bfloat16),
-    86: ConversionOption(mode="BF16+EXPORT+COMPILE_INDUCTOR_DEFAULT_EAGER_FALLBACK", data_dtype=torch.bfloat16),
-    87: ConversionOption(mode="BF16+EXPORT+COMPILE_ONNXRT", device_override="CUDA", data_dtype=torch.bfloat16),
-    88: ConversionOption(mode="BF16+EXPORT+COMPILE_OPENXLA", device_override="XLA_GPU", data_dtype=torch.bfloat16),
+    82: ConversionOption(
+        mode="BF16+EXPORT+COMPILE_CUDAGRAPHS",
+        device_override="CUDA",
+        data_dtype=torch.bfloat16,
+    ),
+    83: ConversionOption(
+        mode="BF16+EXPORT+COMPILE_INDUCTOR_DEFAULT", data_dtype=torch.bfloat16
+    ),
+    84: ConversionOption(
+        mode="BF16+EXPORT+COMPILE_INDUCTOR_REDUCE_OVERHEAD", data_dtype=torch.bfloat16
+    ),
+    85: ConversionOption(
+        mode="BF16+EXPORT+COMPILE_INDUCTOR_MAX_AUTOTUNE", data_dtype=torch.bfloat16
+    ),
+    86: ConversionOption(
+        mode="BF16+EXPORT+COMPILE_INDUCTOR_DEFAULT_EAGER_FALLBACK",
+        data_dtype=torch.bfloat16,
+    ),
+    87: ConversionOption(
+        mode="BF16+EXPORT+COMPILE_ONNXRT",
+        device_override="CUDA",
+        data_dtype=torch.bfloat16,
+    ),
+    88: ConversionOption(
+        mode="BF16+EXPORT+COMPILE_OPENXLA",
+        device_override="XLA_GPU",
+        data_dtype=torch.bfloat16,
+    ),
     89: ConversionOption(mode="BF16+EXPORT+COMPILE_TVM", data_dtype=torch.bfloat16),
-    90: ConversionOption(mode="BF16+EXPORT+COMPILE_TENSORRT", data_dtype=torch.bfloat16),
-    91: ConversionOption(mode="BF16+EXPORT+COMPILE_OPENVINO", data_dtype=torch.bfloat16),
+    90: ConversionOption(
+        mode="BF16+EXPORT+COMPILE_TENSORRT", data_dtype=torch.bfloat16
+    ),
+    91: ConversionOption(
+        mode="BF16+EXPORT+COMPILE_OPENVINO", data_dtype=torch.bfloat16
+    ),
     92: ConversionOption(mode="BF16+JIT_TRACE", data_dtype=torch.bfloat16),
     93: ConversionOption(mode="BF16+TORCH_SCRIPT", data_dtype=torch.bfloat16),
 }
