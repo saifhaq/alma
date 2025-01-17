@@ -3,6 +3,7 @@ from typing import Any, Dict
 
 import torch
 from model.model import Net
+from utils.file_utils import save_dict_to_json
 
 from alma.arguments.benchmark_args import parse_benchmark_args
 from alma.benchmark import BenchmarkConfig
@@ -93,6 +94,8 @@ def main() -> None:
         include_errors=True,
         include_traceback_for_errors=False,
     )
+
+    save_dict_to_json(results, "result.json")
 
 
 if __name__ == "__main__":
