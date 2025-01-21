@@ -7,7 +7,7 @@ logger = logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())
 
 
-def get_bfp16_eager_forward_call(
+def get_bf16_eager_forward_call(
     model: torch.nn.Module,
 ) -> Callable:
     """
@@ -36,3 +36,19 @@ def get_bfp16_eager_forward_call(
         return model(data)
 
     return forward
+
+
+def get_bf16_model(
+    model: torch.nn.Module,
+) -> torch.nn.Module:
+    """
+    Cast the model to brain half precision and return the model.
+
+    Inputs:
+    - model (torch.nn.Module): The model to cast to bf16 precision.
+
+    Returns:
+    - model (torch.nn.Module): the bf16 model.
+    """
+    model = model.to(torch.bfloat16)
+    return model

@@ -18,7 +18,7 @@
   </a>
 </h2>
 
-With just one function call, you can get a full report on how fast your PyTorch model runs for inference across over 40 conversion options, such as
+With just one function call, you can get a full report on how fast your PyTorch model runs for inference across over 90 conversion options, such as
 JIT tracing, torch.compile, torch.export, torchao, ONNX, OpenVINO, TensorRT, and many more!
 
 This allows one to find the best option for one's model, data, and hardware. See 
@@ -245,7 +245,28 @@ Below is a table summarizing the currently supported conversion options and thei
   | 69  |  FP16+EXPORT+COMPILE_OPENVINO                                  | CPU (Intel)   | torch.export + torch.compile + OpenVINO |
   | 70  |  FP16+JIT_TRACE                                                | CPU, MPS, GPU | PyTorch   |
   | 71  |  FP16+TORCH_SCRIPT                                             | CPU, MPS, GPU | PyTorch   |
-
+  | 72  |  BF16+COMPILE_CUDAGRAPHS                                       | GPU (CUDA)    | PyTorch + torch.compile |
+  | 73  |  BF16+COMPILE_INDUCTOR_DEFAULT                                 | CPU, MPS, GPU | PyTorch + torch.compile |
+  | 74  |  BF16+COMPILE_INDUCTOR_REDUCE_OVERHEAD                         | CPU, MPS, GPU | PyTorch + torch.compile |
+  | 75  |  BF16+COMPILE_INDUCTOR_MAX_AUTOTUNE                            | CPU, MPS, GPU | PyTorch + torch.compile |
+  | 76  |  BF16+COMPILE_INDUCTOR_EAGER_FALLBACK                          | CPU, MPS, GPU | PyTorch + torch.compile |
+  | 77  |  BF16+COMPILE_ONNXRT                                           | CPU, MPS, GPU | PyTorch + torch.compile + ONNXRT |
+  | 78  |  BF16+COMPILE_OPENXLA                                          | XLA_GPU       | PyTorch + torch.compile + OpenXLA |
+  | 79  |  BF16+COMPILE_TVM                                              | CPU, MPS, GPU | PyTorch + torch.compile + Apache TVM |
+  | 80  |  BF16+COMPILE_TENSORRT                                         | GPU (CUDA)    | PyTorch + torch.compile + NVIDIA TensorRT |
+  | 81  |  BF16+COMPILE_OPENVINO                                         | CPU (Intel)   | PyTorch + torch.compile + OpenVINO |
+  | 82  |  BF16+EXPORT+COMPILE_CUDAGRAPHS                                | GPU (CUDA)    | torch.export + torch.compile |
+  | 83  |  BF16+EXPORT+COMPILE_INDUCTOR_DEFAULT                          | CPU, MPS, GPU | torch.export + torch.compile |
+  | 84  |  BF16+EXPORT+COMPILE_INDUCTOR_REDUCE_OVERHEAD                  | CPU, MPS, GPU | torch.export + torch.compile |
+  | 85  |  BF16+EXPORT+COMPILE_INDUCTOR_MAX_AUTOTUNE                     | CPU, MPS, GPU | torch.export + torch.compile |
+  | 86  |  BF16+EXPORT+COMPILE_INDUCTOR_DEFAULT_EAGER_FALLBACK           | CPU, MPS, GPU | torch.export + torch.compile |
+  | 87  |  BF16+EXPORT+COMPILE_ONNXRT                                    | CPU, MPS, GPU | torch.export + torch.compile + ONNXRT |
+  | 88  |  BF16+EXPORT+COMPILE_OPENXLA                                   | XLA_GPU       | torch.export + torch.compile + OpenXLA |
+  | 89  |  BF16+EXPORT+COMPILE_TVM                                       | CPU, MPS, GPU | torch.export + torch.compile + Apache TVM |    
+  | 90  |  BF16+EXPORT+COMPILE_TENSORRT                                  | GPU (CUDA)    | torch.export + torch.compile + NVIDIA TensorRT |
+  | 91  |  BF16+EXPORT+COMPILE_OPENVINO                                  | CPU (Intel)   | torch.export + torch.compile + OpenVINO |
+  | 92  |  BF16+JIT_TRACE                                                | CPU, MPS, GPU | PyTorch   |
+  | 93  |  BF16+TORCH_SCRIPT                                             | CPU, MPS, GPU | PyTorch   |
 
 These conversion options are also all hard-coded in the [conversion options](src/alma/conversions/conversion_options.py)
 file, which is the source of truth.
