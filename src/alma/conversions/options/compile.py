@@ -37,18 +37,23 @@ def get_compiled_model(
     check_model_type(model, (torch.nn.Module, fx.GraphModule, ExportedProgram))
 
     # Compile the model, with suppressed internal logs if logging is above Debug level.
-    with suppress_output(logger.root.level >= logging.DEBUG):
-        # Reset env
-        torch._dynamo.reset()
+    # with suppress_output(logger.root.level >= logging.DEBUG):
+    # Reset env
+    torch._dynamo.reset()
 
-        # Set the compilation settings
-        compile_settings: Dict[str, str] = get_compile_settings(backend)
+    # Set the compilation settings
+    compile_settings: Dict[str, str] = get_compile_settings(backend)
 
-        with torch.no_grad():
+    with torch.no_grad():
+        if torch.backends.mps.is_available() and data.dtype == torch.float16:
+            model = model.float()
+            model = torch.compile(model, **compile_settings)
+            model = model.half()
+        else:
             model = torch.compile(model, **compile_settings)
 
-            # Feed some data through the model to make sure it works
-            _ = model(data)
+        # Feed some data through the model to make sure it works
+        _ = model(data)
 
     # Print model graph
     if logger.root.level <= logging.DEBUG:

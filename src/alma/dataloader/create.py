@@ -15,6 +15,7 @@ def create_single_tensor_dataloader(
     num_tensors: int = 100,
     random_type: str = "normal",
     random_params: Optional[dict] = None,
+    dtype: torch.dtype = torch.float32,
     **dataloader_kwargs,
 ) -> DataLoader:
     """
@@ -29,6 +30,7 @@ def create_single_tensor_dataloader(
         num_tensors: Number of random tensors to generate if no specific tensor provided
         random_type: Type of random tensors to generate ('normal', 'uniform', 'bernoulli')
         random_params: Parameters for random tensor generation
+        dtype: Data type of the tensor(s)
         **dataloader_kwargs: Additional arguments to pass to DataLoader
 
     Returns:
@@ -56,6 +58,7 @@ def create_single_tensor_dataloader(
         tensor=tensor,
         random_type=random_type,
         random_params=random_params,
+        dtype=dtype,
     )
 
     return DataLoader(

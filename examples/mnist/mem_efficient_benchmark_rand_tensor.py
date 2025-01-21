@@ -71,33 +71,28 @@ def main() -> None:
     # Prepare random data on the selected device for this conversion
     data = torch.rand(1, 3, 28, 28)
 
-    # Iterate through each selected conversion. We do this just to show that this is an alternate
-    # way to benchmark across multiple converisons, rather than passing in a list of conversions.
-    # Up to you how to to do it!
-    for conversion in conversions:
+    # Benchmark the model, fed in as a callable
+    # Feeding in a tensor, and no dataloader, will cause the benchmark_model function to generate a
+    # dataloader that provides random tensors of the same shape as `data`, which is used to
+    # benchmark the model.
+    # NOTE: one needs to squeeze the data tensor to remove the batch dimension
+    logging.info(
+        "Benchmarking model using random data, passing in a callable to initialise the model"
+    )
+    results: Dict[str, Dict[str, Any]] = benchmark_model(
+        model_init,
+        config,
+        conversions,
+        data=data.squeeze(),
+    )
 
-        # Benchmark the model, fed in as a callable
-        # Feeding in a tensor, and no dataloader, will cause the benchmark_model function to generate a
-        # dataloader that provides random tensors of the same shape as `data`, which is used to
-        # benchmark the model.
-        # NOTE: one needs to squeeze the data tensor to remove the batch dimension
-        logging.info(
-            "Benchmarking model using random data, passing in a callable to initialise the model"
-        )
-        results: Dict[str, Dict[str, Any]] = benchmark_model(
-            model_init,
-            config,
-            [conversion],
-            data=data.squeeze(),
-        )
-
-        # Display results for this conversion (errors shown, but without tracebacks)
-        display_all_results(
-            results,
-            display_function=print,
-            include_errors=True,
-            include_traceback_for_errors=False,
-        )
+    # Display results for this conversion (errors shown, but without tracebacks)
+    display_all_results(
+        results,
+        display_function=print,
+        include_errors=True,
+        include_traceback_for_errors=False,
+    )
 
 
 if __name__ == "__main__":

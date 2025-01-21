@@ -19,6 +19,7 @@ class SingleTensorDataset(Dataset):
             - For 'normal': {'mean': float, 'std': float}
             - For 'uniform': {'low': float, 'high': float}
             - For 'bernoulli': {'p': float}
+    - dtype (torch.dtype, optional): Data type of the tensor(s).
     """
 
     def __init__(
@@ -28,6 +29,7 @@ class SingleTensorDataset(Dataset):
         tensor: Optional[torch.Tensor] = None,
         random_type: str = "normal",
         random_params: Optional[dict] = None,
+        dtype: torch.dtype = torch.float32,
     ):
         self.tensor_size = (
             tensor_size if isinstance(tensor_size, tuple) else (tensor_size,)
@@ -35,17 +37,21 @@ class SingleTensorDataset(Dataset):
 
         if tensor is not None:
             # Use the provided tensor
-            self.tensors = [tensor]
+            self.tensors = [tensor.to(dtype)]
             self.length = 1
         else:
             # Generate random tensors
             self.length = num_tensors
             self.tensors = self._generate_random_tensors(
-                random_type, random_params or {}, num_tensors
+                random_type, random_params or {}, num_tensors, dtype
             )
 
     def _generate_random_tensors(
-        self, random_type: str, params: dict, num_tensors: int
+        self,
+        random_type: str,
+        params: dict,
+        num_tensors: int,
+        dtype: torch.dtype = torch.float32,
     ) -> List[torch.Tensor]:
         """Generate a list of random tensors based on specified parameters."""
         tensors = []
@@ -71,6 +77,8 @@ class SingleTensorDataset(Dataset):
                     "Use 'normal', 'uniform', or 'bernoulli'."
                 )
 
+            # Convert the tensor to the specified dtype
+            tensor = tensor.to(dtype)
             tensors.append(tensor)
 
         return tensors
