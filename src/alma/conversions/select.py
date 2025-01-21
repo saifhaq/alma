@@ -571,6 +571,122 @@ def select_forward_call_function(
             model = get_bf16_model(model)
             forward = get_torch_scripted_model_forward_call(model)
 
+        case "FP16+COMPILE_CUDAGRAPHS":
+            model = get_fp16_model(model)
+            forward = get_compiled_model_forward_call(model, data, backend="cudagraphs")
+
+        case "FP16+COMPILE_INDUCTOR_DEFAULT":
+            model = get_fp16_model(model)
+            forward = get_compiled_model_forward_call(
+                model, data, backend="inductor-default"
+            )
+
+        case "FP16+COMPILE_INDUCTOR_REDUCE_OVERHEAD":
+            model = get_fp16_model(model)
+            forward = get_compiled_model_forward_call(
+                model, data, backend="inductor-reduce-overhead"
+            )
+
+        case "FP16+COMPILE_INDUCTOR_MAX_AUTOTUNE":
+            model = get_fp16_model(model)
+            forward = get_compiled_model_forward_call(
+                model, data, backend="inductor-max-autotune"
+            )
+
+        case "FP16+COMPILE_INDUCTOR_EAGER_FALLBACK":
+            model = get_fp16_model(model)
+            forward = get_compiled_forward_call_eager_fallback(
+                model, data, backend="inductor-default"
+            )
+
+        case "FP16+COMPILE_ONNXRT":
+            model = get_fp16_model(model)
+            check_onnxrt()
+            forward = get_compiled_model_forward_call(model, data, backend="onnxrt")
+
+        case "FP16+COMPILE_OPENXLA":
+            model = get_fp16_model(model)
+            check_openxla()
+            forward = get_compiled_model_forward_call(model, data, backend="openxla")
+
+        case "FP16+COMPILE_TVM":
+            model = get_fp16_model(model)
+            check_tvm()
+            forward = get_compiled_model_forward_call(model, data, backend="tvm")
+
+        case "FP16+COMPILE_TENSORRT":
+            model = get_fp16_model(model)
+            check_tensort()
+            forward = get_compiled_model_forward_call(model, data, backend="tensorrt")
+
+        case "FP16+COMPILE_OPENVINO":
+            model = get_fp16_model(model)
+            forward = get_compiled_model_forward_call(model, data, backend="openvino")
+
+        case "FP16+EXPORT+COMPILE_CUDAGRAPHS":
+            model = get_fp16_model(model)
+            forward = get_export_compiled_forward_call(
+                model, data, backend="cudagraphs"
+            )
+
+        case "FP16+EXPORT+COMPILE_INDUCTOR_DEFAULT":
+            model = get_fp16_model(model)
+            forward = get_export_compiled_forward_call(
+                model, data, backend="inductor-default"
+            )
+
+        case "FP16+EXPORT+COMPILE_INDUCTOR_REDUCE_OVERHEAD":
+            model = get_fp16_model(model)
+            forward = get_export_compiled_forward_call(
+                model, data, backend="inductor-reduce-overhead"
+            )
+
+        case "FP16+EXPORT+COMPILE_INDUCTOR_MAX_AUTOTUNE":
+            model = get_fp16_model(model)
+            forward = get_export_compiled_forward_call(
+                model, data, backend="inductor-max-autotune"
+            )
+
+        case "FP16+EXPORT+COMPILE_INDUCTOR_DEFAULT_EAGER_FALLBACK":
+            model = get_fp16_model(model)
+            forward = get_export_compiled_forward_call_eager_fallback(
+                model,
+                data,
+                backend="inductor-default",
+            )
+
+        case "FP16+EXPORT+COMPILE_ONNXRT":
+            model = get_fp16_model(model)
+            check_onnxrt()
+            forward = get_export_compiled_forward_call(model, data, backend="onnxrt")
+
+        case "FP16+EXPORT+COMPILE_OPENXLA":
+            model = get_fp16_model(model)
+            check_openxla()
+            forward = get_export_compiled_forward_call(model, data, backend="openxla")
+
+        case "FP16+EXPORT+COMPILE_TVM":
+            model = get_fp16_model(model)
+            check_tvm()
+            forward = get_export_compiled_forward_call(model, data, backend="tvm")
+
+        case "FP16+EXPORT+COMPILE_TENSORRT":
+            model = get_fp16_model(model)
+            check_tensort()
+            forward = get_export_compiled_forward_call(model, data, backend="tensorrt")
+
+        case "FP16+EXPORT+COMPILE_OPENVINO":
+            model = get_fp16_model(model)
+            forward = get_export_compiled_forward_call(model, data, backend="openvino")
+
+        case "FP16+JIT_TRACE":
+            model = get_fp16_model(model)
+            forward = get_jit_traced_model_forward_call(model, data)
+
+        case "FP16+TORCH_SCRIPT":
+            model = get_fp16_model(model)
+            forward = get_torch_scripted_model_forward_call(model)
+
         case _:
             error_msg = f"The option {conversion} is not supported"
             assert conversion in MODEL_CONVERSION_OPTIONS.values(), error_msg
