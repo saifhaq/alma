@@ -159,7 +159,7 @@ multiprocessing setup, controlling graceful failures, setting default device fal
 option is incompatible with your specified device, memory efficient usage of `alma`, etc.
 
 ### Video
-See here for a YouTube video going over `alma` as well as a discussion of the documentation for 
+See below for a YouTube video going over `alma` as well as a discussion of the documentation for 
 advanced usages.
 
 [YouTube link.](https://www.youtube.com/watch?v=SV2LaqFv9HA)
