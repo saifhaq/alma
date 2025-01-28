@@ -158,10 +158,11 @@ See the [examples](./examples) for discussion of design choices and for examples
 multiprocessing setup, controlling graceful failures, setting default device fallbacks if a conversion
 option is incompatible with your specified device, memory efficient usage of `alma`, etc.
 
+### Video
 See here for a YouTube video going over `alma` as well as a discussion of the documentation for 
 advanced usages.
 
-[![Alma: Free Tool to Speed Up your PyTorch Model | Auto-Benchmark 50+ Conversion Options](https://ytcards.demolab.com/?id=SV2LaqFv9HA&title=Alma%3A+Free+Tool+to+Speed+Up+your+PyTorch+Model+%7C+Auto-Benchmark+50%2B+Conversion+Options&lang=en&timestamp=1736244024&background_color=%230d1117&title_color=%23ffffff&stats_color=%23dedede&max_title_lines=1&width=250&border_radius=5 "Alma: Free Tool to Speed Up your PyTorch Model | Auto-Benchmark 50+ Conversion Options")](https://www.youtube.com/watch?v=SV2LaqFv9HA)
+[![alma youtube video](assets/alma-logo-banner.jpg)](https://www.youtube.com/watch?v=SV2LaqFv9HA)
 
 ## Conversion Options
 
