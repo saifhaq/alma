@@ -162,7 +162,7 @@ option is incompatible with your specified device, memory efficient usage of `al
 See here for a YouTube video going over `alma` as well as a discussion of the documentation for 
 advanced usages.
 
-[![alma youtube video](assets/alma-logo-banner.jpg)](https://www.youtube.com/watch?v=SV2LaqFv9HA)
+[YouTube link.](https://www.youtube.com/watch?v=SV2LaqFv9HA)
 
 ## Conversion Options
 
