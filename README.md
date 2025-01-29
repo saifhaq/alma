@@ -30,6 +30,7 @@ This allows one to find the best option for one's model, data, and hardware. See
   - [Installation](#installation)
   - [Docker](#docker)
 - [Basic Usage](#basic-usage)
+- [Documentation](#documentation)
 - [Conversion Options](#conversion-options)
 - [Future Work](#future-work)
 - [How to Contribute](#how-to-contribute)
@@ -152,9 +153,16 @@ Total samples: 2048 - Batch size: 64
 Throughput: 611865.07 samples/second
 ```
 
+## Documentation
 See the [examples](./examples) for discussion of design choices and for examples of more advanced usage, e.g. controlling the 
 multiprocessing setup, controlling graceful failures, setting default device fallbacks if a conversion
 option is incompatible with your specified device, memory efficient usage of `alma`, etc.
+
+### Video
+See below for a YouTube video going over `alma` as well as a discussion of the documentation for 
+advanced usages.
+
+[YouTube link.](https://www.youtube.com/watch?v=SV2LaqFv9HA)
 
 ## Conversion Options
 
