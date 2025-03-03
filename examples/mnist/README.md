@@ -463,6 +463,27 @@ config = BenchmarkConfig(
 )
 ```
 
+## Non-blocking host to device data trasnfer
+In many cases, speedups can be gained via setting the transfer of data from host (e.g. CPU) to 
+device (e.g. GPU) to be `non_blocking`:
+```python
+cuda_tensor = cpu_tensor.to("cuda", non_blocking=True)
+```
+
+[This blog](https://pytorch.org/tutorials/intermediate/pinmem_nonblock.html) discusses it 
+extensively, as well as the option of using pinned memory in the data loader. We follow the 
+PyTorch convention of having it default to `False`, but provide it as an option in the config, one 
+can set it to `True`.
+
+```python
+config = BenchmarkConfig(
+    n_samples=args.n_samples,
+    batch_size=args.batch_size,
+    device=device,
+    non_blocking=True,
+)
+```
+
 ## Logging and CI integration
 
 A lot of the imported modules have verbose logging, and so `alma` provides some logging functions

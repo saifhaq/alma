@@ -54,6 +54,7 @@ def main() -> None:
         multiprocessing=True,  # If True, we test each method in its own isolated environment,
         # which helps keep methods from contaminating the global torch state
         fail_on_error=False,  # If False, we fail gracefully and keep testing other methods
+        non_blocking=False,  # If True, we don't block the main thread when transferring data from host to device
     )
 
     # Benchmark the model using the provided data loader.
