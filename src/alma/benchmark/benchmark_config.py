@@ -48,7 +48,8 @@ class BenchmarkConfig(BaseModel):
         default=None, description="Device for benchmarking."
     )
     non_blocking: bool = Field(
-        default=False, description="Blocking or not when transferring data from host to device"
+        default=False,
+        description="Blocking or not when transferring data from host to device",
     )
 
     class Config:
