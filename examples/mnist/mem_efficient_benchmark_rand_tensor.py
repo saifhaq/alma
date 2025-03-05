@@ -61,6 +61,7 @@ def main() -> None:
         multiprocessing=True,  # If True, we test each method in its own isolated environment,
         # which helps keep methods from contaminating the global torch state
         fail_on_error=False,  # If False, we fail gracefully and keep testing other methods
+        non_blocking=True,  # If True, we don't block the main thread when transferring data from host to device
         # Device options:
         allow_device_override=not args.no_device_override,  # Allow device override for device-specific conversions
         allow_cuda=not args.no_cuda,  # True allows CUDA as an override option

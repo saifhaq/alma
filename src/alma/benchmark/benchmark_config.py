@@ -19,6 +19,8 @@ class BenchmarkConfig(BaseModel):
         allow_cuda (bool): Allows CUDA usage if available. Defaults to True.
         allow_mps (bool): Allows MPS usage if available. Defaults to True.
         device (torch.device): Target device for benchmarking. Auto-selected if not provided.
+        non_blocking (bool): Whether to be blocking or not of the main thread when sending data
+        from host to device. Defaults to False.
     """
 
     n_samples: int = Field(
@@ -44,6 +46,10 @@ class BenchmarkConfig(BaseModel):
     )
     device: Optional[torch.device] = Field(
         default=None, description="Device for benchmarking."
+    )
+    non_blocking: bool = Field(
+        default=False,
+        description="Blocking or not when transferring data from host to device",
     )
 
     class Config:

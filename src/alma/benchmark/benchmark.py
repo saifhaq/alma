@@ -118,8 +118,7 @@ def benchmark(
             if total_samples >= n_samples:
                 break
 
-            # data = data.to(device, non_blocking=True)
-            data = data.to(device)
+            data = data.to(device, non_blocking=config.non_blocking)
             batch_start_time = time.perf_counter()
             _ = forward_call(data)
             batch_end_time = time.perf_counter()
