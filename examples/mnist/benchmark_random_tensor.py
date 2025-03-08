@@ -49,6 +49,7 @@ def main() -> None:
         "COMPILE_INDUCTOR_DEFAULT",
         "COMPILE_OPENXLA",
         "COMPILE_INDUCTOR_MAX_AUTOTUNE",
+        "COMPILE_CUDAGRAPHS",
     ]
     # conversions = [ConversionOption["EAGER"], ConversionOption["JIT_TRACE"], ConversionOption["TORCH_SCRIPT"], ConversionOption["COMPILE_INDUCTOR_DEFAULT"]]
 

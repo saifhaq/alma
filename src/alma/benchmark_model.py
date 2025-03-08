@@ -25,7 +25,7 @@ def benchmark_model(
     conversions: Optional[Union[List[ConversionOption], List[str]]] = None,
     data: Optional[torch.Tensor] = None,
     data_loader: Optional[DataLoader] = None,
-) -> Dict[str, Dict[str, Any]]:
+) -> Dict[str, Dict[str, Union[str, float, int, Exception]]]:
     """
     Benchmark the model on different conversion methods. If provided, the dataloader will be used.
     Else, a random dataloader will be created, in which case the `data` tensor must be provided
@@ -56,11 +56,15 @@ def benchmark_model(
         data_loader (Optional[DataLoader]): DataLoader for data samples. If provided, it takes precedence.
 
     Returns:
-    - all_results (Dict[str, Dict[str, Any]]): The results of the benchmarking for each conversion method.
+        Dict[str, Dict[str, Union[str, float, int, Exception]]]: The results of the benchmarking for each conversion method.
+            Each key is a conversion method name, and the value is a dictionary containing:
+            - For successful runs: elapsed time, total time, number of samples, and throughput
+            - For failed runs: error message and traceback (when fail_on_error=False)
         The key is the conversion method, and the value is a tuple containing the total elapsed
         time, the total time taken, the total number of samples, and the throughput of the model.
         If the conversion method failed and we fail gracefully, the value will be a dictionary
-        containing the error and traceback.            If a method fails, its value contains the error message and traceback.
+        containing the error and traceback.
+        If a method fails, its value contains the error message and traceback.
     """
     # If the config is a dictionary, we convert it to a BenchmarkConfig object
     if isinstance(config, dict):
@@ -149,8 +153,8 @@ if __name__ == "__main__":
     sample_data = torch.randn(32, 10)
 
     conversions = [
-        MODEL_CONVERSION_OPTIONS[0],  # EAGER mode
-        MODEL_CONVERSION_OPTIONS[2],  # ONNX_CPU mode
+        MODEL_CONVERSION_OPTIONS["EAGER"],  # EAGER mode
+        MODEL_CONVERSION_OPTIONS["EAGER+EXPORT"],  # EAGER+EXPORT
     ]
 
     # Run benchmark

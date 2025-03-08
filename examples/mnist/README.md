@@ -1,8 +1,15 @@
 # MNIST example
 
 This example of `alma` demonstrates how to train a simple model on the MNIST dataset and benchmark
-the model speed for different conversions using the `benchmark_model` API. Everything, from not using
-a dataloader, to error handling, CLI integration, multiprocessing, logging and debugging, is covered.
+the model speed for different conversions using the `benchmark_model` API. The example covers:
+
+- Using custom dataloaders or auto-generated data
+- Error handling and graceful failure modes
+- CLI integration and argument parsing
+- Multiprocessing for isolated benchmarking environments
+- Comprehensive logging and debugging support
+- Non-blocking data transfer optimization
+- Device fallback handling
 
 It also contains a script to download the MNIST dataset, and extensive example code on how to quantize
 a model using PTQ and QAT.
@@ -69,7 +76,13 @@ device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 model = ...
 
 # Load the data
-data_loader = ...
+data_loader = YourDataLoader(
+    dataset,
+    batch_size=100,
+    shuffle=False,
+    num_workers=8, # Along with pinned memory, number of workers can optimize data load times
+    pin_memory=True,
+)
 
 # Set the configuration
 config = BenchmarkConfig(
@@ -471,9 +484,9 @@ cuda_tensor = cpu_tensor.to("cuda", non_blocking=True)
 ```
 
 [This blog](https://pytorch.org/tutorials/intermediate/pinmem_nonblock.html) discusses it 
-extensively, as well as the option of using pinned memory in the data loader. We follow the 
-PyTorch convention of having it default to `False`, but provide it as an option in the config, one 
-can set it to `True`.
+extensively, as well as the option of using pinned memory and multiple workers in the data loader. 
+We follow the PyTorch convention of having it default to `False`, but provide it as an option in 
+the config, one can set it to `True`.
 
 ```python
 config = BenchmarkConfig(
