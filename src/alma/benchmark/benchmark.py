@@ -120,17 +120,19 @@ def benchmark(
 
     # Calculate number of full batches needed
     n_batches = (n_samples + config.batch_size - 1) // config.batch_size
-    
+
     # Benchmarking loop - only process full batches
     with torch.no_grad():
-        for i, (data, _) in enumerate(tqdm(
-            data_loader,
-            desc=f"Benchmarking {conversion.mode} on {device}",
-            total=n_batches,
-        )):
+        for i, (data, _) in enumerate(
+            tqdm(
+                data_loader,
+                desc=f"Benchmarking {conversion.mode} on {device}",
+                total=n_batches,
+            )
+        ):
             # Transfer data to device
             data = data.to(device, non_blocking=config.non_blocking)
-            
+
             # Run forward pass without per-batch timing
             _ = forward_call(data)
             total_samples += data.size(0)
