@@ -135,6 +135,9 @@ def benchmark(
             _ = forward_call(data)
             total_samples += data.size(0)
 
+            if total_samples > n_samples:
+                break
+
     # End timing and synchronize if needed
     if device.type == "cuda":
         end_event.record()
