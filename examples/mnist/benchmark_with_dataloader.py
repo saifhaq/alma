@@ -37,6 +37,10 @@ def main() -> None:
         dataset,
         batch_size=args.batch_size,
         shuffle=False,
+        # Multiple workers and pinned memory, along with non_blocking in the config, can speed up
+        # data loading and throughput.
+        # See this blog (https://pytorch.org/tutorials/intermediate/pinmem_nonblock.html)
+        # for details
         num_workers=8,
         pin_memory=True,
     )
@@ -58,7 +62,7 @@ def main() -> None:
         multiprocessing=True,  # If True, we test each method in its own isolated environment,
         # which helps keep methods from contaminating the global torch state
         fail_on_error=False,  # If False, we fail gracefully and keep testing other methods
-        non_blocking=False,  # If True, we don't block the main thread when transferring data from host to device
+        non_blocking=True,  # If True, we don't block the main thread when transferring data from host to device
     )
 
     # Benchmark the model using the provided data loader.
