@@ -118,44 +118,21 @@ def benchmark(
     else:
         start_time = time.perf_counter()
 
-    # List to store per-batch inference times
-    batch_times = []
-
-    # Benchmarking loop
+    # Calculate number of full batches needed
+    n_batches = (n_samples + config.batch_size - 1) // config.batch_size
+    
+    # Benchmarking loop - only process full batches
     with torch.no_grad():
-        for data, _ in tqdm(
+        for i, (data, _) in enumerate(tqdm(
             data_loader,
             desc=f"Benchmarking {conversion.mode} on {device}",
-            total=min(
-                len(data_loader),
-                (n_samples + config.batch_size - 1) // config.batch_size,
-            ),
-        ):
-            # Only process up to the remaining samples needed for the last batch
-            remaining_samples = n_samples - total_samples
-            if data.size(0) > remaining_samples:
-                data = data[:remaining_samples]
-
+            total=n_batches,
+        )):
             # Transfer data to device
             data = data.to(device, non_blocking=config.non_blocking)
-
-            # Time the forward pass
-            if device.type == "cuda":
-                batch_start = torch.cuda.Event(enable_timing=True)
-                batch_end = torch.cuda.Event(enable_timing=True)
-                batch_start.record()
-                _ = forward_call(data)
-                batch_end.record()
-                batch_end.synchronize()
-                batch_time = (
-                    batch_start.elapsed_time(batch_end) / 1000.0
-                )  # ms to seconds
-            else:
-                batch_start = time.perf_counter()
-                _ = forward_call(data)
-                batch_time = time.perf_counter() - batch_start
-
-            batch_times.append(batch_time)
+            
+            # Run forward pass without per-batch timing
+            _ = forward_call(data)
             total_samples += data.size(0)
 
     # End timing and synchronize if needed
@@ -171,18 +148,12 @@ def benchmark(
 
     throughput = total_samples / total_elapsed_time if total_elapsed_time > 0 else 0
 
-    # Calculate batch statistics
-    mean_batch_time = mean(batch_times) if batch_times else 0
-    batch_std = stdev(batch_times) if len(batch_times) > 1 else 0
-
     result: Dict[str, Any] = {
         "device": device,
         "total_elapsed_time": total_elapsed_time,
         "total_samples": total_samples,
         "batch_size": config.batch_size,
         "throughput": throughput,
-        "mean_batch_time": mean_batch_time,
-        "batch_time_std": batch_std,
         "status": "success",
         "data_dtype": conversion.data_dtype,
     }
