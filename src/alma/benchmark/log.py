@@ -62,9 +62,9 @@ def log_results(
     None
     """
     display_function(f"Device: {results['device']}")
-    display_function(f"Total elapsed time: {results['total_elapsed_time']:.6f} seconds")
+    display_function(f"Total elapsed time: {results['total_elapsed_time']:.3f} seconds")
     display_function(
-        f"Total inference time (model only): {results['total_inf_time']:.6f} seconds"
+        f"Mean batch time: {results['mean_batch_time']:.3f} seconds ± {results['batch_time_std']:.3f}"
     )
     display_function(
         f"Total samples: {results['total_samples']} - Batch size: {results['batch_size']}"

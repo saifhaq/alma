@@ -1,7 +1,9 @@
 import logging
 import time
-from typing import Any, Callable, Dict, Union
+from statistics import mean, stdev
+from typing import Any, Callable, Dict, List, Union
 
+import numpy as np
 import torch
 import torch._dynamo
 from torch.utils.data import DataLoader
@@ -29,7 +31,7 @@ def benchmark(
     conversion: ConversionOption,
     data: torch.Tensor,
     data_loader: DataLoader,
-) -> Dict[str, float]:
+) -> Dict[str, Union[torch.device, float, int, str, torch.dtype]]:
     """
     Benchmark the model using the given data loader. This function will benchmark the model using the
     given conversion method.
@@ -91,9 +93,7 @@ def benchmark(
     model.eval()
 
     # Initialize benchmark variables
-    total_inf_time = 0.0
     total_samples = 0
-    num_batches = 0
 
     # Get sample of data from dataloader. This overwrites the data tensor provided by the user
     data = get_sample_data(data_loader, device)
@@ -109,39 +109,80 @@ def benchmark(
     # Warmup
     warmup(forward_call, data_loader, device)
 
+    # Setup CUDA events for more accurate GPU timing if available
+    if device.type == "cuda":
+        start_event = torch.cuda.Event(enable_timing=True)
+        end_event = torch.cuda.Event(enable_timing=True)
+        torch.cuda.synchronize()
+        start_event.record()
+    else:
+        start_time = time.perf_counter()
+
+    # List to store per-batch inference times
+    batch_times = []
+
     # Benchmarking loop
-    start_time = time.perf_counter()  # Start timing for the entire process
     with torch.no_grad():
         for data, _ in tqdm(
-            data_loader, desc=f"Benchmarking {conversion.mode} on {device}"
+            data_loader,
+            desc=f"Benchmarking {conversion.mode} on {device}",
+            total=min(
+                len(data_loader),
+                (n_samples + config.batch_size - 1) // config.batch_size,
+            ),
         ):
-            if total_samples >= n_samples:
-                break
+            # Only process up to the remaining samples needed for the last batch
+            remaining_samples = n_samples - total_samples
+            if data.size(0) > remaining_samples:
+                data = data[:remaining_samples]
 
+            # Transfer data to device
             data = data.to(device, non_blocking=config.non_blocking)
-            batch_start_time = time.perf_counter()
-            _ = forward_call(data)
-            batch_end_time = time.perf_counter()
 
-            batch_size = min(data.size(0), n_samples - total_samples)
-            total_inf_time += batch_end_time - batch_start_time
-            total_samples += batch_size
-            num_batches += 1
+            # Time the forward pass
+            if device.type == "cuda":
+                batch_start = torch.cuda.Event(enable_timing=True)
+                batch_end = torch.cuda.Event(enable_timing=True)
+                batch_start.record()
+                _ = forward_call(data)
+                batch_end.record()
+                batch_end.synchronize()
+                batch_time = (
+                    batch_start.elapsed_time(batch_end) / 1000.0
+                )  # ms to seconds
+            else:
+                batch_start = time.perf_counter()
+                _ = forward_call(data)
+                batch_time = time.perf_counter() - batch_start
 
-            if total_samples >= n_samples:
-                break
+            batch_times.append(batch_time)
+            total_samples += data.size(0)
 
-    end_time = time.perf_counter()  # End timing for the entire process
+    # End timing and synchronize if needed
+    if device.type == "cuda":
+        end_event.record()
+        end_event.synchronize()
+        total_elapsed_time = (
+            start_event.elapsed_time(end_event) / 1000.0
+        )  # Convert ms to seconds
+    else:
+        end_time = time.perf_counter()
+        total_elapsed_time = end_time - start_time
 
-    total_elapsed_time = end_time - start_time
-    throughput = total_samples / total_inf_time if total_elapsed_time > 0 else 0
+    throughput = total_samples / total_elapsed_time if total_elapsed_time > 0 else 0
+
+    # Calculate batch statistics
+    mean_batch_time = mean(batch_times) if batch_times else 0
+    batch_std = stdev(batch_times) if len(batch_times) > 1 else 0
+
     result: Dict[str, Any] = {
         "device": device,
         "total_elapsed_time": total_elapsed_time,
-        "total_inf_time": total_inf_time,
         "total_samples": total_samples,
-        "batch_size": data.shape[0],
+        "batch_size": config.batch_size,
         "throughput": throughput,
+        "mean_batch_time": mean_batch_time,
+        "batch_time_std": batch_std,
         "status": "success",
         "data_dtype": conversion.data_dtype,
     }
