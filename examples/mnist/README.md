@@ -1,8 +1,15 @@
 # MNIST example
 
 This example of `alma` demonstrates how to train a simple model on the MNIST dataset and benchmark
-the model speed for different conversions using the `benchmark_model` API. Everything, from not using
-a dataloader, to error handling, CLI integration, multiprocessing, logging and debugging, is covered.
+the model speed for different conversions using the `benchmark_model` API. The example covers:
+
+- Using custom dataloaders or auto-generated data
+- Error handling and graceful failure modes
+- CLI integration and argument parsing
+- Multiprocessing for isolated benchmarking environments
+- Comprehensive logging and debugging support
+- Non-blocking data transfer optimization
+- Device fallback handling
 
 It also contains a script to download the MNIST dataset, and extensive example code on how to quantize
 a model using PTQ and QAT.
