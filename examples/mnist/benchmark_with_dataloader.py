@@ -13,7 +13,6 @@ from alma.arguments.benchmark_args import parse_benchmark_args
 from alma.benchmark import BenchmarkConfig
 from alma.benchmark.log import display_all_results
 from alma.benchmark_model import benchmark_model
-from alma.utils.load_model import load_model
 from alma.utils.setup_logging import setup_logging
 
 # One needs to set their quantization backend engine to what is appropriate for their system.
@@ -34,15 +33,20 @@ def main() -> None:
     dataset = BenchmarkCustomImageDataset(
         img_dir=args.data_dir, transform=InferenceTransform
     )
-    data_loader = CircularDataLoader(dataset, batch_size=args.batch_size, shuffle=False)
+    data_loader = CircularDataLoader(
+        dataset,
+        batch_size=args.batch_size,
+        shuffle=False,
+        num_workers=8,
+        pin_memory=True,
+    )
 
     # Set the device one wants to benchmark on
     device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
 
     # Load model
-    assert args.model_path is not None, "Please provide a model path"
     load_start_time = time.perf_counter()
-    model = load_model(args.model_path, device, logger=logging, modelArchitecture=Net)
+    model = Net()
     load_end_time = time.perf_counter()
     logging.info(f"Model loading time: {load_end_time - load_start_time:.4f} seconds")
 

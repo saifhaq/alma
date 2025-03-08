@@ -76,7 +76,13 @@ device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 model = ...
 
 # Load the data
-data_loader = ...
+data_loader = YourDataLoader(
+    dataset,
+    batch_size=100,
+    shuffle=False,
+    num_workers=8, # Along with pinned memory, number of workers can optimize data load times
+    pin_memory=True,
+)
 
 # Set the configuration
 config = BenchmarkConfig(
@@ -478,9 +484,9 @@ cuda_tensor = cpu_tensor.to("cuda", non_blocking=True)
 ```
 
 [This blog](https://pytorch.org/tutorials/intermediate/pinmem_nonblock.html) discusses it 
-extensively, as well as the option of using pinned memory in the data loader. We follow the 
-PyTorch convention of having it default to `False`, but provide it as an option in the config, one 
-can set it to `True`.
+extensively, as well as the option of using pinned memory and multiple workers in the data loader. 
+We follow the PyTorch convention of having it default to `False`, but provide it as an option in 
+the config, one can set it to `True`.
 
 ```python
 config = BenchmarkConfig(
