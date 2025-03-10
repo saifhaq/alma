@@ -1,7 +1,9 @@
 import logging
 import time
-from typing import Any, Callable, Dict, Union
+from statistics import mean, stdev
+from typing import Any, Callable, Dict, List, Union
 
+import numpy as np
 import torch
 import torch._dynamo
 from torch.utils.data import DataLoader
@@ -29,7 +31,7 @@ def benchmark(
     conversion: ConversionOption,
     data: torch.Tensor,
     data_loader: DataLoader,
-) -> Dict[str, float]:
+) -> Dict[str, Union[torch.device, float, int, str, torch.dtype]]:
     """
     Benchmark the model using the given data loader. This function will benchmark the model using the
     given conversion method.
@@ -91,9 +93,7 @@ def benchmark(
     model.eval()
 
     # Initialize benchmark variables
-    total_inf_time = 0.0
     total_samples = 0
-    num_batches = 0
 
     # Get sample of data from dataloader. This overwrites the data tensor provided by the user
     data = get_sample_data(data_loader, device)
@@ -109,38 +109,55 @@ def benchmark(
     # Warmup
     warmup(forward_call, data_loader, device)
 
-    # Benchmarking loop
-    start_time = time.perf_counter()  # Start timing for the entire process
+    # Setup CUDA events for more accurate GPU timing if available
+    if device.type == "cuda":
+        start_event = torch.cuda.Event(enable_timing=True)
+        end_event = torch.cuda.Event(enable_timing=True)
+        torch.cuda.synchronize()
+        start_event.record()
+    else:
+        start_time = time.perf_counter()
+
+    # Calculate number of full batches needed
+    n_batches = (n_samples + config.batch_size - 1) // config.batch_size
+
+    # Benchmarking loop - only process full batches
     with torch.no_grad():
-        for data, _ in tqdm(
-            data_loader, desc=f"Benchmarking {conversion.mode} on {device}"
+        for i, (data, _) in enumerate(
+            tqdm(
+                data_loader,
+                desc=f"Benchmarking {conversion.mode} on {device}",
+                total=n_batches,
+            )
         ):
-            if total_samples >= n_samples:
-                break
-
+            # Transfer data to device
             data = data.to(device, non_blocking=config.non_blocking)
-            batch_start_time = time.perf_counter()
+
+            # Run forward pass without per-batch timing
             _ = forward_call(data)
-            batch_end_time = time.perf_counter()
+            total_samples += data.size(0)
 
-            batch_size = min(data.size(0), n_samples - total_samples)
-            total_inf_time += batch_end_time - batch_start_time
-            total_samples += batch_size
-            num_batches += 1
-
-            if total_samples >= n_samples:
+            if total_samples > n_samples:
                 break
 
-    end_time = time.perf_counter()  # End timing for the entire process
+    # End timing and synchronize if needed
+    if device.type == "cuda":
+        end_event.record()
+        end_event.synchronize()
+        total_elapsed_time = (
+            start_event.elapsed_time(end_event) / 1000.0
+        )  # Convert ms to seconds
+    else:
+        end_time = time.perf_counter()
+        total_elapsed_time = end_time - start_time
 
-    total_elapsed_time = end_time - start_time
-    throughput = total_samples / total_inf_time if total_elapsed_time > 0 else 0
+    throughput = total_samples / total_elapsed_time if total_elapsed_time > 0 else 0
+
     result: Dict[str, Any] = {
         "device": device,
         "total_elapsed_time": total_elapsed_time,
-        "total_inf_time": total_inf_time,
         "total_samples": total_samples,
-        "batch_size": data.shape[0],
+        "batch_size": config.batch_size,
         "throughput": throughput,
         "status": "success",
         "data_dtype": conversion.data_dtype,
