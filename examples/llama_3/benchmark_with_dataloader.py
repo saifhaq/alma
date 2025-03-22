@@ -34,6 +34,9 @@ def pipe_call() -> callable:
 
     NOTE: THIS HAS TO BE DEFINED AT THE MODULE LEVEL, NOT NESTED INSIDE ANY FUNCTION. This is so
     that it is pickle-able, necessary for it to be passed to multi-processing.
+
+    For pipelines, for any kwargs we want to pass the model (e.g. `max_new_tokens`), these should
+    be defined at pipeline initialization as in the below example.
     """
     # Initialise HF transformers pipeline object, which will be our high-level model wrapper
     # we can pass to alma
@@ -44,7 +47,14 @@ def pipe_call() -> callable:
         torch_dtype=torch.float16,
         device_map="auto"
     )
-    pipe = TextGenerationPipeline(model=model, tokenizer=tokenizer)
+    pipe = TextGenerationPipeline(
+        model=model, 
+        tokenizer=tokenizer,
+        max_length=None,  # See issue: https://github.com/huggingface/transformers/issues/19358
+        max_new_tokens=100,  # Maximum tokens we allow the LLM to generate
+        min_new_tokens=99,  # Minimum tokens we allow the LLM to generate
+        num_return_sequences=1,  # How many sequences we want the model to return per prompt
+    )
     return pipe
 
 def main() -> None:
@@ -78,11 +88,6 @@ def main() -> None:
         # which helps keep methods from contaminating the global torch state
         fail_on_error=False,  # If False, we fail gracefully and keep testing other methods
         non_blocking=False,  # If True, we don't block the main thread when transferring data from host to device
-        pipeline_kwargs={
-            "max_new_tokens": args.max_new_tokens,
-            "min_new_tokens": args.min_new_tokens,
-            "num_return_sequences": args.num_return_sequences,
-        },
     )
 
     # Hard-code a list of options. These can be provided as a list of strings, or a list of ConversionOption objects
