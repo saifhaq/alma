@@ -59,7 +59,6 @@ def main() -> None:
 
     # Configuration for the benchmarking
     config = BenchmarkConfig(
-        model_type="torch.nn.Module",
         n_samples=args.n_samples,
         batch_size=args.batch_size,
         device=device,

@@ -1,28 +1,16 @@
-from typing import Optional, Any
+from typing import Any, Optional
 
 import torch
-from pydantic import BaseModel, Field, model_validator
-from enum import Enum
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 from alma.utils.device import setup_device
-
-class ModelTypeEnum(str, Enum):
-    TORCH_MODULE = "toch.nn.Module"
-    CALLABLE = "callable"
-    TEXT_GENERATION_PIPELINE = "TextGenerationPipeline"
-    # TEXT_CLASSIFICATION = "TextClassificationPipeline"
-    # TOKEN_CLASSIFICATION = "TokenClassificationPipeline"
-    # SUMMARIZATION = "SummarizationPipeline"
-    # TRANSLATION = "TranslationPipeline"
-    # QUESTION_ANSWERING = "QuestionAnsweringPipeline"
-
+from .model_type import ModelTypeEnum, validate_model_or_callable
 
 class BenchmarkConfig(BaseModel):
     """
     Configuration model for benchmarking a machine learning model.
 
     Attributes:
-        model_type (ModelTypeEnum): the type of the models we are expected to benchmark.
         n_samples (int): Number of samples to benchmark. Defaults to 128.
         batch_size (int): Batch size for benchmarking. Defaults to 128.
         multiprocessing (bool): Enables multiprocessing during benchmarking. Defaults to True.
@@ -35,9 +23,6 @@ class BenchmarkConfig(BaseModel):
         from host to device. Defaults to False.
     """
 
-    model_type: ModelTypeEnum = Field(
-        description="The type of model to benchmark"
-    )
     n_samples: int = Field(
         default=128, gt=0, description="Number of samples to benchmark."
     )
@@ -66,7 +51,7 @@ class BenchmarkConfig(BaseModel):
         default=False,
         description="Blocking or not when transferring data from host to device",
     )
-
+    
     class Config:
         arbitrary_types_allowed = True
 

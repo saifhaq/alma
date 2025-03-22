@@ -11,12 +11,10 @@ from ..conversions.conversion_options import ConversionOption
 from ..conversions.select import select_forward_call_function
 from ..dataloader.create import create_single_tensor_dataloader
 from ..utils.data import get_sample_data
-from ..utils.multiprocessing import LazyLoader, benchmark_error_handler, init_lazy_model
-from ..utils.times import inference_time_benchmarking  # should we use this?
+from ..utils.multiprocessing import benchmark_error_handler, init_lazy_model
 from .benchmark_config import BenchmarkConfig
 from .log import log_results
 from .warmup import warmup
-from .callable import check_and_return_callable
 
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())
@@ -28,8 +26,8 @@ def benchmark(
     model: Any,
     config: BenchmarkConfig,
     conversion: ConversionOption,
-    data: torch.Tensor,
-    data_loader: DataLoader,
+    data: Optional[torch.Tensor] = None,
+    data_loader: Optional[DataLoader] = None,
 ) -> Dict[str, Union[torch.device, float, int, str, torch.dtype]]:
     """
     Benchmark the model using the given data loader. This function will benchmark the model using the
@@ -46,8 +44,8 @@ def benchmark(
     isolated test environments).
     - config (BenchmarkConfig): The configuration for the benchmarking.
     - conversion (ConversionOption): The conversion method to benchmark.
-    - data (torch.Tensor): The input data to benchmark the model on.
-    - data_loader (DataLoader): The DataLoader to get samples of data from.
+    - data (Optional[torch.Tensor]): The input data to benchmark the model on.
+    - data_loader (Optional[DataLoader]): The DataLoader to get samples of data from.
 
     Outputs:
     - total_elapsed_time (float): The total elapsed time for the benchmark.
@@ -55,7 +53,7 @@ def benchmark(
     - total_samples (int): The total number of samples benchmarked.
     - throughput (float): The throughput of the model.
     """
-    # If the model is a LazyLoader instance, initialise it to get the model
+    # If the model is a LazyLoad instance, load it to initialize the model
     model = init_lazy_model(model)
 
     # Get the number of samples to benchmark
@@ -80,6 +78,7 @@ def benchmark(
             data.dtype == conversion.data_dtype
         ), f"The data loader dtype ({data.dtype}) does not match the conversion dtype ({conversion.data_dtype})."
 
+    import ipdb; ipdb.set_trace(); import pprint
     # Send the model to device
     model = model.to(device)
 
@@ -96,6 +95,7 @@ def benchmark(
     # benchmark on, since some conversions are only supported for certain devices, e.g.
     # PyTorch native quantized conversions requires CPU
     forward_call = select_forward_call_function(model, conversion.mode, data, device)
+    import ipdb; ipdb.set_trace(); import pprint
 
     # Clear all caches, etc.
     torch._dynamo.reset()

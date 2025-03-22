@@ -1,6 +1,8 @@
-import random, string
-from torch.utils.data import Dataset, Sampler
 import itertools
+import random
+import string
+
+from torch.utils.data import Dataset, Sampler
 
 BASE_PROMPTS = [
     "In a world where technology and nature have merged, cities now grow like forests and buildings bloom like flowers. The year is 2150, and I am walking through the streets of Neo-Singapore, where:",
@@ -18,7 +20,7 @@ BASE_PROMPTS = [
 
 def _randomword(length):
     """
-    Helper function to create a random word we add to base prompt to avoid cache hits on 
+    Helper function to create a random word we add to base prompt to avoid cache hits on
     prompts.
 
     Inputs:
@@ -28,10 +30,13 @@ def _randomword(length):
     (str): a string of `length` random underscore chars.
     """
     letters = string.ascii_lowercase
-    return ''.join(random.choice(letters) for i in range(length))
+    return "".join(random.choice(letters) for i in range(length))
+
 
 class PromptDataset(Dataset):
-    def __init__(self, include_random_prefix: bool = False, prompts: list[str] = BASE_PROMPTS):
+    def __init__(
+        self, include_random_prefix: bool = False, prompts: list[str] = BASE_PROMPTS
+    ):
         self.prompts = prompts
         self.include_random_prefix: bool = include_random_prefix
 
@@ -39,7 +44,7 @@ class PromptDataset(Dataset):
         # cache hits
         if include_random_prefix:
             self.__getitem__ = self.__getitem_with_rand_prefix__
-    
+
     def __len__(self):
         return len(self.prompts)
 
@@ -55,13 +60,12 @@ class CircularSampler(Sampler):
     def __init__(self, data_source, total_samples: int):
         self.data_source = data_source
         self.total_samples = total_samples
-    
+
     def __iter__(self):
         # Repeat indices to achieve the total number of samples needed
         return itertools.islice(
-            itertools.cycle(range(len(self.data_source))),
-            self.total_samples
+            itertools.cycle(range(len(self.data_source))), self.total_samples
         )
-    
+
     def __len__(self):
         return self.total_samples

@@ -11,7 +11,11 @@ logger.addHandler(logging.NullHandler())
 
 
 def warmup(
-        forward_call: Callable, data_loader: DataLoader, device: torch.device, kwargs: dict | None = None) -> None:
+    forward_call: Callable,
+    data_loader: DataLoader,
+    device: torch.device,
+    kwargs: dict | None = None,
+) -> None:
     """
     Warms up the forward call for a few iterations.
 

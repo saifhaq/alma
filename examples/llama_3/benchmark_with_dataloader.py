@@ -2,20 +2,22 @@ import logging
 from typing import Any, Dict
 
 import torch
-from transformers import LlamaTokenizer, LlamaForCausalLM, TextGenerationPipeline
+import os
 from torch.utils.data import DataLoader
+from transformers import AutoTokenizer, AutoModelForCausalLM, TextGenerationPipeline
 
 from alma.arguments.benchmark_args import parse_benchmark_args
-from alma.benchmark import TextGenerationPipelineBenchmarkConfig
+from alma.benchmark import BenchmarkConfig
 from alma.benchmark.log import display_all_results
 from alma.benchmark_model import benchmark_model
 from alma.utils.setup_logging import setup_logging
 
-from .data import PromptDataset, CircularSampler
+from data import CircularSampler, PromptDataset
 
 # One needs to set their quantization backend engine to what is appropriate for their system.
 # torch.backends.quantized.engine = 'x86'
 torch.backends.quantized.engine = "qnnpack"
+
 
 # It is a lot more memory efficienct, if multi-processing is enabled, to create the model in a
 # callable function, which can be called later to create the model.
@@ -41,14 +43,21 @@ def pipe_call() -> callable:
     # Initialise HF transformers pipeline object, which will be our high-level model wrapper
     # we can pass to alma
     # REQUIRES HUGGINGFACE_TOKEN TO BE AN ENVIRONMENTAL VARIABLE AND TO HAVE ACCEPTED THE META LICENSE
-    tokenizer = LlamaTokenizer.from_pretrained("meta-llama/Meta-Llama-3-8B-Instruct")
-    model = LlamaForCausalLM.from_pretrained(
-        "meta-llama/Meta-Llama-3-8B-Instruct", 
+    hf_token = os.getenv("HF_TOKEN")
+    if not hf_token:
+        raise RuntimeError(
+            """`HF_TOKEN` should be provided as an environmental variable, and one 
+should accept the Meta terms and conditions to download the LLama 3 8B Instruct model from HuggingFace"""
+        )
+
+    tokenizer = AutoTokenizer.from_pretrained("meta-llama/Meta-Llama-3-8B-Instruct")
+    model = AutoModelForCausalLM.from_pretrained(
+        "meta-llama/Meta-Llama-3-8B-Instruct",
         torch_dtype=torch.float16,
-        device_map="auto"
+        device_map="auto",
     )
     pipe = TextGenerationPipeline(
-        model=model, 
+        model=model,
         tokenizer=tokenizer,
         max_length=None,  # See issue: https://github.com/huggingface/transformers/issues/19358
         max_new_tokens=100,  # Maximum tokens we allow the LLM to generate
@@ -56,6 +65,7 @@ def pipe_call() -> callable:
         num_return_sequences=1,  # How many sequences we want the model to return per prompt
     )
     return pipe
+
 
 def main() -> None:
     # Set up logging. DEBUG level will also log the internal conversion logs (where available), as well
@@ -69,24 +79,46 @@ def main() -> None:
     # the prompts.
     dataset = PromptDataset(include_random_prefix=True)
     sampler = CircularSampler(dataset, args.n_samples)
-    data_loader = DataLoader(
-        dataset, 
-        batch_size=args.batch_size, 
-        sampler=sampler
-    )
-    
+    data_loader = DataLoader(dataset, batch_size=args.batch_size, sampler=sampler)
+
     # Set the device one wants to benchmark on
     device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
 
+    # Initialise HF transformers pipeline object, which will be our high-level model wrapper
+    # we can pass to alma
+    # REQUIRES HUGGINGFACE_TOKEN TO BE AN ENVIRONMENTAL VARIABLE AND TO HAVE ACCEPTED THE META LICENSE
+    hf_token = os.getenv("HF_TOKEN")
+    if not hf_token:
+        raise RuntimeError(
+            """`HF_TOKEN` should be provided as an environmental variable, and one 
+should accept the Meta terms and conditions to download the LLama 3 8B Instruct model from HuggingFace"""
+        )
+
+    tokenizer = AutoTokenizer.from_pretrained("meta-llama/Meta-Llama-3-8B-Instruct")
+    model = AutoModelForCausalLM.from_pretrained(
+        "meta-llama/Meta-Llama-3-8B-Instruct",
+        torch_dtype=torch.float16,
+        device_map="auto",
+    )
+
+    @lazyload
+    pipe = TextGenerationPipeline(
+        model=model,
+        tokenizer=tokenizer,
+        max_length=None,  # See issue: https://github.com/huggingface/transformers/issues/19358
+        max_new_tokens=100,  # Maximum tokens we allow the LLM to generate
+        min_new_tokens=99,  # Minimum tokens we allow the LLM to generate
+        num_return_sequences=1,  # How many sequences we want the model to return per prompt
+    )
+
     # Configuration for the benchmarking
-    config = TextGenerationPipelineBenchmarkConfig(
-        model_type="callable",
+    config = BenchmarkConfig(
         n_samples=args.n_samples,
-        batch_size=args.batch_size, 
+        batch_size=args.batch_size,
         device=device,
-        multiprocessing=True,  # If True, we test each method in its own isolated environment,
+        multiprocessing=False,  # If True, we test each method in its own isolated environment,
         # which helps keep methods from contaminating the global torch state
-        fail_on_error=False,  # If False, we fail gracefully and keep testing other methods
+        fail_on_error=True,  # If False, we fail gracefully and keep testing other methods
         non_blocking=False,  # If True, we don't block the main thread when transferring data from host to device
     )
 
@@ -106,7 +138,11 @@ def main() -> None:
     # NOTE: one needs to squeeze the data tensor to remove the batch dimension
     logging.info("Benchmarking model using random data")
     results: Dict[str, Dict[str, Any]] = benchmark_model(
-        pipe_call, config, conversions, data=None, data_loader=data_loader,
+        pipe,
+        config,
+        conversions,
+        data=None,
+        data_loader=data_loader,
     )
 
     # Display the results
