@@ -186,7 +186,7 @@ Below is a table summarizing the currently supported conversion options and thei
   | 2   |  ONNX_CPU                                         | CPU            | ONNXRT      |
   | 3   |  ONNX_GPU                                         | GPU            | ONNXRT      |
   | 4   |  ONNX+DYNAMO_EXPORT                               | CPU            | ONNXRT      |
-  | 5   |  COMPILE_CUDAGRAPHS                               | GPU (CUDA)     | torch.compile |
+  | 5   |  COMPILE_CUDAGRAPHS                               | GPU      | torch.compile |
   | 6   |  COMPILE_INDUCTOR_DEFAULT                         | CPU, MPS, GPU  | torch.compile |
   | 7   |  COMPILE_INDUCTOR_REDUCE_OVERHEAD                 | CPU, MPS, GPU  | torch.compile |
   | 8   |  COMPILE_INDUCTOR_MAX_AUTOTUNE                    | CPU, MPS, GPU  | torch.compile |
@@ -199,7 +199,7 @@ Below is a table summarizing the currently supported conversion options and thei
   | 15  |  EXPORT+AI8WI8_STATIC_QUANTIZED                   | CPU, MPS, GPU  | torch.export |
   | 16  |  EXPORT+AI8WI8_STATIC_QUANTIZED+RUN_DECOMPOSITION | CPU, MPS, GPU  | torch.export |
   | 17  |  EXPORT+AOT_INDUCTOR                              | CPU, MPS, GPU  | torch.export + aot_inductor |
-  | 18  |  EXPORT+COMPILE_CUDAGRAPHS                        | GPU (CUDA)     | torch.export + torch.compile |
+  | 18  |  EXPORT+COMPILE_CUDAGRAPHS                        | GPU      | torch.export + torch.compile |
   | 19  |  EXPORT+COMPILE_INDUCTOR_DEFAULT                  | CPU, MPS, GPU  | torch.export + torch.compile |
   | 20  |  EXPORT+COMPILE_INDUCTOR_REDUCE_OVERHEAD          | CPU, MPS, GPU  | torch.export + torch.compile |
   | 21  |  EXPORT+COMPILE_INDUCTOR_MAX_AUTOTUNE             | CPU, MPS, GPU  | torch.export + torch.compile |
@@ -209,8 +209,8 @@ Below is a table summarizing the currently supported conversion options and thei
   | 25  |  EXPORT+COMPILE_TVM                               | CPU, MPS, GPU  | torch.export + torch.compile + Apache TVM |
   | 26  |  NATIVE_CONVERT_AI8WI8_STATIC_QUANTIZED           | CPU            | CPU (PyTorch) |
   | 27  |  NATIVE_FAKE_QUANTIZED_AI8WI8_STATIC              | CPU, GPU       | CPU (PyTorch) |
-  | 28  |  COMPILE_TENSORRT                                 | GPU (CUDA)     | torch.compile + NVIDIA TensorRT |
-  | 29  |  EXPORT+COMPILE_TENSORRT                          | GPU (CUDA)     | torch.export + torch.compile + NVIDIA TensorRT |
+  | 28  |  COMPILE_TENSORRT                                 | GPU (NVIDIA)     | torch.compile + NVIDIA TensorRT |
+  | 29  |  EXPORT+COMPILE_TENSORRT                          | GPU (NVIDIA)     | torch.export + torch.compile + NVIDIA TensorRT |
   | 30  |  COMPILE_OPENVINO                                 | CPU (Intel)    | torch.compile + OpenVINO  |
   | 31  |  JIT_TRACE                                        | CPU, MPS, GPU  | PyTorch   |
   | 32  |  TORCH_SCRIPT                                     | CPU, MPS, GPU  | PyTorch   |
@@ -223,12 +223,12 @@ Below is a table summarizing the currently supported conversion options and thei
   | 39  |  OPTIMUM_QUANTO_Wf8E4M3N                          | CPU, MPS, GPU  | optimum quanto |
   | 40  |  OPTIMUM_QUANTO_Wf8E4M3NUZ                        | CPU, MPS, GPU  | optimum quanto |
   | 41  |  OPTIMUM_QUANTO_Wf8E5M2                           | CPU, MPS, GPU  | optimum quanto |
-  | 42  |  OPTIMUM_QUANTO_Wf8E5M2+COMPILE_CUDAGRAPHS        | GPU (CUDA)     | optimum quanto + torch.compile |
+  | 42  |  OPTIMUM_QUANTO_Wf8E5M2+COMPILE_CUDAGRAPHS        | GPU      | optimum quanto + torch.compile |
   | 43  |  FP16+EAGER                                       | CPU, MPS, GPU  | PyTorch   |
   | 44  |  BF16+EAGER                                       | CPU, MPS, GPU (not all GPUs natively supported)  | PyTorch   |
   | 45  |  COMPILE_INDUCTOR_MAX_AUTOTUNE+<br>TORCHAO_AUTOQUANT_DEFAULT    | GPU  | torch.compile + torchao |
   | 46  |  COMPILE_INDUCTOR_MAX_AUTOTUNE+<br>TORCHAO_AUTOQUANT_NONDEFAULT | GPU  | torch.compile + torchao |
-  | 47  |  COMPILE_CUDAGRAPHS+<br>TORCHAO_AUTOQUANT_DEFAULT               | GPU (CUDA) | torch.compile + torchao |
+  | 47  |  COMPILE_CUDAGRAPHS+<br>TORCHAO_AUTOQUANT_DEFAULT               | GPU  | torch.compile + torchao |
   | 48  |  COMPILE_INDUCTOR_MAX_AUTOTUNE+<br>TORCHAO_QUANT_I4_WEIGHT_ONLY | GPU (requires bf16 support)  | torch.compile + torchao |
   | 49  |  TORCHAO_QUANT_I4_WEIGHT_ONLY                                  | GPU (requires bf16 support) | torchao |
   | 50  |  FP16+COMPILE_CUDAGRAPHS                                       | GPU (CUDA) | PyTorch + torch.compile |
@@ -239,9 +239,9 @@ Below is a table summarizing the currently supported conversion options and thei
   | 55  |  FP16+COMPILE_ONNXRT                                           | CPU, MPS, GPU | PyTorch + torch.compile + ONNXRT |
   | 56  |  FP16+COMPILE_OPENXLA                                          | XLA_GPU       | PyTorch + torch.compile + OpenXLA |
   | 57  |  FP16+COMPILE_TVM                                              | CPU, MPS, GPU | PyTorch + torch.compile + Apache TVM |
-  | 58  |  FP16+COMPILE_TENSORRT                                         | GPU (CUDA)    | PyTorch + torch.compile + NVIDIA TensorRT |
+  | 58  |  FP16+COMPILE_TENSORRT                                         | GPU (NVIDIA)    | PyTorch + torch.compile + NVIDIA TensorRT |
   | 59  |  FP16+COMPILE_OPENVINO                                         | CPU (Intel)   | PyTorch + torch.compile + OpenVINO |
-  | 60  |  FP16+EXPORT+COMPILE_CUDAGRAPHS                                | GPU (CUDA)    | torch.export + torch.compile |
+  | 60  |  FP16+EXPORT+COMPILE_CUDAGRAPHS                                | GPU     | torch.export + torch.compile |
   | 61  |  FP16+EXPORT+COMPILE_INDUCTOR_DEFAULT                          | CPU, MPS, GPU | torch.export + torch.compile |
   | 62  |  FP16+EXPORT+COMPILE_INDUCTOR_REDUCE_OVERHEAD                  | CPU, MPS, GPU | torch.export + torch.compile |
   | 63  |  FP16+EXPORT+COMPILE_INDUCTOR_MAX_AUTOTUNE                     | CPU, MPS, GPU | torch.export + torch.compile |
@@ -249,11 +249,11 @@ Below is a table summarizing the currently supported conversion options and thei
   | 65  |  FP16+EXPORT+COMPILE_ONNXRT                                    | CPU, MPS, GPU | torch.export + torch.compile + ONNXRT |
   | 66  |  FP16+EXPORT+COMPILE_OPENXLA                                   | XLA_GPU       | torch.export + torch.compile + OpenXLA |
   | 67  |  FP16+EXPORT+COMPILE_TVM                                       | CPU, MPS, GPU | torch.export + torch.compile + Apache TVM |    
-  | 68  |  FP16+EXPORT+COMPILE_TENSORRT                                  | GPU (CUDA)    | torch.export + torch.compile + NVIDIA TensorRT |
+  | 68  |  FP16+EXPORT+COMPILE_TENSORRT                                  | GPU (NVIDIA)    | torch.export + torch.compile + NVIDIA TensorRT |
   | 69  |  FP16+EXPORT+COMPILE_OPENVINO                                  | CPU (Intel)   | torch.export + torch.compile + OpenVINO |
   | 70  |  FP16+JIT_TRACE                                                | CPU, MPS, GPU | PyTorch   |
   | 71  |  FP16+TORCH_SCRIPT                                             | CPU, MPS, GPU | PyTorch   |
-  | 72  |  BF16+COMPILE_CUDAGRAPHS                                       | GPU (CUDA)    | PyTorch + torch.compile |
+  | 72  |  BF16+COMPILE_CUDAGRAPHS                                       | GPU     | PyTorch + torch.compile |
   | 73  |  BF16+COMPILE_INDUCTOR_DEFAULT                                 | CPU, MPS, GPU | PyTorch + torch.compile |
   | 74  |  BF16+COMPILE_INDUCTOR_REDUCE_OVERHEAD                         | CPU, MPS, GPU | PyTorch + torch.compile |
   | 75  |  BF16+COMPILE_INDUCTOR_MAX_AUTOTUNE                            | CPU, MPS, GPU | PyTorch + torch.compile |
@@ -261,9 +261,9 @@ Below is a table summarizing the currently supported conversion options and thei
   | 77  |  BF16+COMPILE_ONNXRT                                           | CPU, MPS, GPU | PyTorch + torch.compile + ONNXRT |
   | 78  |  BF16+COMPILE_OPENXLA                                          | XLA_GPU       | PyTorch + torch.compile + OpenXLA |
   | 79  |  BF16+COMPILE_TVM                                              | CPU, MPS, GPU | PyTorch + torch.compile + Apache TVM |
-  | 80  |  BF16+COMPILE_TENSORRT                                         | GPU (CUDA)    | PyTorch + torch.compile + NVIDIA TensorRT |
+  | 80  |  BF16+COMPILE_TENSORRT                                         | GPU (NVIDIA)    | PyTorch + torch.compile + NVIDIA TensorRT |
   | 81  |  BF16+COMPILE_OPENVINO                                         | CPU (Intel)   | PyTorch + torch.compile + OpenVINO |
-  | 82  |  BF16+EXPORT+COMPILE_CUDAGRAPHS                                | GPU (CUDA)    | torch.export + torch.compile |
+  | 82  |  BF16+EXPORT+COMPILE_CUDAGRAPHS                                | GPU     | torch.export + torch.compile |
   | 83  |  BF16+EXPORT+COMPILE_INDUCTOR_DEFAULT                          | CPU, MPS, GPU | torch.export + torch.compile |
   | 84  |  BF16+EXPORT+COMPILE_INDUCTOR_REDUCE_OVERHEAD                  | CPU, MPS, GPU | torch.export + torch.compile |
   | 85  |  BF16+EXPORT+COMPILE_INDUCTOR_MAX_AUTOTUNE                     | CPU, MPS, GPU | torch.export + torch.compile |
@@ -271,10 +271,11 @@ Below is a table summarizing the currently supported conversion options and thei
   | 87  |  BF16+EXPORT+COMPILE_ONNXRT                                    | CPU, MPS, GPU | torch.export + torch.compile + ONNXRT |
   | 88  |  BF16+EXPORT+COMPILE_OPENXLA                                   | XLA_GPU       | torch.export + torch.compile + OpenXLA |
   | 89  |  BF16+EXPORT+COMPILE_TVM                                       | CPU, MPS, GPU | torch.export + torch.compile + Apache TVM |    
-  | 90  |  BF16+EXPORT+COMPILE_TENSORRT                                  | GPU (CUDA)    | torch.export + torch.compile + NVIDIA TensorRT |
+  | 90  |  BF16+EXPORT+COMPILE_TENSORRT                                  | GPU (NVIDIA)    | torch.export + torch.compile + NVIDIA TensorRT |
   | 91  |  BF16+EXPORT+COMPILE_OPENVINO                                  | CPU (Intel)   | torch.export + torch.compile + OpenVINO |
   | 92  |  BF16+JIT_TRACE                                                | CPU, MPS, GPU | PyTorch   |
   | 93  |  BF16+TORCH_SCRIPT                                             | CPU, MPS, GPU | PyTorch   |
+  | 94  |  AOT_IREE                                                      | CPU, GPU      | IREE   |
 
 These conversion options are also all hard-coded in the [conversion options](src/alma/conversions/conversion_options.py)
 file, which is the source of truth.

@@ -24,6 +24,7 @@ from .options.export_compile import (
     get_export_compiled_forward_call,
     get_export_compiled_forward_call_eager_fallback,
 )
+from .options.aot_iree import get_aot_iree_forward_call
 from .options.export_eager import get_export_eager_forward_call
 from .options.export_quant import get_quant_exported_forward_call
 from .options.fake_quant import get_fake_quantized_model_forward_call
@@ -122,6 +123,11 @@ def select_forward_call_function(
                 model,
                 data,
                 backend="inductor-default",
+            )
+
+        case "AOT_IREE":
+            forward = get_aot_iree_forward_call(
+                model, data
             )
 
         case "EXPORT+AOT_INDUCTOR":

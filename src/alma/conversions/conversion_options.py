@@ -221,6 +221,7 @@ MODEL_CONVERSION_OPTIONS: dict[int, ConversionOption] = {
     ),
     92: ConversionOption(mode="BF16+JIT_TRACE", data_dtype=torch.bfloat16),
     93: ConversionOption(mode="BF16+TORCH_SCRIPT", data_dtype=torch.bfloat16),
+    93: ConversionOption(mode="AOT_IREE"),
 }
 
 
