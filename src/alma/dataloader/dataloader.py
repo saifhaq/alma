@@ -1,6 +1,7 @@
 from typing import List, Optional, Tuple, Union
 
 import torch
+import numpy as np
 from torch.utils.data import Dataset
 
 
@@ -78,7 +79,11 @@ class SingleTensorDataset(Dataset):
                 )
 
             # Convert the tensor to the specified dtype
-            tensor = tensor.to(dtype)
+            if isinstance(dtype, np.dtype):
+                tensor = tensor.detach().cpu().numpy().astype(dtype)
+            else:
+                tensor = tensor.to(dtype)
+
             tensors.append(tensor)
 
         return tensors
@@ -87,5 +92,5 @@ class SingleTensorDataset(Dataset):
         return self.length
 
     def __getitem__(self, idx: int) -> torch.Tensor:
-        # Return the tensor at the specified index, and the index itself
-        return self.tensors[idx], idx
+        # Return the tensor at the specified index
+        return self.tensors[idx]

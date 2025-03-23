@@ -1,6 +1,7 @@
 from typing import List, Optional, Union
 
 import torch
+import numpy as np
 from pydantic import BaseModel, Field, validator
 
 
@@ -21,7 +22,7 @@ class ConversionOption(BaseModel):
         None,
         description="Optional override for the target device, e.g., 'CPU', 'CUDA', etc.",
     )
-    data_dtype: Optional[torch.dtype] = Field(  # Specify the type hint correctly
+    data_dtype: Optional[Union[torch.dtype, np.dtype]] = Field(
         default=torch.float32, description="The data type of the input data."
     )
 
@@ -29,11 +30,26 @@ class ConversionOption(BaseModel):
     def validate_dtype(cls, v):
         if v is None:
             return None
+
         if isinstance(v, str):
             # Convert string representation to torch.dtype
             return getattr(torch, v)
+
         if isinstance(v, torch.dtype):
             return v
+
+        # Handle np.dtype
+        if isinstance(v, np.dtype):
+            return v
+
+        # Handle numpy scalar types (like np.float32)
+        if hasattr(np, "dtype") and hasattr(v, "dtype"):
+            return np.dtype(v)
+
+        # Handle direct type objects
+        if v in (np.float32, np.float64, np.int32, np.int64):
+            return np.dtype(v)
+
         raise ValueError(f"Invalid dtype: {v}")
 
 
@@ -221,7 +237,7 @@ MODEL_CONVERSION_OPTIONS: dict[int, ConversionOption] = {
     ),
     92: ConversionOption(mode="BF16+JIT_TRACE", data_dtype=torch.bfloat16),
     93: ConversionOption(mode="BF16+TORCH_SCRIPT", data_dtype=torch.bfloat16),
-    93: ConversionOption(mode="AOT_IREE"),
+    94: ConversionOption(mode="AOT_IREE", data_dtype=np.float32),
 }
 
 

@@ -13,7 +13,7 @@ def get_sample_data(data_loader: DataLoader, device: torch.device) -> torch.Tens
     Outputs:
     - data (torch.Tensor): A sample of data from the DataLoader
     """
-    for data, _ in data_loader:
+    for data in data_loader:
         data = data.to(device)
         return data
     raise ValueError("DataLoader is empty")

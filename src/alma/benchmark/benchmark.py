@@ -23,7 +23,7 @@ logger = logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())
 
 
-@benchmark_error_handler
+# @benchmark_error_handler
 def benchmark(
     device: torch.device,
     model: Union[torch.nn.Module, Callable],
@@ -64,9 +64,10 @@ def benchmark(
             model, torch.nn.Module
         ), "The provided callable should return a PyTorch model"
 
-    # Get the number of samples to benchmark
+    # Get the number of samples to benchmark, and the dtype
     n_samples = config.n_samples
     batch_size = config.batch_size
+    dtype = conversion.data_dtype
 
     # Creates a dataloader with random data, of the same size as the input data sample
     # If the data_loader has been provided by the user, we use that one
@@ -77,14 +78,14 @@ def benchmark(
             random_type="normal",
             random_params={"mean": 0.0, "std": 2.0},
             batch_size=batch_size,
-            dtype=conversion.data_dtype,
+            dtype=dtype,
         )
     else:
         # If a data loader is provided, we check that the data dtype matches the conversion dtype
         data = get_sample_data(data_loader, device)
         assert (
-            data.dtype == conversion.data_dtype
-        ), f"The data loader dtype ({data.dtype}) does not match the conversion dtype ({conversion.data_dtype})."
+            data.dtype == dtype
+        ), f"The data loader dtype ({data.dtype}) does not match the conversion dtype ({dtype})."
 
     # Send the model to device
     model = model.to(device)
@@ -96,11 +97,17 @@ def benchmark(
     total_samples = 0
 
     # Get sample of data from dataloader. This overwrites the data tensor provided by the user
-    data = get_sample_data(data_loader, device)
+    if isinstance(dtype, np.dtype):
+        dataloader_iter = iter(data_loader)
+        data = next(dataloader_iter)
+    else:
+        data = get_sample_data(data_loader, device)
 
     # Get the forward call of the model, which we will benchmark. We also return the device we will
     # benchmark on, since some conversions are only supported for certain devices, e.g.
     # PyTorch native quantized conversions requires CPU
+    import ipdb; ipdb.set_trace()
+    #NOTE: FIGURE OUT FORMAT TO BEED IREE, LIST OF NP TENSORS?
     forward_call = select_forward_call_function(model, conversion.mode, data, device)
 
     # Clear all caches, etc.
@@ -123,7 +130,7 @@ def benchmark(
 
     # Benchmarking loop - only process full batches
     with torch.no_grad():
-        for i, (data, _) in enumerate(
+        for i, data in enumerate(
             tqdm(
                 data_loader,
                 desc=f"Benchmarking {conversion.mode} on {device}",

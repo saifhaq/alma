@@ -25,12 +25,13 @@ def warmup(
     Outputs:
     None
     """
-    with suppress_output(logger.root.level >= logging.DEBUG):
-        counter = 0
-        with torch.no_grad():
-            for data, _ in data_loader:
-                data = data.to(device)
-                _ = forward_call(data)
-                counter += 1
-                if counter > 10:
-                    return
+    # with suppress_output(logger.root.level >= logging.DEBUG):
+    counter = 0
+    with torch.no_grad():
+        for data in data_loader:
+            import ipdb; ipdb.set_trace()
+            data = data.to(device)
+            _ = forward_call(data)
+            counter += 1
+            if counter > 10:
+                return

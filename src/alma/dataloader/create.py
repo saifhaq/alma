@@ -1,9 +1,11 @@
 from typing import Optional, Tuple, Union
 
 import torch
-from torch.utils.data import DataLoader, Dataset
+import numpy as np
+from torch.utils.data import DataLoader, Dataset, default_collate
 
 from .dataloader import SingleTensorDataset
+from .np_collate import np_collate
 
 
 def create_single_tensor_dataloader(
@@ -66,7 +68,12 @@ def create_single_tensor_dataloader(
         batch_size=batch_size,
         shuffle=shuffle,
         num_workers=num_workers,
-        **dataloader_kwargs,
+        collate_fn=(
+            default_collate
+            if not isinstance(dtype, np.dtype)
+            else np_collate
+        ),
+        **dataloader_kwargs
     )
 
 

@@ -30,7 +30,7 @@ class BenchmarkCustomImageDataset(Dataset):
         image = read_image(img_path)
         if self.transform:
             image = self.transform(image)
-        return image, 0  # Returning 0 as label since it's not used for benchmarking
+        return image
 
 
 class CustomImageDataset(Dataset):
@@ -69,4 +69,4 @@ class InferenceDataset(Dataset):
         image = read_image(img_path)
         if self.transform:
             image = self.transform(image)
-        return image, img_path
+        return image
