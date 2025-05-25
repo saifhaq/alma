@@ -39,6 +39,24 @@ class LazyLoader:
         return getattr(self.load(), name)
 
 
+def init_lazy_model(obj_or_cls):
+    """
+    Get the original class from a lazy-loaded object or class.
+    
+    Args:
+        obj_or_cls: LazyLoader instance or lazyloaded class
+        
+    Returns:
+        The original class, or the input if it's not lazy-loaded
+    """
+    if isinstance(obj_or_cls, LazyLoader):
+        return obj_or_cls._cls
+    elif hasattr(obj_or_cls, '_original_class'):
+        return obj_or_cls._original_class
+    else:
+        return obj_or_cls
+
+
 def lazyload(cls: Type[T]) -> Type[T]:
     """
     Decorator that makes class instantiation lazy.
