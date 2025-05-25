@@ -25,7 +25,7 @@ def main() -> None:
     # whatever logging one wishes, or none.
     setup_logging(log_file=None, level="INFO")
 
-    args, conversions = parse_benchmark_args()
+    args, _ = parse_benchmark_args()
 
     # Create dataset and circular dataloader. We add a random string input to reduce cache hits on
     # the prompts.
@@ -103,7 +103,7 @@ should accept the Meta terms and conditions to download the LLama 3 8B Instruct 
     # Hard-code a list of options. These can be provided as a list of strings, or a list of ConversionOption objects
     conversions = [
         "EAGER",
-        "JIT_TRACE",
+        # "JIT_TRACE",
         "COMPILE_INDUCTOR_DEFAULT",
         # "COMPILE_OPENXLA",
         # "COMPILE_INDUCTOR_MAX_AUTOTUNE",

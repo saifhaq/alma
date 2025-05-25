@@ -48,10 +48,12 @@ def get_compiled_model(
     with torch.no_grad():
         if torch.backends.mps.is_available() and data.dtype == torch.float16:
             model = model.float()
-            model = torch.compile(model, **compile_settings)
+            with suppress_output(logger.root.level >= logging.DEBUG):
+                model = torch.compile(model, **compile_settings)
             model = model.half()
         else:
-            model = torch.compile(model, **compile_settings)
+            with suppress_output(logger.root.level >= logging.DEBUG):
+                model = torch.compile(model, **compile_settings)
 
         # Feed some data through the model to make sure it works
         _ = model(data)

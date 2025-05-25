@@ -23,7 +23,7 @@ logger = logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())
 
 
-@benchmark_error_handler
+# @benchmark_error_handler
 def benchmark(
     device: torch.device,
     model: Any,
@@ -231,7 +231,9 @@ def hf_pipeline_benchmark(
         end_time = time.perf_counter()
         total_elapsed_time = end_time - start_time
 
-    throughput = total_prompts / total_elapsed_time if total_elapsed_time > 0 else 0
+    output_throughput = total_output_tokens / total_elapsed_time if total_elapsed_time > 0 else 0
+    input_throughput = total_input_tokens / total_elapsed_time if total_elapsed_time > 0 else 0
+    request_rate = total_prompts / total_elapsed_time if total_elapsed_time > 0 else 0
 
     result = TextGenerationPipelineMetrics(
         device=device,
@@ -240,7 +242,9 @@ def hf_pipeline_benchmark(
         total_input_tokens=total_input_tokens,
         total_output_tokens=total_output_tokens,
         batch_size=config.batch_size,
-        throughput=throughput,
+        output_throughput=output_throughput,
+        input_throughput=input_throughput,
+        request_rate=request_rate,
         status="success",
         data_dtype=conversion.data_dtype,
     )

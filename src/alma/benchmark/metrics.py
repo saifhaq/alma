@@ -33,9 +33,6 @@ class BenchmarkMetrics(BaseModel):
     batch_size: int = Field(
         gt=0, description="Batch size for benchmarking."
     )
-    throughput: float = Field(
-        description="Throughput of processed samples / output tokens"
-    )
     status: BenchmarkStatus = Field(
         description="Whether the benchmark succeeded or failed"
     )
@@ -65,6 +62,9 @@ class TorchModuleMetrics(BenchmarkMetrics):
     total_samples: int = Field(
         gt=0, description="Total samples processed"
     )
+    throughput: float = Field(
+        description="Throughput of processed samples"
+    )
 
 
 class TextGenerationPipelineMetrics(BenchmarkMetrics):
@@ -80,5 +80,14 @@ class TextGenerationPipelineMetrics(BenchmarkMetrics):
     )
     total_output_tokens: int = Field(
         gt=0, description="Total output tokens generated"
+    )
+    output_throughput: float = Field(
+        description="Output token throughput"
+    )
+    input_throughput: float = Field(
+        description="Intput token throughput"
+    )
+    request_rate: float = Field(
+        description="Rate that the prompts are processed"
     )
 
