@@ -8,6 +8,7 @@ from utils.file_utils import save_dict_to_json
 from alma.benchmark import BenchmarkConfig
 from alma.benchmark.log import display_all_results
 from alma.benchmark_model import benchmark_model
+from alma.utils.multiprocessing.lazyload import lazyload
 from alma.utils.setup_logging import setup_logging
 
 # One needs to set their quantization backend engine to what is appropriate for their system.
@@ -28,6 +29,9 @@ def main() -> None:
     data = torch.rand(1, 3, 28, 28)
 
     # Load model (random weights)
+    # NOTE: We use the lazyload decorator to ensure this is alo loaded once it is used, which can have better
+    # memory usage under multiprocessing scenarios
+    @lazyload
     model = Net()
 
     # Configuration for the benchmarking

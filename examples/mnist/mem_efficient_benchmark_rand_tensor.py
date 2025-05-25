@@ -10,6 +10,7 @@ from alma.benchmark.log import display_all_results
 from alma.benchmark_model import benchmark_model
 from alma.utils.device import setup_device
 from alma.utils.setup_logging import setup_logging
+from alma.utils.multiprocessing.lazyload import lazyload
 
 # One needs to set their quantization backend engine to what is appropriate for their system.
 # torch.backends.quantized.engine = 'x86'
@@ -51,6 +52,18 @@ def main() -> None:
     device = setup_device(
         None, allow_cuda=(not args.no_cuda), allow_mps=(not args.no_mps)
     )
+
+    # It is a lot more memory efficienct, if multi-processing is enabled, to create the model in a
+    # callable function, which can be called later to create the model.
+    # This allows us to initialise the model in each child process, rather than the parent
+    # process. This is because the model is not pickled and sent to the child process (which would
+    # require the program to sotre the model in memory twice), but rather created in the child
+    # process. This is especially important if the model is large and two instances would not fit
+    # on device.
+    # We accomplish this via the lazyload decorator, which will cause the model to ony be loaded
+    # when called, not at initialisation
+    @lazyload
+    model = Net()
 
     # Configuration for the benchmarking. Here we show of all of the options, including for device.
     # With `allow_device_override` we allow a device-specific conversion method to automtically assign

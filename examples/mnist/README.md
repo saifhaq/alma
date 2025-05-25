@@ -395,16 +395,20 @@ from the parent process to the child process. This doubles the required model me
 a problem for large models. To avoid this, one can, insead of feeding in a model
 directly to `benchmark_model`, feed in a function that returns the model. This way, the model is 
 only initialized once the child process starts for each conversion method, meaning we only have 
-one copy of the model at a time in device memory.
+one copy of the model at a time in device memory. 
 
+To make this easy, we provide a `lazyload` decorator one can use at model initialisation to have
+it only load once it is called.
 E.g.
 
 ```python
+from alma.utils.multiprocessing.lazyload import lazyload
 ...
 
-# This callable function returns the model, only once when we call it inside the child process
-def get_model():
-    return Net()
+# The model will only be properly initialised once called inside the benchmark process, meaning
+# multiple copies of the model will not be made (here and inside the child process).
+@lazyload
+model = Net()
 
 config = BenchmarkConfig(
     n_samples=args.n_samples,

@@ -8,6 +8,7 @@ from alma.benchmark import BenchmarkConfig
 from alma.benchmark.log import display_all_results
 from alma.benchmark_model import benchmark_model
 from alma.utils.setup_logging import setup_logging
+from alma.utils.multiprocessing.lazyload import lazyload
 
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())
@@ -26,10 +27,14 @@ def main() -> None:
     device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
 
     # Create a random model
+    # NOTE: We use the lazyload decorator to ensure this is alo loaded once it is used, which can have better
+    # memory usage under multiprocessing scenarios
+    @lazyload
     model = torch.nn.Sequential(
         torch.nn.Linear(3, 3),
         torch.nn.ReLU(),
     )
+    import ipdb, pprint; ipdb.set_trace();
 
     # Create a random tensor
     data = torch.rand(1, 512, 3)
