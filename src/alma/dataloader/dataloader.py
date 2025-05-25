@@ -87,5 +87,5 @@ class SingleTensorDataset(Dataset):
         return self.length
 
     def __getitem__(self, idx: int) -> torch.Tensor:
-        # Return the tensor at the specified index, and the index itself
-        return self.tensors[idx], idx
+        # Return the tensor at the specified index
+        return self.tensors[idx]

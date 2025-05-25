@@ -1,11 +1,13 @@
 import logging
 import time
-from typing import Any, Dict, Union
+from typing import Any, Dict, Union, Optional
 
+from alma.benchmark.metrics import TorchModuleMetrics
 import torch
 import torch._dynamo
 from torch.utils.data import DataLoader
 from tqdm import tqdm
+from transformers import Pipeline
 
 from ..conversions.conversion_options import ConversionOption
 from ..conversions.select import select_forward_call_function
@@ -15,6 +17,7 @@ from ..utils.multiprocessing import benchmark_error_handler, init_lazy_model
 from .benchmark_config import BenchmarkConfig
 from .log import log_results
 from .warmup import warmup
+from .metrics import TextGenerationPipelineMetrics, TorchModuleMetrics
 
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())
@@ -54,7 +57,8 @@ def benchmark(
     - throughput (float): The throughput of the model.
     """
     # If the model is a LazyLoad instance, load it to initialize the model
-    model = init_lazy_model(model)
+    print("Loaded", model.is_loaded())
+    model = init_lazy_model(model, device)
 
     # Get the number of samples to benchmark
     n_samples = config.n_samples
@@ -72,36 +76,48 @@ def benchmark(
             dtype=conversion.data_dtype,
         )
     else:
-        # If a data loader is provided, we check that the data dtype matches the conversion dtype
-        data = get_sample_data(data_loader, device)
-        assert (
-            data.dtype == conversion.data_dtype
-        ), f"The data loader dtype ({data.dtype}) does not match the conversion dtype ({conversion.data_dtype})."
-
-    import ipdb; ipdb.set_trace(); import pprint
-    # Send the model to device
-    model = model.to(device)
-
-    # Set to eval mode
-    model.eval()
-
-    # Initialize benchmark variables
-    total_samples = 0
+        assert data_loader.batch_size == config.batch_size, f"The `data_loader.batch_size` ({data_loader.batch_size}) does not match the `config.batch_size` ({config.batch_size})"
+        assert data_loader.sampler.total_samples == config.n_samples, f"The `data_loader.sampler.total_samples` ({data_loader.sampler.total_samples}) does not match the `config.n_samples` ({config.n_samples})"
 
     # Get sample of data from dataloader. This overwrites the data tensor provided by the user
-    data = get_sample_data(data_loader, device)
+    # We also check it matches the config dtype, if it is a Tensor
+    data = get_sample_data(data_loader, device, conversion)
 
     # Get the forward call of the model, which we will benchmark. We also return the device we will
     # benchmark on, since some conversions are only supported for certain devices, e.g.
     # PyTorch native quantized conversions requires CPU
     forward_call = select_forward_call_function(model, conversion.mode, data, device)
-    import ipdb; ipdb.set_trace(); import pprint
 
     # Clear all caches, etc.
     torch._dynamo.reset()
 
     # Warmup
-    warmup(forward_call, data_loader, device)
+    warmup(forward_call, data_loader, warmup_iters=3, device=device)
+
+    # Benchmarking loop - only process full batches
+    if isinstance(model, torch.nn.Module):
+        result = torch_module_benchmark(forward_call, config, conversion, data_loader, device)
+    elif isinstance(model, Pipeline):
+        result = hf_pipeline_benchmark(model.tokenizer, forward_call, config, conversion, data_loader, device)
+
+    if logger.root.level <= logging.DEBUG:
+        log_results(result)
+
+    return result
+
+
+def torch_module_benchmark(
+    forward_call: callable,
+    config: BenchmarkConfig,
+    conversion: ConversionOption,
+    data_loader: DataLoader,
+    device: torch.device,
+) -> TorchModuleMetrics:
+
+    # Get the number of samples to benchmark
+    n_samples = config.n_samples
+    total_samples = 0
+    n_batches = (n_samples + config.batch_size - 1) // config.batch_size
 
     # Setup CUDA events for more accurate GPU timing if available
     if device.type == "cuda":
@@ -112,12 +128,8 @@ def benchmark(
     else:
         start_time = time.perf_counter()
 
-    # Calculate number of full batches needed
-    n_batches = (n_samples + config.batch_size - 1) // config.batch_size
-
-    # Benchmarking loop - only process full batches
     with torch.no_grad():
-        for i, (data, _) in enumerate(
+        for i, data in enumerate(
             tqdm(
                 data_loader,
                 desc=f"Benchmarking {conversion.mode} on {device}",
@@ -148,16 +160,88 @@ def benchmark(
 
     throughput = total_samples / total_elapsed_time if total_elapsed_time > 0 else 0
 
-    result: Dict[str, Any] = {
-        "device": device,
-        "total_elapsed_time": total_elapsed_time,
-        "total_samples": total_samples,
-        "batch_size": config.batch_size,
-        "throughput": throughput,
-        "status": "success",
-        "data_dtype": conversion.data_dtype,
-    }
-    if logger.root.level <= logging.DEBUG:
-        log_results(result)
+    result = TorchModuleMetrics(
+        device=device,
+        total_elapsed_time=total_elapsed_time,
+        total_samples=total_samples,
+        batch_size=config.batch_size,
+        throughput=throughput,
+        status="success",
+        data_dtype=conversion.data_dtype,
+    )
+    return result
 
+
+def hf_pipeline_benchmark(
+    tokenizer: any,
+    forward_call: callable,
+    config: BenchmarkConfig,
+    conversion: ConversionOption,
+    data_loader: DataLoader,
+    device: torch.device,
+) -> TextGenerationPipelineMetrics:
+    # Get the number of samples to benchmark
+    n_prompts = config.n_samples
+    total_prompts = 0
+    total_input_tokens = 0
+    total_output_tokens = 0
+    n_batches = (n_prompts + config.batch_size - 1) // config.batch_size
+
+    # Setup CUDA events for more accurate GPU timing if available
+    if device.type == "cuda":
+        start_event = torch.cuda.Event(enable_timing=True)
+        end_event = torch.cuda.Event(enable_timing=True)
+        torch.cuda.synchronize()
+        start_event.record()
+    else:
+        start_time = time.perf_counter()
+
+    with torch.no_grad():
+        for i, data in enumerate(
+            tqdm(
+                data_loader,
+                desc=f"Benchmarking {conversion.mode} on {device}",
+                total=n_batches,
+            )
+        ):
+            # Run forward pass without per-batch timing
+            output = forward_call(data)
+
+            for input_, output_ in zip(data, output):
+                input_token_len = len(tokenizer(input_)["input_ids"])
+                input_str_len = len(input_)
+                total_input_tokens += input_token_len
+                for gen in output_:
+                    # for elem in gen:
+                    generated_tokens = tokenizer(gen["generated_text"][input_str_len:])["input_ids"]
+                    total_output_tokens += len(generated_tokens)
+
+            total_prompts += len(data)
+            if total_prompts > n_prompts:
+                break
+
+    # End timing and synchronize if needed
+    if device.type == "cuda":
+        end_event.record()
+        end_event.synchronize()
+        total_elapsed_time = (
+            start_event.elapsed_time(end_event) / 1000.0
+        )  # Convert ms to seconds
+    else:
+        end_time = time.perf_counter()
+        total_elapsed_time = end_time - start_time
+
+    throughput = total_prompts / total_elapsed_time if total_elapsed_time > 0 else 0
+
+    result = TextGenerationPipelineMetrics(
+        device=device,
+        total_elapsed_time=total_elapsed_time,
+        total_prompts=total_prompts,
+        total_input_tokens=total_input_tokens,
+        total_output_tokens=total_output_tokens,
+        batch_size=config.batch_size,
+        throughput=throughput,
+        status="success",
+        data_dtype=conversion.data_dtype,
+    )
     return result

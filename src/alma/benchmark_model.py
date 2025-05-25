@@ -6,6 +6,7 @@ from torch.utils.data import DataLoader
 
 from .benchmark import benchmark
 from .benchmark.benchmark_config import BenchmarkConfig
+from .benchmark.metrics import BenchmarkMetrics, BenchmarkError
 from .conversions.conversion_options import (
     MODEL_CONVERSION_OPTIONS,
     ConversionOption,
@@ -114,7 +115,7 @@ def benchmark_model(
         )
 
         # Benchmark the model
-        result = benchmark_process_wrapper(
+        result: Union[BenchmarkMetrics, BenchmarkError] = benchmark_process_wrapper(
             multiprocessing,
             benchmark,
             device,
@@ -127,12 +128,12 @@ def benchmark_model(
         all_results[conversion_mode] = result
 
         # If the conversion failed, we raise an exception if we are failing fast
-        if result["status"] == "error":
+        if isinstance(result, BenchmarkError):
             error_msg = f"Benchmarking conversion {conversion_mode} failed."
             logger.error(error_msg)
 
             if fail_on_error:
-                raise RuntimeError(result["traceback"])
+                raise RuntimeError(result.traceback)
 
     return all_results
 

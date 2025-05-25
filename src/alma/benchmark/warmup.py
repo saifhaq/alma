@@ -14,6 +14,7 @@ def warmup(
     forward_call: Callable,
     data_loader: DataLoader,
     device: torch.device,
+    warmup_iters: int = 10,
     kwargs: dict | None = None,
 ) -> None:
     """
@@ -24,20 +25,22 @@ def warmup(
     - data_loader (DataLoader): The data loader we use for the warmup. Should be the same as
         for the benchmarking.
     - device (torch.device): the device we are targetting.
+    - warmup_iters (int): The number of warmup iterations to do.
     - kwargs (dict): any input kwargs for the forward call.
 
     Outputs:
     None
     """
-    with suppress_output(logger.root.level >= logging.DEBUG):
-        counter = 0
-        with torch.no_grad():
-            for data, _ in data_loader:
+    # with suppress_output(logger.root.level >= logging.DEBUG):
+    counter = 0
+    with torch.no_grad():
+        for data in data_loader:
+            if hasattr(data, "device"):
                 data = data.to(device)
-                if kwargs:
-                    _ = forward_call(data, **kwargs)
-                else:
-                    _ = forward_call(data)
-                counter += 1
-                if counter > 10:
-                    return
+            if kwargs:
+                _ = forward_call(data, **kwargs)
+            else:
+                _ = forward_call(data)
+            counter += 1
+            if counter > warmup_iters:
+                return

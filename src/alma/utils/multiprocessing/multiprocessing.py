@@ -5,6 +5,7 @@ from typing import Any, Callable, Union
 import torch
 
 from .traceback import get_next_line_info
+from alma.benchmark.metrics import BenchmarkMetrics, BenchmarkError
 
 # MPS requires the `multiprocess` package
 if torch.backends.mps.is_available():
@@ -48,9 +49,9 @@ def run_benchmark_process(
     result = benchmark_func(device, *args, **kwargs)
     # If the benchmark function returns an error, we prepend the traceback with the formatted stack trace
     # up to this point.
-    if result["status"] == "error":
-        result["traceback"] = (
-            formatted_stacktrace + next_cmd_multi + result["traceback"]
+    if isinstance(result, BenchmarkError):
+        result.traceback = (
+            formatted_stacktrace + next_cmd_multi + result.status.traceback
         )
     result_queue.put(result)
 
@@ -61,7 +62,7 @@ def benchmark_process_wrapper(
     device: torch.device,
     *args: Any,
     **kwargs: Any,
-) -> Union[Any, None]:
+) -> Union[BenchmarkMetrics, BenchmarkError]:
     """
     Wrapper to run benchmark in a fresh process (if multiprocessing enabled) and return its results. This allows us
     to run different conversion methods (whose imports may affect the glocal state of PyTorch)
@@ -110,9 +111,9 @@ def benchmark_process_wrapper(
         result = benchmark_func(device, *args, **kwargs)
         # If the benchmark function returns an error, we prepend the traceback with the formatted stack trace
         # up to this point.
-        if result["status"] == "error":
-            result["traceback"] = (
-                formatted_stacktrace + next_cmd_single + result["traceback"]
+        if isinstance(result, BenchmarkError):
+            result.traceback = (
+                formatted_stacktrace + next_cmd_single + result.traceback
             )
         return result
 
@@ -140,9 +141,8 @@ def benchmark_process_wrapper(
         return result
 
     # No result was returned
-    result = {
-        "status": "error",
-        "error": "No result was returned from the benchmarking process",
-        "traceback": formatted_stacktrace,
-    }
+    result = BenchmarkError(
+        error="No result was returned from the benchmarking process",
+        traceback=formatted_stacktrace,
+    )
     return result
