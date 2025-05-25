@@ -47,6 +47,7 @@ def main() -> None:
     # With `allow_device_override` we allow a device-specific conversion method to automtically assign
     # itself to that device, e.g. ONNX_CPU will automatically run on CPU even if device is CUDA.
     config = BenchmarkConfig(
+        model_type="callable",
         n_samples=args.n_samples,
         batch_size=args.batch_size,
         multiprocessing=True,  # If True, we test each method in its own isolated environment,

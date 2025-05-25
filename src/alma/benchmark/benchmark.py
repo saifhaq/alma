@@ -16,6 +16,7 @@ from ..utils.times import inference_time_benchmarking  # should we use this?
 from .benchmark_config import BenchmarkConfig
 from .log import log_results
 from .warmup import warmup
+from .callable import check_and_return_callable
 
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())
@@ -60,6 +61,9 @@ def benchmark(
     # Get the number of samples to benchmark
     n_samples = config.n_samples
     batch_size = config.batch_size
+    
+    # Get any model input kwargs
+    model_kwargs = config.get_kwargs_dict()
 
     # Creates a dataloader with random data, of the same size as the input data sample
     # If the data_loader has been provided by the user, we use that one
@@ -100,7 +104,7 @@ def benchmark(
     torch._dynamo.reset()
 
     # Warmup
-    warmup(forward_call, data_loader, device)
+    warmup(forward_call, data_loader, device, model_kwargs)
 
     # Setup CUDA events for more accurate GPU timing if available
     if device.type == "cuda":
@@ -127,7 +131,11 @@ def benchmark(
             data = data.to(device, non_blocking=config.non_blocking)
 
             # Run forward pass without per-batch timing
-            _ = forward_call(data)
+            if model_kwargs:
+                _ = forward_call(data, **model_kwargs)
+            else:
+                _ = forward_call(data)
+
             total_samples += data.size(0)
 
             if total_samples > n_samples:
