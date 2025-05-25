@@ -27,6 +27,6 @@ def get_export_eager_forward_call(
     model = get_exported_model(model, data)
 
     check_model_type(model, ExportedProgram)
-    forward = model.module().forward
+    forward = model.module().__call__
 
     return forward

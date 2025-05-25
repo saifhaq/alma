@@ -84,4 +84,4 @@ def get_torchao_autoquant_forward_call(
     """
     model = get_torchao_autoquant_model(model, data, backend, use_autoquant_default)
 
-    return model.forward
+    return model.__call__

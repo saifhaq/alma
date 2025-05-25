@@ -22,4 +22,4 @@ def get_torch_scripted_model_forward_call(
     - forward (Callable): the forward call representing the scripted model.
     """
     scripted_model = torch.jit.script(model)
-    return scripted_model.forward
+    return scripted_model.__call__

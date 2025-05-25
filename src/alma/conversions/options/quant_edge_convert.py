@@ -40,4 +40,4 @@ def get_converted_edge_quantized_model_forward_call(
     model_quantized = convert_fx(fx_model)
 
     # Return forward call
-    return model_quantized.forward, device
+    return model_quantized.__call__, device

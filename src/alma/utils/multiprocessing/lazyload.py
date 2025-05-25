@@ -1,5 +1,7 @@
 from typing import Any, Callable
 
+import torch
+
 
 class LazyLoader:
     """A lazy loader that defers object creation until accessed."""
@@ -12,6 +14,7 @@ class LazyLoader:
     def load(self) -> Any:
         """Load the actual object and return it."""
         if not self._loaded:
+            print("Factory", self._factory)
             self._instance = self._factory()
             self._loaded = True
         return self._instance
@@ -46,17 +49,27 @@ def lazyload(factory: Callable[[], Any]) -> LazyLoader:
     return LazyLoader(factory)
 
 
-def init_lazy_model(obj_or_cls: Any) -> Any:
+def init_lazy_model(model: Any, device: torch.device) -> Any:
     """
     Load the model, if it is LazyLoader instance and has not yet been loaded.
 
     Args:
-        obj_or_cls (Any): Instance that may be a LazyLoader instance or not.
+        model (Any): Instance that may be a LazyLoader instance or not.
+        device (torch.device): the device to send the model to
 
     Returns:
         (Any): The loaded model.
     """
-    if isinstance(obj_or_cls, LazyLoader):
-        return obj_or_cls.load()
+    if isinstance(model, LazyLoader):
+        model = model.load()
+
+    if hasattr(model, "to"):
+        model.to(device)
     else:
-        return obj_or_cls
+        assert hasattr(model, "device") and model.device == device
+
+    # Set to eval mode
+    if hasattr(model, "eval"):
+        model.eval()
+
+    return model

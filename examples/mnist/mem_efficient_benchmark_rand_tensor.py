@@ -41,7 +41,29 @@ def main() -> None:
     # on device.
     # We accomplish this via the lazyload function, which initializes a Lazyload instance, which will
     # cause the model to ony be loaded when called, not at initialisation.
-    model = lazyload(Net)
+    # Get baseline memory
+
+    import os
+
+    import psutil
+
+    def get_memory_usage():
+        """Get current memory usage in MB."""
+        process = psutil.Process(os.getpid())
+        return process.memory_info().rss / 1024 / 1024  # Convert to MB
+
+    baseline_memory = get_memory_usage()
+    print(f"Baseline memory: {baseline_memory:.1f} MB\n")
+
+    # Method 1: Check the is_loaded() method
+    print("=== Method 1: Using is_loaded() method ===")
+
+    model = lazyload(Net)  # Note: corrected syntax
+    print(f"Model created, is_loaded(): {model.is_loaded()}")
+    print(f"Memory after creating lazy loader: {get_memory_usage():.1f} MB")
+    # import ipdb, pprint; ipdb.set_trace();
+    # model = model.load()
+    # print(f"Memory after creating lazy loader: {get_memory_usage():.1f} MB")
 
     # Configuration for the benchmarking. Here we show of all of the options, including for device.
     # With `allow_device_override` we allow a device-specific conversion method to automtically assign
@@ -49,7 +71,7 @@ def main() -> None:
     config = BenchmarkConfig(
         n_samples=args.n_samples,
         batch_size=args.batch_size,
-        multiprocessing=True,  # If True, we test each method in its own isolated environment,
+        multiprocessing=False,  # If True, we test each method in its own isolated environment,
         # which helps keep methods from contaminating the global torch state
         fail_on_error=False,  # If False, we fail gracefully and keep testing other methods
         non_blocking=False,  # If True, we don't block the main thread when transferring data from host to device

@@ -33,7 +33,7 @@ def get_optimum_quanto_forward_call(
     - forward (callable): the forward call of the HuggingFace Optimum Quanto quantized model.
     """
     model = get_optimum_quanto_model(model, data, weights, activations)
-    forward = model.forward
+    forward = model.__call__
 
     # Test feeding data through the model
     _ = forward(data)
@@ -127,4 +127,4 @@ def get_optimum_quant_model_compiled_forward_call(
     model = get_optimum_quant_compiled_model(model, data, weights, activations, backend)
 
     check_model_type(model, OptimizedModule)
-    return model.forward
+    return model.__call__

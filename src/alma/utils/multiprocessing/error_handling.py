@@ -3,6 +3,8 @@ import traceback
 from functools import wraps
 from typing import Callable
 
+from alma.benchmark.metrics import BenchmarkError
+
 
 def benchmark_error_handler(decorated_func: Callable) -> Callable:
     """
@@ -63,10 +65,6 @@ def benchmark_error_handler(decorated_func: Callable) -> Callable:
             # Combine the forward traceback with the function call
             forward_traceback = function_trace + forward_traceback
 
-            return {
-                "status": "error",
-                "error": str(e),
-                "traceback": forward_traceback,
-            }
+            return BenchmarkError(error=str(e), traceback=forward_traceback)
 
     return wrapper

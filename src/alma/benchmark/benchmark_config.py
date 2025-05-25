@@ -1,7 +1,7 @@
-from typing import Optional
+from typing import Any, Optional
 
 import torch
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 from alma.utils.device import setup_device
 
@@ -73,3 +73,7 @@ class BenchmarkConfig(BaseModel):
                 allow_device_override=allow_override,
             )
         return values
+
+    def get_kwargs_dict(self) -> dict[str, Any]:
+        """Returns empty dict, but some children classes return genuine kwargs"""
+        return {}
