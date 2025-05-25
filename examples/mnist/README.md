@@ -397,7 +397,7 @@ directly to `benchmark_model`, feed in a function that returns the model. This w
 only initialized once the child process starts for each conversion method, meaning we only have 
 one copy of the model at a time in device memory. 
 
-To make this easy, we provide a `lazyload` decorator one can use at model initialisation to have
+To make this easy, we provide a `lazyload` function one can use at model initialisation to have
 it only load once it is called.
 E.g.
 
@@ -407,8 +407,7 @@ from alma.utils.multiprocessing.lazyload import lazyload
 
 # The model will only be properly initialised once called inside the benchmark process, meaning
 # multiple copies of the model will not be made (here and inside the child process).
-@lazyload
-model = Net()
+model = lazyload(Net)
 
 config = BenchmarkConfig(
     n_samples=args.n_samples,
