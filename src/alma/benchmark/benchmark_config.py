@@ -4,7 +4,6 @@ import torch
 from pydantic import BaseModel, Field, field_validator, model_validator
 
 from alma.utils.device import setup_device
-from .model_type import ModelTypeEnum, validate_model_or_callable
 
 class BenchmarkConfig(BaseModel):
     """
