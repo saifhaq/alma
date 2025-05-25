@@ -62,7 +62,8 @@ def get_compiled_model(
             logger.debug("Model graph:")
             logger.debug(model.graph.print_tabular())
 
-    check_model_type(model, OptimizedModule)
+    # NOTE: compile returns a function for TextGenerationPipeline
+    # check_model_type(model, OptimizedModule)
 
     return model
 
