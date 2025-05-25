@@ -35,7 +35,9 @@ def get_compiled_model(
     model (torch._dynamo.eval_frame.OptimizedModule): The compiled model
     """
     logger.info(f"Running torch.compile [{backend} backend] on the model")
-    check_model_type(model, (torch.nn.Module, fx.GraphModule, ExportedProgram, Pipeline))
+    check_model_type(
+        model, (torch.nn.Module, fx.GraphModule, ExportedProgram, Pipeline)
+    )
 
     # Compile the model, with suppressed internal logs if logging is above Debug level.
     # with suppress_output(logger.root.level >= logging.DEBUG):

@@ -1,23 +1,23 @@
 import logging
+import os
 from typing import Any, Dict
 
 import torch
-import os
+from data import CircularSampler, PromptDataset
 from torch.utils.data import DataLoader
-from transformers import AutoTokenizer, AutoModelForCausalLM, TextGenerationPipeline
+from transformers import AutoModelForCausalLM, AutoTokenizer, TextGenerationPipeline
 
 from alma.arguments.benchmark_args import parse_benchmark_args
 from alma.benchmark import BenchmarkConfig
 from alma.benchmark.log import display_all_results
 from alma.benchmark_model import benchmark_model
-from alma.utils.setup_logging import setup_logging
 from alma.utils.multiprocessing import lazyload
-
-from data import CircularSampler, PromptDataset
+from alma.utils.setup_logging import setup_logging
 
 # One needs to set their quantization backend engine to what is appropriate for their system.
 # torch.backends.quantized.engine = 'x86'
 torch.backends.quantized.engine = "qnnpack"
+
 
 def main() -> None:
     # Set up logging. DEBUG level will also log the internal conversion logs (where available), as well
@@ -72,14 +72,16 @@ should accept the Meta terms and conditions to download the LLama 3 8B Instruct 
         )
 
     import psutil
+
     def get_memory_usage():
         """Get current memory usage in MB."""
         process = psutil.Process(os.getpid())
         return process.memory_info().rss / 1024 / 1024  # Convert to MB
+
     baseline_memory = get_memory_usage()
     print(f"Baseline memory: {baseline_memory:.1f} MB\n")
 
-# Method 1: Check the is_loaded() method
+    # Method 1: Check the is_loaded() method
     print("=== Method 1: Using is_loaded() method ===")
 
     pipe = lazyload(lambda: create_huggingface_pipeline(model_name))

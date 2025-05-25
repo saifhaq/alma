@@ -41,18 +41,21 @@ def main() -> None:
     # on device.
     # We accomplish this via the lazyload function, which initializes a Lazyload instance, which will
     # cause the model to ony be loaded when called, not at initialisation.
-# Get baseline memory
+    # Get baseline memory
+
+    import os
 
     import psutil
-    import os
+
     def get_memory_usage():
         """Get current memory usage in MB."""
         process = psutil.Process(os.getpid())
         return process.memory_info().rss / 1024 / 1024  # Convert to MB
+
     baseline_memory = get_memory_usage()
     print(f"Baseline memory: {baseline_memory:.1f} MB\n")
 
-# Method 1: Check the is_loaded() method
+    # Method 1: Check the is_loaded() method
     print("=== Method 1: Using is_loaded() method ===")
 
     model = lazyload(Net)  # Note: corrected syntax
@@ -61,7 +64,6 @@ def main() -> None:
     # import ipdb, pprint; ipdb.set_trace();
     # model = model.load()
     # print(f"Memory after creating lazy loader: {get_memory_usage():.1f} MB")
-
 
     # Configuration for the benchmarking. Here we show of all of the options, including for device.
     # With `allow_device_override` we allow a device-specific conversion method to automtically assign

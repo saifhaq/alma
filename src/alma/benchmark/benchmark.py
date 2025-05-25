@@ -1,13 +1,14 @@
 import logging
 import time
-from typing import Any, Dict, Union, Optional
+from typing import Any, Dict, Optional, Union
 
-from alma.benchmark.metrics import TorchModuleMetrics
 import torch
 import torch._dynamo
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 from transformers import Pipeline
+
+from alma.benchmark.metrics import TorchModuleMetrics
 
 from ..conversions.conversion_options import ConversionOption
 from ..conversions.select import select_forward_call_function
@@ -16,8 +17,8 @@ from ..utils.data import get_sample_data
 from ..utils.multiprocessing import benchmark_error_handler, init_lazy_model
 from .benchmark_config import BenchmarkConfig
 from .log import log_results
-from .warmup import warmup
 from .metrics import TextGenerationPipelineMetrics, TorchModuleMetrics
+from .warmup import warmup
 
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())
@@ -76,8 +77,12 @@ def benchmark(
             dtype=conversion.data_dtype,
         )
     else:
-        assert data_loader.batch_size == config.batch_size, f"The `data_loader.batch_size` ({data_loader.batch_size}) does not match the `config.batch_size` ({config.batch_size})"
-        assert data_loader.sampler.total_samples == config.n_samples, f"The `data_loader.sampler.total_samples` ({data_loader.sampler.total_samples}) does not match the `config.n_samples` ({config.n_samples})"
+        assert (
+            data_loader.batch_size == config.batch_size
+        ), f"The `data_loader.batch_size` ({data_loader.batch_size}) does not match the `config.batch_size` ({config.batch_size})"
+        assert (
+            data_loader.sampler.total_samples == config.n_samples
+        ), f"The `data_loader.sampler.total_samples` ({data_loader.sampler.total_samples}) does not match the `config.n_samples` ({config.n_samples})"
 
     # Get sample of data from dataloader. This overwrites the data tensor provided by the user
     # We also check it matches the config dtype, if it is a Tensor
@@ -96,9 +101,13 @@ def benchmark(
 
     # Benchmarking loop - only process full batches
     if isinstance(model, torch.nn.Module):
-        result = torch_module_benchmark(forward_call, config, conversion, data_loader, device)
+        result = torch_module_benchmark(
+            forward_call, config, conversion, data_loader, device
+        )
     elif isinstance(model, Pipeline):
-        result = hf_pipeline_benchmark(model.tokenizer, forward_call, config, conversion, data_loader, device)
+        result = hf_pipeline_benchmark(
+            model.tokenizer, forward_call, config, conversion, data_loader, device
+        )
 
     if logger.root.level <= logging.DEBUG:
         log_results(result)
@@ -213,7 +222,9 @@ def hf_pipeline_benchmark(
                 total_input_tokens += input_token_len
                 for gen in output_:
                     # for elem in gen:
-                    generated_tokens = tokenizer(gen["generated_text"][input_str_len:])["input_ids"]
+                    generated_tokens = tokenizer(gen["generated_text"][input_str_len:])[
+                        "input_ids"
+                    ]
                     total_output_tokens += len(generated_tokens)
 
             total_prompts += len(data)
@@ -231,8 +242,12 @@ def hf_pipeline_benchmark(
         end_time = time.perf_counter()
         total_elapsed_time = end_time - start_time
 
-    output_throughput = total_output_tokens / total_elapsed_time if total_elapsed_time > 0 else 0
-    input_throughput = total_input_tokens / total_elapsed_time if total_elapsed_time > 0 else 0
+    output_throughput = (
+        total_output_tokens / total_elapsed_time if total_elapsed_time > 0 else 0
+    )
+    input_throughput = (
+        total_input_tokens / total_elapsed_time if total_elapsed_time > 0 else 0
+    )
     request_rate = total_prompts / total_elapsed_time if total_elapsed_time > 0 else 0
 
     result = TextGenerationPipelineMetrics(

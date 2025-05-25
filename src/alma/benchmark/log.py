@@ -1,10 +1,11 @@
 import logging
 from typing import Any, Callable, Dict
+
 from .metrics import (
-    TextGenerationPipelineMetrics,
     BenchmarkError,
-    TorchModuleMetrics,
     BenchmarkMetrics,
+    TextGenerationPipelineMetrics,
+    TorchModuleMetrics,
 )
 
 logger = logging.getLogger(__name__)
@@ -78,7 +79,9 @@ def log_results(
         torch_module_logging(results, display_function)
 
 
-def torch_module_logging(results: TorchModuleMetrics, display_function: Callable = logger.info) -> None:
+def torch_module_logging(
+    results: TorchModuleMetrics, display_function: Callable = logger.info
+) -> None:
     """
     Some torch.nn.module specific result logging.
     Inputs:
@@ -92,7 +95,9 @@ def torch_module_logging(results: TorchModuleMetrics, display_function: Callable
     display_function(f"Throughput: {results.throughput:.2f} samples/second")
 
 
-def text_gen_pipeline_logging(results: TextGenerationPipelineMetrics, display_function: Callable = logger.info) -> None:
+def text_gen_pipeline_logging(
+    results: TextGenerationPipelineMetrics, display_function: Callable = logger.info
+) -> None:
     """
     Some Transformer TextGenerationPipeline specific result logging.
 

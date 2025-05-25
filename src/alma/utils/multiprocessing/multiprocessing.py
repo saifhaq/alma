@@ -4,8 +4,9 @@ from typing import Any, Callable, Union
 
 import torch
 
+from alma.benchmark.metrics import BenchmarkError, BenchmarkMetrics
+
 from .traceback import get_next_line_info
-from alma.benchmark.metrics import BenchmarkMetrics, BenchmarkError
 
 # MPS requires the `multiprocess` package
 if torch.backends.mps.is_available():
@@ -112,9 +113,7 @@ def benchmark_process_wrapper(
         # If the benchmark function returns an error, we prepend the traceback with the formatted stack trace
         # up to this point.
         if isinstance(result, BenchmarkError):
-            result.traceback = (
-                formatted_stacktrace + next_cmd_single + result.traceback
-            )
+            result.traceback = formatted_stacktrace + next_cmd_single + result.traceback
         return result
 
     # If the device to benchmark on is CUDA, we need to set the start method to 'spawn'

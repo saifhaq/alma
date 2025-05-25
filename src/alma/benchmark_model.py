@@ -6,7 +6,7 @@ from torch.utils.data import DataLoader
 
 from .benchmark import benchmark
 from .benchmark.benchmark_config import BenchmarkConfig
-from .benchmark.metrics import BenchmarkMetrics, BenchmarkError
+from .benchmark.metrics import BenchmarkError, BenchmarkMetrics
 from .conversions.conversion_options import (
     MODEL_CONVERSION_OPTIONS,
     ConversionOption,

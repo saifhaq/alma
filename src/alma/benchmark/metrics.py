@@ -1,18 +1,17 @@
-
-from pydantic import BaseModel, Field, validator
 from enum import Enum
-import torch
 from typing import Optional
 
+import torch
+from pydantic import BaseModel, Field, validator
+
 from alma.utils.device import setup_device
+
 
 class BenchmarkError(BaseModel):
     traceback: Optional[str] = Field(
         default=None, description="The traceback of the error"
     )
-    error: Optional[str] = Field(
-        default=None, description="The error message"
-    )
+    error: Optional[str] = Field(default=None, description="The error message")
 
 
 class BenchmarkStatus(Enum):
@@ -24,15 +23,14 @@ class BenchmarkMetrics(BaseModel):
     """
     Base class for benchmark metrics.
     """
+
     device: Optional[torch.device] = Field(
         default=None, description="Device for benchmarking."
     )
     total_elapsed_time: float = Field(
         description="Total elapsed time during the benchmark"
     )
-    batch_size: int = Field(
-        gt=0, description="Batch size for benchmarking."
-    )
+    batch_size: int = Field(gt=0, description="Batch size for benchmarking.")
     status: BenchmarkStatus = Field(
         description="Whether the benchmark succeeded or failed"
     )
@@ -59,12 +57,9 @@ class TorchModuleMetrics(BenchmarkMetrics):
     """
     Contains the metrics for a torch.nn.Module benchmark.
     """
-    total_samples: int = Field(
-        gt=0, description="Total samples processed"
-    )
-    throughput: float = Field(
-        description="Throughput of processed samples"
-    )
+
+    total_samples: int = Field(gt=0, description="Total samples processed")
+    throughput: float = Field(description="Throughput of processed samples")
 
 
 class TextGenerationPipelineMetrics(BenchmarkMetrics):
@@ -72,22 +67,9 @@ class TextGenerationPipelineMetrics(BenchmarkMetrics):
     Contains the metrics for a HuggingFace TextGenerationPipeline benchmark.
     """
 
-    total_prompts: int = Field(
-        gt=0, description="Total prompts processed"
-    )
-    total_input_tokens: int = Field(
-        gt=0, description="Total input tokens processed"
-    )
-    total_output_tokens: int = Field(
-        gt=0, description="Total output tokens generated"
-    )
-    output_throughput: float = Field(
-        description="Output token throughput"
-    )
-    input_throughput: float = Field(
-        description="Intput token throughput"
-    )
-    request_rate: float = Field(
-        description="Rate that the prompts are processed"
-    )
-
+    total_prompts: int = Field(gt=0, description="Total prompts processed")
+    total_input_tokens: int = Field(gt=0, description="Total input tokens processed")
+    total_output_tokens: int = Field(gt=0, description="Total output tokens generated")
+    output_throughput: float = Field(description="Output token throughput")
+    input_throughput: float = Field(description="Intput token throughput")
+    request_rate: float = Field(description="Rate that the prompts are processed")

@@ -1,9 +1,12 @@
 import torch
 from torch.utils.data import DataLoader
+
 from ..conversions.conversion_options import ConversionOption
 
 
-def get_sample_data(data_loader: DataLoader, device: torch.device, conversion: ConversionOption) -> torch.Tensor:
+def get_sample_data(
+    data_loader: DataLoader, device: torch.device, conversion: ConversionOption
+) -> torch.Tensor:
     """
     Get a sample of data from the DataLoader.
 

@@ -5,6 +5,7 @@ from pydantic import BaseModel, Field, field_validator, model_validator
 
 from alma.utils.device import setup_device
 
+
 class BenchmarkConfig(BaseModel):
     """
     Configuration model for benchmarking a machine learning model.
@@ -50,7 +51,7 @@ class BenchmarkConfig(BaseModel):
         default=False,
         description="Blocking or not when transferring data from host to device",
     )
-    
+
     class Config:
         arbitrary_types_allowed = True
 

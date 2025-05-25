@@ -65,9 +65,6 @@ def benchmark_error_handler(decorated_func: Callable) -> Callable:
             # Combine the forward traceback with the function call
             forward_traceback = function_trace + forward_traceback
 
-            return BenchmarkError(
-                error=str(e),
-                traceback=forward_traceback
-            )
+            return BenchmarkError(error=str(e), traceback=forward_traceback)
 
     return wrapper
