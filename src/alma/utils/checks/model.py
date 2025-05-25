@@ -5,6 +5,8 @@ from typing import Callable, Union
 
 import torch
 
+from ..multiprocessing import LazyLoader
+
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())
 
@@ -21,23 +23,32 @@ def check_model(model: Union[torch.nn.Module, Callable], config: dict) -> None:
     Outputs:
     None
     """
+    # If we are doing multiprocessing and the model is being LazyLoaded, that's perfect
+    if isinstance(model, LazyLoader) and config.multiprocessing:
+        # Unless it's already been loaded
+        if model.is_loaded():
+            warning_msg = """Multiprocessing is enabled, and a LazyLoader is being used, which is ideal. However,
+the Lazyloader instance has already been loaded, which means there will be 2 copies of the model initialized in memory.
+Iti is recommended you check your code to see why the model has been initialized already. See 
+`examples/mnist/README.md` in section `Effect on model memory` for discussion on this topic."""
+            logger.warning(warning_msg)
+        return
 
-    if not isinstance(model, torch.nn.Module) and config.multiprocessing:
-        type_error_msg = "If not torch.nn.Module, the modle type should be a Callable that loads the model"
-        assert isinstance(model, Callable), type_error_msg
-        error_msg = """Please ensure that your 'load model' function is pickle-able. The function 
-must not be locally sourced, but sourced at the module level."""
-        check_is_local_function(model, error_msg)
-
-    # If the model is a torch.nn.Mpodule and multiprocessing is enabled, we log a warning
-    # that this is not memory efficient
-    elif isinstance(model, torch.nn.Module) and config.multiprocessing:
-        warning_msg = """Multiprocessing is enabled, and the model is a torch.nn.Module. This is not memory efficient,
-as the model will be pickled and sent to each child process, which will require the model to be stored in memory
-twice. If the model is large, this may cause memory issues. Consider using a callable to return the model, which
-will be created in each child process, rather than the parent process. See `examples/mnist/mem_efficient_benchmark_rand_tensor.py`
-for an example."""
+    if not isinstance(model, LazyLoader) and config.multiprocessing:
+        warning_msg = """Multiprocessing is enabled, but LazyLoader is not being used. This can cause
+the model to be loaded into memory twice, once in the parent process and once in the child process.
+See `examples/mnist/mem_efficient_benchmark_rand_tensor.py` for an example on how to use the `LazyLoader`
+for more efficient memory usage."""
         logger.warning(warning_msg)
+
+    if not config.multiprocessing:
+        warning_msg = """Multiprocessing is not enabled. These is a risk that different export 
+options, e.g. HF optimum quanto, will contaminate the global torch state and break other conversion options. For testing
+multiple options, consider enabling multiprocessing to run each option in a dedicated subprocess. Also
+consider using the `alma.utils.multiprocessing.LazyLoader class for more memory efficient loading of models
+in a multiprocessing setup. See `examples/mnist/mem_efficient_benchmark_rand_tensor.py` for an example."""
+        logger.warning(warning_msg)
+        return
 
 
 def check_is_local_function(func: Callable, error_msg: str) -> None:

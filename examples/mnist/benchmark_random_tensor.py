@@ -29,9 +29,8 @@ def main() -> None:
     data = torch.rand(1, 3, 28, 28)
 
     # Load model (random weights)
-    # NOTE: We use the lazyload decorator to ensure this is alo loaded once it is used, which can have better
-    # memory usage under multiprocessing scenarios
-    @lazyload
+    # NOTE: Here we don't use the lazyload decorator on purpose, which will cause the model to be initialised immediately.
+    # Since we are using Multiprocessing, this will log a warning about inefficient memory usage.
     model = Net()
 
     # Configuration for the benchmarking

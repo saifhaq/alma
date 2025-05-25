@@ -1,4 +1,4 @@
-from typing import Callable, List, Union
+from typing import Any, List, Union
 
 import torch
 from torch.utils.data import DataLoader
@@ -12,7 +12,7 @@ from .model import check_model
 
 
 def check_inputs(
-    model: Union[torch.nn.Module, Callable],
+    model: Any,
     config: BenchmarkConfig,
     conversions: Union[List[str], None],
     data: Union[torch.Tensor, None],
