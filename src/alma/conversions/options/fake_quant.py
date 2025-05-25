@@ -33,7 +33,7 @@ def get_fake_quantized_model_forward_call(
     fx_model: fx.GraphModule = fx_quantize(model, data)
 
     # Return forward call
-    return fx_model.forward
+    return fx_model.__call__
 
 
 def fx_quantize(

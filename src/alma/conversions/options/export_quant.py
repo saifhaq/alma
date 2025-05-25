@@ -133,6 +133,6 @@ def get_quant_exported_forward_call(
     model = get_quant_exported_model(model, data, int_or_dequant_op, run_decompositions)
 
     check_model_type(model, expected_type=torch.fx.graph_module.GraphModule)
-    forward = model.forward
+    forward = model.__call__
 
     return forward

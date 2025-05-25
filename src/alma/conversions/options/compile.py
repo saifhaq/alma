@@ -7,6 +7,7 @@ import torch._dynamo
 import torch.fx as fx
 from torch._dynamo.eval_frame import OptimizedModule
 from torch.export.exported_program import ExportedProgram
+from transformers import Pipeline
 
 from ...utils.setup_logging import suppress_output
 from .utils.checks.type import check_model_type
@@ -34,7 +35,7 @@ def get_compiled_model(
     model (torch._dynamo.eval_frame.OptimizedModule): The compiled model
     """
     logger.info(f"Running torch.compile [{backend} backend] on the model")
-    check_model_type(model, (torch.nn.Module, fx.GraphModule, ExportedProgram))
+    check_model_type(model, (torch.nn.Module, fx.GraphModule, ExportedProgram, Pipeline))
 
     # Compile the model, with suppressed internal logs if logging is above Debug level.
     # with suppress_output(logger.root.level >= logging.DEBUG):
@@ -85,7 +86,7 @@ def get_compiled_model_forward_call(
     """
 
     model = get_compiled_model(model, data, backend)
-    return model.forward
+    return model.__call__
 
 
 def get_compiled_forward_call_eager_fallback(

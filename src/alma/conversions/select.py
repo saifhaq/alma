@@ -4,14 +4,14 @@ from pathlib import Path
 from typing import Any, Callable
 
 import torch
-from optimum.quanto import (
-    qfloat8_e4m3fn,
-    qfloat8_e4m3fnuz,
-    qfloat8_e5m2,
-    qint2,
-    qint4,
-    qint8,
-)
+# from optimum.quanto import (
+#     qfloat8_e4m3fn,
+#     qfloat8_e4m3fnuz,
+#     qfloat8_e5m2,
+#     qint2,
+#     qint4,
+#     qint8,
+# )
 
 from .conversion_options import MODEL_CONVERSION_OPTIONS
 from .options.bf16 import get_bf16_eager_forward_call, get_bf16_model
@@ -29,11 +29,11 @@ from .options.export_quant import get_quant_exported_forward_call
 from .options.fake_quant import get_fake_quantized_model_forward_call
 from .options.fp16 import get_fp16_eager_forward_call, get_fp16_model
 from .options.jit_trace import get_jit_traced_model_forward_call
-from .options.onnx import get_onnx_dynamo_forward_call, get_onnx_forward_call
-from .options.optimum_quanto import (
-    get_optimum_quant_model_compiled_forward_call,
-    get_optimum_quanto_forward_call,
-)
+# from .options.onnx import get_onnx_dynamo_forward_call, get_onnx_forward_call
+# from .options.optimum_quanto import (
+#     get_optimum_quant_model_compiled_forward_call,
+#     get_optimum_quanto_forward_call,
+# )
 from .options.quant_edge_convert import get_converted_edge_quantized_model_forward_call
 from .options.torchao_autoquant import get_torchao_autoquant_forward_call
 from .options.torchao_quant import (
@@ -240,7 +240,7 @@ def select_forward_call_function(
 
         case "EAGER":
             # Regular eager model forward call
-            forward = model.forward
+            forward = model.__call__
 
         case "ONNX_CPU":
             # We create temporary file to save the onnx model
