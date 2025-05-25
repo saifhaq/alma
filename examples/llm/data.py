@@ -5,16 +5,18 @@ import string
 from torch.utils.data import Dataset, Sampler
 
 BASE_PROMPTS = [
-    "In a world where technology and nature have merged, cities now grow like forests and buildings bloom like flowers. The year is 2150, and I am walking through the streets of Neo-Singapore, where:",
-    "The quantum computer finally solved the problem that had puzzled scientists for centuries. The implications were enormous:",
-    "As the last human colony on Mars celebrated its centennial, an unexpected signal was received from deep space. The message contained:",
-    "The AI poet had finally learned to feel emotions. Its first sonnet about love began:",
-    "In the aftermath of the Great Climate Restoration, ecosystems thought extinct for decades began to re-emerge. The first signs appeared in:",
-    "The kitchen of the future was not what anyone expected. Instead of robots, it featured:",
-    "When time travel became commercially available, the most popular destination wasn't the past or future, but rather:",
-    "The neural interface allowed people to share memories directly. The most surprising effect of this technology was:",
-    "On the 500th anniversary of the first Mars landing, the president of the United Solar System gave a speech that started with:",
-    "The library of forgotten books contained volumes that had been written but never published. Among them was a manuscript that:",
+    "In a world where technologyr",
+    "The quantum computer finall",
+    # "In a world where technology and nature have merged, cities now grow like forests and buildings bloom like flowers. The year is 2150, and I am walking through the streets of Neo-Singapore, where:",
+    # "The quantum computer finally solved the problem that had puzzled scientists for centuries. The implications were enormous:",
+    # "As the last human colony on Mars celebrated its centennial, an unexpected signal was received from deep space. The message contained:",
+    # "The AI poet had finally learned to feel emotions. Its first sonnet about love began:",
+    # "In the aftermath of the Great Climate Restoration, ecosystems thought extinct for decades began to re-emerge. The first signs appeared in:",
+    # "The kitchen of the future was not what anyone expected. Instead of robots, it featured:",
+    # "When time travel became commercially available, the most popular destination wasn't the past or future, but rather:",
+    # "The neural interface allowed people to share memories directly. The most surprising effect of this technology was:",
+    # "On the 500th anniversary of the first Mars landing, the president of the United Solar System gave a speech that started with:",
+    # "The library of forgotten books contained volumes that had been written but never published. Among them was a manuscript that:",
 ]
 
 
