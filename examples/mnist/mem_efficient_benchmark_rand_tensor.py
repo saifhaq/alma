@@ -40,8 +40,9 @@ def main() -> None:
     # process. This is especially important if the model is large and two instances would not fit
     # on device.
     # We accomplish this via the lazyload function, which initializes a Lazyload instance, which will
-    # cause the model to ony be loaded when called, not at initialisation.
-    model = lazyload(Net)
+    # cause the model to ony be loaded when called, not at initialisation. The `lambda` is key to this,
+    # otherwise the model will be initialised immediately.
+    model = lazyload(lambda: Net())
 
     # Configuration for the benchmarking. Here we show of all of the options, including for device.
     # With `allow_device_override` we allow a device-specific conversion method to automtically assign
