@@ -13,6 +13,9 @@ description = "A package for benchmarking the speed of different PyTorch convers
 readme = "README.md"
 requires-python = ">=3.8"
 license = "MIT"
+license-files = [
+    "LICENSE",
+]
 classifiers = [
     "Programming Language :: Python :: 3",
     "License :: OSI Approved :: MIT License",
@@ -22,9 +25,6 @@ classifiers = [
 [project.urls]
 Homepage = "https://github.com/saifhaq/alma"
 Issues = "https://github.com/saifhaq/alma/issues"
-
-[project.license]
-file = "LICENSE"
 
 [tool.isort]
 profile = "black"
