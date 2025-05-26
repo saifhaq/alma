@@ -12,7 +12,7 @@ authors = [
 description = "A package for benchmarking the speed of different PyTorch conversion options"
 readme = "README.md"
 requires-python = ">=3.8"
-license = { file = "LICENSE" }
+license = "MIT"
 
 classifiers = [
     "Programming Language :: Python :: 3",
