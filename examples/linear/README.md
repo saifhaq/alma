@@ -51,10 +51,10 @@ display_all_results(results)
 ```
 
 ### Full working example:
-A full working example can be found in `examples/mnist/benchmark_random_tensor.py` where a random model is used.
+A full working example can be found in `examples/linear/benchmark_random_tensor.py` where a random model is used.
 E.g.
 ```bash
-cd examples/mnist
+cd examples/linear
 python benchmark_random_tensor.py  --conversions EAGER,EXPORT+EAGER --batch-size 10
 --n-samples 5000 
 ```

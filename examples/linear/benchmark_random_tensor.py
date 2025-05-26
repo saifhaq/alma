@@ -7,6 +7,7 @@ from alma.arguments.benchmark_args import parse_benchmark_args
 from alma.benchmark import BenchmarkConfig
 from alma.benchmark.log import display_all_results
 from alma.benchmark_model import benchmark_model
+from alma.utils.multiprocessing.lazyload import lazyload
 from alma.utils.setup_logging import setup_logging
 
 logger = logging.getLogger(__name__)
@@ -26,9 +27,17 @@ def main() -> None:
     device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
 
     # Create a random model
-    model = torch.nn.Sequential(
-        torch.nn.Linear(3, 3),
-        torch.nn.ReLU(),
+    # NOTE: We use the lazyload wrapper to ensure this is only loaded once we call it within the `benchmark` function.
+    # This is because under multiprocessing setups, where we use multiprocessing to ensure that each export/compilation
+    # option occurs in a standalone environment to prevent global torch state contamination, there is a risk
+    # that a model could be loaded here at initialisation, and again inside the child process. A lazyload ensures
+    # that we only load it within the child processes, which uses half the memory for model storage compared to also
+    # loading it here in the parent process.
+    model = lazyload(
+        lambda: torch.nn.Sequential(
+            torch.nn.Linear(3, 3),
+            torch.nn.ReLU(),
+        )
     )
 
     # Create a random tensor

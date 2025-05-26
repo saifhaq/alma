@@ -13,6 +13,7 @@ from alma.arguments.benchmark_args import parse_benchmark_args
 from alma.benchmark import BenchmarkConfig
 from alma.benchmark.log import display_all_results
 from alma.benchmark_model import benchmark_model
+from alma.utils.multiprocessing.lazyload import lazyload
 from alma.utils.setup_logging import setup_logging
 
 # One needs to set their quantization backend engine to what is appropriate for their system.
@@ -50,6 +51,8 @@ def main() -> None:
 
     # Load model
     load_start_time = time.perf_counter()
+    # NOTE: Here we don't use the lazyload decorator on purpose, which will cause the model to be initialised immediately.
+    # Since we are using Multiprocessing, this will log a warning about inefficient memory usage.
     model = Net()
     load_end_time = time.perf_counter()
     logging.info(f"Model loading time: {load_end_time - load_start_time:.4f} seconds")

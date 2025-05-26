@@ -1,5 +1,5 @@
 import logging
-from typing import Any, Callable, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional, Union
 
 import torch
 from torch.utils.data import DataLoader
@@ -20,7 +20,7 @@ logger.addHandler(logging.NullHandler())
 
 
 def benchmark_model(
-    model: Union[torch.nn.Module, Callable],
+    model: Any,
     config: Union[BenchmarkConfig, Dict[str, Any]],
     conversions: Optional[Union[List[ConversionOption], List[str]]] = None,
     data: Optional[torch.Tensor] = None,
@@ -44,7 +44,7 @@ def benchmark_model(
         the error message and traceback in the returned struct.
 
     Args:
-        model (Union[torch.nn.Module, Callable]): The model to benchmark. If a callable is provided,
+        model (Any): The model to benchmark. If a LazyLoader instance is provided,
             it should return the model instance. This helps when using multiprocessing, as the model
             can be instantiated inside isolated child processes.
         config (Union[BenchmarkConfig, Dict[str, Any]]): A validated Pydantic configuration for benchmarking.

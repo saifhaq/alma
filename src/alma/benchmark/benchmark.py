@@ -1,9 +1,7 @@
 import logging
 import time
-from statistics import mean, stdev
-from typing import Any, Callable, Dict, List, Union
+from typing import Any, Dict, Union
 
-import numpy as np
 import torch
 import torch._dynamo
 from torch.utils.data import DataLoader
@@ -13,7 +11,7 @@ from ..conversions.conversion_options import ConversionOption
 from ..conversions.select import select_forward_call_function
 from ..dataloader.create import create_single_tensor_dataloader
 from ..utils.data import get_sample_data
-from ..utils.multiprocessing import benchmark_error_handler
+from ..utils.multiprocessing import LazyLoader, benchmark_error_handler, init_lazy_model
 from ..utils.times import inference_time_benchmarking  # should we use this?
 from .benchmark_config import BenchmarkConfig
 from .log import log_results
@@ -26,7 +24,7 @@ logger.addHandler(logging.NullHandler())
 @benchmark_error_handler
 def benchmark(
     device: torch.device,
-    model: Union[torch.nn.Module, Callable],
+    model: Any,
     config: BenchmarkConfig,
     conversion: ConversionOption,
     data: torch.Tensor,
@@ -56,13 +54,8 @@ def benchmark(
     - total_samples (int): The total number of samples benchmarked.
     - throughput (float): The throughput of the model.
     """
-    # If the model is a callable, call it to get the model
-    if not isinstance(model, torch.nn.Module):
-        logger.info(f"Initializing model inside {conversion.mode} benchmarking")
-        model = model()
-        assert isinstance(
-            model, torch.nn.Module
-        ), "The provided callable should return a PyTorch model"
+    # If the model is a LazyLoader instance, initialise it to get the model
+    model = init_lazy_model(model)
 
     # Get the number of samples to benchmark
     n_samples = config.n_samples
