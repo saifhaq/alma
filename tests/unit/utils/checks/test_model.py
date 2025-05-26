@@ -4,10 +4,8 @@ import pytest
 import torch
 
 from alma.benchmark.benchmark_config import BenchmarkConfig
-from alma.utils.multiprocessing.lazyload import lazyload, LazyLoader
-from alma.utils.checks.model import (
-    check_model,
-)
+from alma.utils.checks.model import check_model
+from alma.utils.multiprocessing.lazyload import LazyLoader, lazyload
 
 
 class DummyModule(torch.nn.Module):
