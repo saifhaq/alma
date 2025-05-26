@@ -11,18 +11,20 @@ logger = logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())
 
 
-def check_model(model: Union[torch.nn.Module, Callable], config: dict) -> None:
+def check_model(model: Callable, config: dict) -> None:
     """
     Checks if the model (or init function) is valid, and logs a warning if a memory inefficient
     process is being used.
 
     Inputs:
-    - model (Union[torch.nn.Module, Callable]): The model to benchmark, or a callable function to get the model.
+    - model (Callable): The model to benchmark, or a callable function to get the model.
     - config (dict): The configuration for the benchmarking.
 
     Outputs:
     None
     """
+    assert callable(model), "The model should always be a callable"
+
     # If we are doing multiprocessing and the model is being LazyLoaded, that's perfect
     if isinstance(model, LazyLoader) and config.multiprocessing:
         # Unless it's already been loaded
